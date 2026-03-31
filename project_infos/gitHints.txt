@@ -1,5 +1,0 @@
-Git pull Force
-
-git pull --force
-git fetch origin
-git reset --hard origin/main
