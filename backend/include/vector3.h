@@ -46,6 +46,14 @@ struct Vector3 {
         double n = norm();
         return n == 0 ? *this : *this * (1.0 / n);
     }
+
+    Vector3 cross(const Vector3 &other) const {
+        double x = this->y * other.z - this->z * other.y;
+        double y = this->z * other.x - this->x * other.z;
+        double z = this->x * other.y - this->y * other.x;
+
+        return {x, y, z};
+    }
 };
 
 

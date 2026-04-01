@@ -1,4 +1,0 @@
-#ifndef COORDINATES_H
-#define COORDINATES_H
-
-#endif // COORDINATES_H

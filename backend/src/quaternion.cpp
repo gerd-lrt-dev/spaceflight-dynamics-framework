@@ -51,3 +51,23 @@ void Quaternion::normalize()
     q2_ /= qN;
     q3_ /= qN;
 }
+
+Vector3 Quaternion::rotate(const Vector3 &vector) const {
+    Quaternion vq(0.0, vector.x, vector.y, vector.z);
+
+    Quaternion result = (*this) * vq * this->inverse();
+
+    return Vector3(result.q1_, result.q2_, result.q3_);
+}
+
+Quaternion Quaternion::inverse() const {
+    return Quaternion(this->q0_, -this->q1_, -this->q2_, -this->q3_);
+}
+
+Quaternion Quaternion::operator*(const Quaternion &other) const {
+    return Quaternion(
+        this->q0_ * other.q0_- this->q1_ * other.q1_ - this->q2_ * other.q2_ - this->q3_ * other.q3_,
+        this->q0_ * other.q1_ + this->q1_ * other.q0_ + this->q2_ * other.q3_ + this->q3_ * other.q2_,
+        this->q0_ * other.q2_ - this->q1_ * other.q3_ + this->q2_ * other.q0_ + this->q3_ * other.q1_,
+        this->q0_ * other.q3_ + this->q1_ * other.q2_ - this->q2_ * other.q1_ + this->q3_ * other.q0_);
+}

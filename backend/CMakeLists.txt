@@ -19,7 +19,7 @@ add_library(moonlander_backend
     src/Automation/adaptiveDescentController.cpp
     src/Control/inputArbiter.cpp
     src/Controller/pd_controller.cpp
-    src/Coordinates/coordinates.cpp
+    src/Coordinates/coordinateTransformer.cpp
     src/Thrust/BasicMainEngineModel.cpp
     include/Integrators/Dynamics.h
     include/Integrators/iIntegrator.h
@@ -37,7 +37,7 @@ add_library(moonlander_backend
     include/Control/inputArbiter.h
     include/Controller/iController.h
     include/Controller/pd_controller.h
-    include/Coordinates/coordinates.h
+    include/Coordinates/coordinateTransformer.h
     include/Thrust/iThrust.h
     include/Thrust/BasicMainEngineModel.h
     include/Thrust/FuelStateStruct.h
