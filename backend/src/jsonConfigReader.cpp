@@ -78,6 +78,23 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
         lander.engines_.push_back(engine);
     }
 
+    // -------------------------
+    // Tanks
+    // -------------------------
+    const auto& tanks = j.at("tanks");
+    for (const auto& t : tanks)
+    {
+        FuelTank tank;
+
+        tank.id             = t.at("id").get<int>();
+        tank.name           = t.at("name").get<std::string>();
+        tank.role           = t.at("role").get<std::string>();
+        tank.mass           = t.at("fuelMass").get<double>();
+        tank.capacity       = t.at("fuelMass").get<double>();
+
+        lander.tanks_.push_back(tank);
+    }
+
     return lander;
 }
 

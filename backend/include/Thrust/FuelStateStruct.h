@@ -1,6 +1,5 @@
 #ifndef FUELSTATESTRUCT_H
 #define FUELSTATESTRUCT_H
-#include <vector>
 
 /**
  * @brief Fuel-related state variables for the engine.

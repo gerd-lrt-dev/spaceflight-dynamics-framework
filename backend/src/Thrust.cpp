@@ -17,25 +17,57 @@ Thrust::~Thrust()
 // -------------------------------------------------------------------------
 // Public setter functions
 // -------------------------------------------------------------------------
-void Thrust::setTargetThrust(const double &tThrust, const size_t &engineNr)
+void Thrust::setTargetThrustInNewton(EngineType engine, const double &tMainEngineThrust, const Vector3 &tRCSThrust)
 {
-    if (engineNr >= models_.size())
+    if (engine == EngineType::All)
     {
-        std::cerr << "Engine index out of range!" << std::endl;
+        std::cerr << "[Thrust]-setTargetThrustInPercentage- Engine Type is ALL but the type must be specified!" << std::endl;
         return;
     }
 
-    models_[engineNr]->setTarget(tThrust);
+        if (engine == EngineType::MainEngine)
+        {
+            for (const auto& model : models_)
+            {
+                if (model->getEngineType() == "main")
+                {
+                    model->setTarget(tMainEngineThrust);
+                }
+            }
+        }
+        else if (engine == EngineType::RCS)
+        {
+            // To be done...
+        }
 }
 
-void Thrust::setTargetThrustInPercentage(const double &tThrustInPercentage, const size_t &engineNr)
+void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainEngineThrust, const Vector3 &tRCSThrust)
 {
-    if (engineNr >= models_.size())
+    if (engine == EngineType::All)
     {
-        std::cerr << "Engine index out of range!" << std::endl;
+        std::cerr << "[Thrust]-setTargetThrustInPercentage- Engine Type is ALL but the type must be specified!" << std::endl;
         return;
     }
-    models_[engineNr]->setTargetInPercentage(tThrustInPercentage);
+
+    if (engine == EngineType::MainEngine)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "main")
+            {
+                model->setTargetInPercentage(tMainEngineThrust);
+            }
+        }
+    }
+    else if (engine == EngineType::RCS)
+    {
+        // To be done...
+        std::cout << "RCS Thrust: \n"
+                  << "x: " << tRCSThrust.x << "\n"
+                  << "y: " << tRCSThrust.y << "\n"
+                  << "z: " << tRCSThrust.z << "\n"
+                  << std::endl;
+    }
 }
 
 void Thrust::shutDownAllEngines() const
@@ -46,7 +78,7 @@ void Thrust::shutDownAllEngines() const
     }
 }
 
-void Thrust::initializeEngines(std::vector<EngineConfig> &engineConfigs, const std::vector<double> &tanks)
+void Thrust::initializeEngines(std::vector<EngineConfig> &engineConfigs, const std::vector<FuelTank> &tanks)
 {
     // -----------------------------------------
     // Initialize tanks
@@ -61,7 +93,27 @@ void Thrust::initializeEngines(std::vector<EngineConfig> &engineConfigs, const s
     {
         FuelState state;
         state.consumptionRate = 0.0;
-        addModel(std::make_unique<basicMainEngineModel>(cfg_, state));
+        if (cfg_.type == "main")
+        {
+            std::cout << "[Thrust]-initializeEngines- Configured Main Engine" << std::endl;
+            addModel(std::make_unique<basicMainEngineModel>(cfg_, state));
+        }
+        else if (cfg_.type == "translation")
+        {
+            std::cout << "[Thrust]-initializeEngines- Configured RCS translational engine" << std::endl;
+            std::cout << "[Thrust]-initializeEngines- RCS Model not included yet" << std::endl;
+            addModel(std::make_unique<basicMainEngineModel>(cfg_, state));
+        }
+        else if (cfg_.type == "rotation")
+        {
+            std::cout << "[Thrust]-initializeEngines- Configured RCS rotational engine" << std::endl;
+        }
+        else
+        {
+            std::cerr << "[Thrust]-initializeEngines- Engine Type unknown!!" << std::endl;
+            return;
+        }
+
     }
 }
 
@@ -101,51 +153,200 @@ void Thrust::updateThrust(double dt)
 
 // --- Getter functions ---------------------------------------------
 
-Vector3 Thrust::getTargetThrust() const
+Vector3 Thrust::getTargetThrust(EngineType engine) const
 {
-    Vector3 total{0.0, 0.0, 0.0};
+    Vector3     total{0.0, 0.0, 0.0};
+    Vector3     dir{0.0, 0.0, 0.0};
+    double      thrust(0.0);
 
-    for (const auto& model : models_)
+    if (engine == EngineType::All)
     {
-        Vector3 dir = model->getDirectionOfThrust();
-        double thrust = model->getTargetThrust();
+        for (const auto& model : models_)
+        {
+            dir = model->getDirectionOfThrust();
+            thrust = model->getTargetThrust();
 
-        total += dir * thrust;
+            total += dir * thrust;
+        }
+    }
+    else if (engine == EngineType::MainEngine)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "main")
+            {
+                dir = model->getDirectionOfThrust();
+                thrust = model->getTargetThrust();
+                total += dir * thrust;
+            }
+        }
+    }
+    else if (engine == EngineType::RCS)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
+            {
+                dir = model->getDirectionOfThrust();
+                thrust = model->getTargetThrust();
+                total += dir * thrust;
+            }
+        }
     }
 
     return total;
 }
 
-Vector3 Thrust::getCurrentThrust() const
+Vector3 Thrust::getCurrentThrust(EngineType engine) const
 {
-    Vector3 total{0.0, 0.0, 0.0};
+    Vector3     total{0.0, 0.0, 0.0};
+    Vector3     dir{0.0, 0.0, 0.0};
+    double      thrust(0.0);
 
-    for (const auto& model : models_)
+    if (engine == EngineType::All)
     {
-        Vector3 dir = model->getDirectionOfThrust();
-        double thrust = model->getCurrentThrust();
+        for (const auto& model : models_)
+        {
+            dir = model->getDirectionOfThrust();
+            thrust = model->getCurrentThrust();
 
-        total += dir * thrust;
+            total += dir * thrust;
+        }
+    }
+    else if (engine == EngineType::MainEngine)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "main")
+            {
+                dir = model->getDirectionOfThrust();
+                thrust = model->getCurrentThrust();
+
+                total += dir * thrust;
+            }
+        }
+    }
+    else if (engine == EngineType::RCS)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
+            {
+                dir = model->getDirectionOfThrust();
+                thrust = model->getCurrentThrust();
+
+                total += dir * thrust;
+            }
+        }
+    }
+    return total;
+}
+
+Vector3 Thrust::getCurrentThrustInPercentage(EngineType engine) const
+{
+    Vector3     total{0.0, 0.0, 0.0};
+    Vector3     dir{0.0, 0.0, 0.0};
+    double      thrustInPercentage(0.0);
+
+    if (engine == EngineType::All)
+    {
+        for (const auto& model : models_)
+        {
+            dir = model->getDirectionOfThrust();
+            thrustInPercentage = model->getCurrentThrust() / model->getMaxThrust();
+
+            total += dir * thrustInPercentage;
+        }
+    }
+    else if (engine == EngineType::MainEngine)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "main")
+            {
+                dir = model->getDirectionOfThrust();
+                thrustInPercentage = model->getCurrentThrust() / model->getMaxThrust();
+            }
+
+            total += dir * thrustInPercentage;
+        }
+    }
+    else if (engine == EngineType::RCS)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
+            {
+                dir = model->getDirectionOfThrust();
+                thrustInPercentage = model->getCurrentThrust() / model->getMaxThrust();
+            }
+
+            total += dir * thrustInPercentage;
+        }
     }
 
     return total;
 }
 
-Vector3 Thrust::getCurrentThrustInPercentage() const
+Vector3 Thrust::getDirectionOfThrust(EngineType engine, int engineID) const
 {
-    for (const auto& model: models_)
+    Vector3 dir{0.0, 0.0, 0.0};
+
+    if (engine == EngineType::MainEngine && engineID == 0)
     {
-        //model->
+        for (const auto& model : models_)
+        {
+            dir = model->getDirectionOfThrust();
+        }
     }
-
-    return {0.0, 0.0, 0.0};
-
+    else if(engineID > 0)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineID() == engineID)
+            {
+                dir = model->getDirectionOfThrust();
+            }
+        }
+    }
+    else
+    {
+        std::cerr << "[Thrust]-getDirectionOfThrust- Failed requesting direction of thrust" << std::endl;
+        return {0.0, 0.0, 0.0};
+    }
+    return dir;
 }
 
-double Thrust::getFuelConsumption() const
+double Thrust::getFuelConsumption(EngineType engine) const
 {
     double sum = 0.0;
-
+    if (engine == EngineType::All)
+    {
+        for (const auto& model : models_)
+        {
+            sum += model->getFuelConsumption();
+        }
+    }
+    else if (engine == EngineType::MainEngine)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "main")
+            {
+                sum += model->getFuelConsumption();
+            }
+        }
+    }
+    else if (engine == EngineType::RCS)
+    {
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
+            {
+                sum += model->getFuelConsumption();
+            }
+        }
+    }
     for (const auto& model : models_)
     {
         sum += model->getFuelConsumption();
@@ -154,10 +355,9 @@ double Thrust::getFuelConsumption() const
     return sum;
 }
 
-double Thrust::getCurrentFuelMass() const
+const std::vector<FuelTank>& Thrust::getFuelTanks() const
 {
-    // TODO: Change it to requesting fuel mass of specific tanks, when UI is adapted
-    return getFuelMassOfAllTanks();
+    return tanks_;
 }
 
 void Thrust::addModel(std::unique_ptr<IThrustModel> model)
@@ -165,16 +365,14 @@ void Thrust::addModel(std::unique_ptr<IThrustModel> model)
     models_.push_back(std::move(model));
 }
 
-void Thrust::addFuelTank(const std::vector<double> &tanks)
+void Thrust::addFuelTank(const std::vector<FuelTank> &tanks)
 {
+    tanks_ = tanks;
+
     for (size_t i = 0; i < tanks.size(); ++i)
     {
-        FuelTank tank;
-        tank.id = i;
 
-        tank.mass = tanks[i];
-        tank.capacity = tanks[i];
-        tanks_.push_back(tank);
+        //std::cout << "[Thrust]-addFuelTank- Add Tank " << tanks[i].
     }
 
     std::cout << "[Thrust] Added " << tanks.size() << " tanks" << std::endl;

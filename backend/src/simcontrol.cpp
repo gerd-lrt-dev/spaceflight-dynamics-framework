@@ -14,8 +14,6 @@ void simcontrol::buildSimulationEnvironment(double t)
     // Instance classes
     landerSpacecraft    = std::make_unique<spacecraft>(landerMoon1);
     inputArbiter_       = std::make_unique<InputArbiter>();
-
-    std::cout << "[simcontrol]-buildSimulationEnvironment-: class spacecraft & inputArbiter instanced" << std::endl;
 }
 
 customSpacecraft simcontrol::loadSpacecraftFromJsonString(const std::string& jsonString)
@@ -48,7 +46,8 @@ void simcontrol::processCommands()
 {
     ControlCommand activeCommand = inputArbiter_->chooseCommand();
 
-    setTargetThrust(activeCommand.thrustInPercentage);
+    setTargetMainEngineThrust(activeCommand.mainEngine);
+    setTargetRCSThrust(activeCommand.translation);
 }
 
 void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, const int &engineNr, const double& dt)
@@ -60,15 +59,14 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         double autoThrust = autopilot_->setAutoThrustInNewton(controller_.get(), landerMoon1.engines_[0].maxThrust, landerSpacecraft->getVelocity().z, landerSpacecraft->getPosition().z - config_.radiusMoon, dt, landerMoon1.emptyMass + landerMoon1.fuelM, config_.moonGravity);
         double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, landerMoon1.engines_[0].maxThrust);
         ControlCommand autoCmd;
-        autoCmd.thrustInPercentage = autoThrustNormalized;
+        autoCmd.mainEngine = autoThrustNormalized;
         receiveCommandFromAutopilot(autoCmd);
         processCommands();
     }
     else if (currentSpacecraftstate == SpacecraftState::Landed)
     {
         ControlCommand cmd;
-        cmd.thrustInPercentage  = 0.0;
-        cmd.thrustInNewton      = 0.0;
+        cmd.mainEngine          = 0.0;
         cmd.autopilotActive     = false;
         receiveCommandFromAutopilot(cmd);
         processCommands();
@@ -150,6 +148,7 @@ simData simcontrol::runSimulation(const double dt)
         logger.log("Unknown exception in runSimulation.");
         throw;
     }
+
     return simdata_;
 }
 
@@ -168,11 +167,16 @@ void simcontrol::setJsonConfigStr(const std::string &jsonConfigStr)
     jsonConfigString = jsonConfigStr;
 }
 
-void simcontrol::setTargetThrust(const double& thrustPercent, const double& thrustInNewton)
+void simcontrol::setTargetMainEngineThrust(const double& thrustPercent, const double& thrustInNewton)
 {
-    // Using main engine with index number zero
-    landerSpacecraft->setThrust(thrustPercent, 0);
-    landerSpacecraft->setThrust(0.21, 1);
+    landerSpacecraft->setMainEngineThrust(thrustPercent);
+}
+
+// Function is going to get obsolet when RCS model is introduced
+
+void simcontrol::setTargetRCSThrust(const Vector3 &ENU_translation)
+{
+    landerSpacecraft->setTargetRCSThrust(ENU_translation);
 }
 
 void simcontrol::setResetBoolean()
@@ -182,7 +186,5 @@ void simcontrol::setResetBoolean()
 
 void simcontrol::setAutoPilotCommand(const double &autoThrust)
 {
-    cmd_.thrustInNewton = autoThrust;
-
     receiveCommandFromAutopilot(cmd_);
 }

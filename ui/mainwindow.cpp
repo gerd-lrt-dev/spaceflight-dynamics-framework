@@ -25,11 +25,9 @@ void MainWindow::setupUI()
 
     //Create pages
     homepage = new Homepage(this);
-    cPage = new cockpitPage(this);
 
     // Add pages to stackedWidget
     stackedWidget->addWidget(homepage);
-    stackedWidget->addWidget(cPage);
 
     // Add StackedWidget to layout
     vLayout->addWidget(stackedWidget);

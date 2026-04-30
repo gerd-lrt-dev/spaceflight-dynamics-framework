@@ -31,7 +31,6 @@
 #include <QWidget>
 #include <QWindow>
 
-#include "cockpitpage.h"
 #include "homepage.h"
 
 /**
@@ -69,7 +68,6 @@ private:
     // ==========================================
     QVBoxLayout *vLayout;   ///< Main vertical layout for the central widget
     Homepage    *homepage;  ///< First page of program. Used to select initial steps.
-    cockpitPage *cPage;     ///< Cockpit page containing control panels, spacecraft LCDs, and 2D landing simulation view
 
     // ==========================================
     // Member Functions

@@ -48,6 +48,12 @@ struct FuelTank
      * - "RCS Tank"
      */
 
+    std::string role;
+    /**<
+     * @brief role
+     * Which engine is mainly connected to the tank
+     */
+
     double capacity;
     /**<
      * @brief Maximum propellant mass the tank can hold.

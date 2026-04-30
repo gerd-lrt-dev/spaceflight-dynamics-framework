@@ -12,16 +12,32 @@
       "B_initialRot": { "x": 0.0, "y": 0.0, "z": 0.0 },
       "B_initialCenterOfMass": { "x": 0.0, "y": 0.0, "z": -0.2 },
 
-      "initialVelocity": { "x": 10.0, "y": 12.0, "z": 0.0 },
+      "initialVelocity": { "x": 0.0, "y": 0.0, "z": 0.0 },
 
       "structuralIntegrity": 0.25,
       "safeVelocity": 5.0,
+
+      "tanks": [
+        {
+          "id": 0,
+          "name": "MainTank",
+          "role": "main",
+          "fuelMass": 100.0
+        },
+        {
+          "id": 1,
+          "name": "RCSTank",
+          "role": "rcs",
+          "fuelMass": 20.0
+        }
+      ],
 
       "engines": [
         {
           "id": 0,
           "name": "MainEngine",
           "type": "main",
+          "axis": "-z",
           "tankID": 0,
 
           "Isp": 311.0,
@@ -32,19 +48,98 @@
           "direction": { "x": 0.0, "y": 0.0, "z": -1.0 },
           "position":  { "x": 0.0, "y": 0.0, "z": -0.5 }
         },
+
         {
           "id": 1,
-          "name": "AttitudeThruster",
-          "type": "attitude",
-          "tankID": 0,
+          "name": "RCS_PosX",
+          "type": "translation",
+          "axis": "+x",
+          "tankID": 1,
 
-          "Isp": 80.0,
-          "timeConstant": 0.1,
-          "responseRate": 20.0,
-          "maxThrust": 50.0,
+          "Isp": 285.0,
+          "timeConstant": 0.08,
+          "responseRate": 25.0,
+          "maxThrust": 40.0,
 
           "direction": { "x": 1.0, "y": 0.0, "z": 0.0 },
-          "position":  { "x": 0.2, "y": 0.0, "z": 0.0 }
+          "position":  { "x": 0.0, "y": 0.8, "z": 0.6 }
+        },
+        {
+          "id": 2,
+          "name": "RCS_NegX",
+          "type": "translation",
+          "axis": "-x",
+          "tankID": 1,
+
+          "Isp": 285.0,
+          "timeConstant": 0.08,
+          "responseRate": 25.0,
+          "maxThrust": 40.0,
+
+          "direction": { "x": -1.0, "y": 0.0, "z": 0.0 },
+          "position":  { "x": 0.0, "y": -0.8, "z": 0.6 }
+        },
+
+        {
+          "id": 3,
+          "name": "RCS_PosY",
+          "type": "translation",
+          "axis": "+y",
+          "tankID": 1,
+
+          "Isp": 285.0,
+          "timeConstant": 0.08,
+          "responseRate": 25.0,
+          "maxThrust": 40.0,
+
+          "direction": { "x": 0.0, "y": 1.0, "z": 0.0 },
+          "position":  { "x": -0.8, "y": 0.0, "z": 0.6 }
+        },
+        {
+          "id": 4,
+          "name": "RCS_NegY",
+          "type": "translation",
+          "axis": "-y",
+          "tankID": 1,
+
+          "Isp": 285.0,
+          "timeConstant": 0.08,
+          "responseRate": 25.0,
+          "maxThrust": 40.0,
+
+          "direction": { "x": 0.0, "y": -1.0, "z": 0.0 },
+          "position":  { "x": 0.8, "y": 0.0, "z": 0.6 }
+        },
+
+        {
+          "id": 5,
+          "name": "RCS_PosZ",
+          "type": "translation",
+          "axis": "+z",
+          "tankID": 1,
+
+          "Isp": 285.0,
+          "timeConstant": 0.08,
+          "responseRate": 25.0,
+          "maxThrust": 30.0,
+
+          "direction": { "x": 0.0, "y": 0.0, "z": 1.0 },
+          "position":  { "x": 0.5, "y": 0.5, "z": 0.6 }
+        },
+        {
+          "id": 6,
+          "name": "RCS_NegZ",
+          "type": "translation",
+          "axis": "-z",
+          "tankID": 1,
+
+          "Isp": 285.0,
+          "timeConstant": 0.08,
+          "responseRate": 25.0,
+          "maxThrust": 30.0,
+
+          "direction": { "x": 0.0, "y": 0.0, "z": -1.0 },
+          "position":  { "x": -0.5, "y": -0.5, "z": 0.6 }
         }
       ]
     }

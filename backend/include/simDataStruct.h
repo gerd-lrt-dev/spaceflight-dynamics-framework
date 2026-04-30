@@ -3,8 +3,12 @@
 
 #include "stateVectorStruct.h"
 #include "spacecraftStateStruct.h"
+#include "Thrust/FueltankStruct.h"
+#include "Thrust/ME_thrustState.h"
+#include "Thrust/RCS_ThrustState.h"
 
 #include <string>
+#include <vector>
 
 /**
  * @brief This data will be return to UI by runSimulation
@@ -29,18 +33,19 @@ struct simData
     // Console output
     std::string output;
 
-    // Engine data
-    Vector3 thrust;
-    Vector3 targetThrust;
-    double thrustInPercentage;
+    // MainEngine data
+    ME_ThrustState ME_ThrustState_;
+
+    // RCSEngine data
+    RCS_ThrustState RCS_ThrustState_;
 
     // Fuel data
-    double fuelMass;
+    std::vector<FuelTank> tanks;
+    double fuelMass; ///< Fuel Mass summed by all installed tanks[kg]
     double fuelFlow;
 
     // Forces
     double GLoad;
-
 };
 
 #endif // SIMDATASTRUCT_H

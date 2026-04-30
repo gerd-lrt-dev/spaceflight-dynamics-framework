@@ -47,3 +47,78 @@ QLabel* UIBuilder::createPageTitle(const QString &titleStr, QWidget *parent)
 
     return title;
 }
+
+QWidget *UIBuilder::setupDetailBox(const QVector<QLCDNumber*> &lcdPanels, const QVector<QString> &namesOfPanels, const QString &nameOfTitle, int columns)
+{
+    if (lcdPanels.size() != namesOfPanels.size())
+    {
+        qDebug() << "[UIBuilder] Size of Panel and Name Vector is not identical!";
+        return nullptr;
+    }
+
+    if (columns <= 0)
+    {
+        qDebug() << "[UIBuilder] Invalid column count!";
+        return nullptr;
+    }
+
+    QFrame *box = new QFrame();
+    box->setFrameShape(QFrame::StyledPanel);
+    box->setStyleSheet("background-color: #0E1624");
+    box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(box);
+    mainLayout->setContentsMargins(6, 6, 6, 6);
+    mainLayout->setSpacing(4);
+
+    QLabel *title = new QLabel(nameOfTitle);
+    title->setAlignment(Qt::AlignCenter);
+    title->setStyleSheet("color: #4FC3F7; font-weight: bold;");
+
+    QGridLayout *grid = new QGridLayout();
+
+    for (int i = 0; i < lcdPanels.size(); ++i)
+    {
+        QWidget *lcdField = createLcdField(namesOfPanels[i], lcdPanels[i], 8);
+
+        int row = i / columns;
+        int col = i % columns;
+
+        grid->addWidget(lcdField, row, col);
+    }
+
+    mainLayout->addWidget(title);
+    mainLayout->addLayout(grid);
+
+    return box;
+}
+
+//*******************************
+// Private
+//*******************************
+static void configureLCD(QLCDNumber* lcd, int digits)
+{
+    lcd->setDigitCount(digits);
+    lcd->setSegmentStyle(QLCDNumber::Flat);
+    lcd->setSmallDecimalPoint(false);
+}
+
+QWidget* UIBuilder::createLcdField(const QString& title, QLCDNumber* lcd, int digits)
+{
+    QWidget *field = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(field);
+
+    layout->setContentsMargins(2, 2, 2, 2);
+    layout->setSpacing(2);
+
+    QLabel *label = new QLabel(title);
+    label->setAlignment(Qt::AlignCenter);
+    label->setStyleSheet("color: #AFC7DF; font-size: 10px;");
+
+    configureLCD(lcd, digits);
+
+    layout->addWidget(label);
+    layout->addWidget(lcd);
+
+    return field;
+}

@@ -25,9 +25,9 @@ void basicMainEngineModel::updateThrust(const double &dt)
 {
     if(engineConfig_.timeConstant != 0)
     {
-        thrustState_.current += (1 - exp(-dt / engineConfig_.timeConstant)) * (thrustState_.target - thrustState_.current);
+        ME_thrustState_.current += (1 - exp(-dt / engineConfig_.timeConstant)) * (ME_thrustState_.target - ME_thrustState_.current);
 
-        fuelstate_.consumptionRate = calcMassFlow(thrustState_.current, engineConfig_.Isp, 9.81);
+        fuelstate_.consumptionRate = calcMassFlow(ME_thrustState_.current, engineConfig_.Isp, 9.81);
 
         // Calculate fuel mass based on fuel consumption
         fuelstate_.massCurrent = calcFuelReduction(fuelstate_.massCurrent, fuelstate_.consumptionRate, dt);
@@ -48,26 +48,35 @@ void basicMainEngineModel::setEnginePowerSwitch(bool activateEngine)
 
 void basicMainEngineModel::setTarget(const double &tThrust)
 {
-    engineConfig_.engineActivated ? thrustState_.target = tThrust : thrustState_.target = 0.0;
+    engineConfig_.engineActivated ? ME_thrustState_.target = tThrust : ME_thrustState_.target = 0.0;
 }
 
 void basicMainEngineModel::setTargetInPercentage(const double &tThrustInPercentage)
 {
-    engineConfig_.engineActivated ? thrustState_.target = tThrustInPercentage * engineConfig_.maxThrust : thrustState_.target = 0.0;
+    engineConfig_.engineActivated ? ME_thrustState_.target = tThrustInPercentage * engineConfig_.maxThrust : ME_thrustState_.target = 0.0;
 }
 
 // -------------------------------------------------------------------------
 // Public getter override functions
 // -------------------------------------------------------------------------
+int basicMainEngineModel::getEngineID() const
+{
+    return engineConfig_.id;
+}
+
+std::string basicMainEngineModel::getEngineType() const
+{
+    return engineConfig_.type;
+}
 
 double basicMainEngineModel::getTargetThrust() const
 {
-    return thrustState_.target;
+    return ME_thrustState_.target;
 }
 
 double basicMainEngineModel::getCurrentThrust() const
 {
-    return thrustState_.current;
+    return ME_thrustState_.current;
 }
 
 double basicMainEngineModel::getFuelConsumption() const
@@ -90,13 +99,18 @@ Vector3 basicMainEngineModel::getDirectionOfThrust() const
     return engineConfig_.direction;
 }
 
+double basicMainEngineModel::getMaxThrust() const
+{
+    return engineConfig_.maxThrust;
+}
+
 // -------------------------------------------------------------------------
 // Private setter functions
 // -------------------------------------------------------------------------
 void basicMainEngineModel::setDefaultValues()
 {
-    thrustState_.current = 0.0;
-    thrustState_.target  = 0.0;
+    ME_thrustState_.current = 0.0;
+    ME_thrustState_.target  = 0.0;
 }
 
 // -------------------------------------------------------------------------

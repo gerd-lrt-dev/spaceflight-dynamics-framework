@@ -11,6 +11,10 @@
 
 #include <QLabel>
 #include <QPushButton>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QLCDNumber>
+#include <QVector>
 
 /**
  * @class UIBuilder
@@ -28,6 +32,16 @@ public:
      * Can be used to initialize global styles if needed.
      */
     UIBuilder();
+
+    /**
+     * @brief Rad to degree helper function
+     * @param rad
+     * @return degree
+     */
+    constexpr double rad2deg(double rad)
+    {
+        return rad * 180.0 / M_PI;
+    }
 
     /**
      * @brief Creates a QPushButton with consistent styling.
@@ -53,6 +67,16 @@ public:
      */
     QLabel* createPageTitle(const QString &titleStr, QWidget *parent);
 
+    /**
+     * @brief Setup a detail box to organize data in between QGroupBox
+     * @param lcdPanels Vector with QLCDNumber given by reference
+     * @param namesOfWidget Name of panels. The name must be given equal to lcdPanels
+     * @param nameOfTitle Title for Widget
+     * @param columns Defines how many elements should be in a row
+     * @return Detail box as QWidget
+     */
+    QWidget *setupDetailBox(const QVector<QLCDNumber*> &lcdPanels, const QVector<QString> &namesOfPanels, const QString &nameOfTitle, int columns);
+
 private:
     // ==========================================
     // Member Variables
@@ -63,6 +87,8 @@ private:
         static const int buttonwidth     = 300; ///< Standard button width
         static const int buttonHeight    = 50;  ///< Standard button height
     };
+
+    QWidget* createLcdField(const QString& title, QLCDNumber* lcd, int digits);
 };
 
 #endif // UIBUILDER_H

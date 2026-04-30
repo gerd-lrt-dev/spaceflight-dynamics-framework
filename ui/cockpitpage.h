@@ -17,10 +17,20 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSlider>
+#include <QProgressBar>
+#include <QScrollArea>
+#include <QVBoxLayout>
+#include <QMap>
+#include <QVector>
+
 #include <vector3.h>
 #include <spacecraftStateStruct.h>
 
+
 #include "landingview.h"
+#include "uibuilder.h"
+#include "inputmapper.h"
+#include "Thrust/FueltankStruct.h"
 
 /**
  * @class cockpitPage
@@ -73,16 +83,22 @@ public:
     void updatePosition(Vector3 position);
 
     /**
-     * @brief Updates the vertical velocity display.
-     * @param vSpeed Vertical velocity in meters per second.
+     * @brief Updates the rotational displays.
+     * @param Vector with Latitude, Longitude and Roation in degree.
      */
-    void updateVerticalVelocity(double vSpeed);
+    void updateRotation(Vector3 rotation);
 
     /**
-     * @brief Updates the horizontal velocity display.
-     * @param hSpeed Horizontal velocity in meters per second.
+     * @brief Updates the velocity displays.
+     * @param Vector with velocity in meters per second.
      */
-    void updateHorizontalVelocity(double hSpeed);
+    void updateVelocity(Vector3 velocity);
+
+    /**
+     * @brief Updates the angular velocity displays.
+     * @param Vector with Pitch, Roll and Yaw in degrees per second.
+     */
+    void updateAngularVelocity(Vector3 angularVelocity);
 
     /**
      * @brief Updates the current spacecraft acceleration.
@@ -100,7 +116,7 @@ public:
      * @brief Updates the target thrust setpoint.
      * @param target Target thrust value.
      */
-    void updateTargetThrust(double target);
+    void updateTargetThrust(Vector3 target);
 
     /**
      * @brief Updates the remaining fuel mass.
@@ -162,6 +178,12 @@ signals:
     void thrustTargetRequested(double percent);
 
     /**
+     * @brief Emitted when the user provide flight command input
+     * @param FlightCommand struct
+     */
+    void flightCmdRequested(FlightCommand cmd);
+
+    /**
      * @brief Emitted when the autopilot toggle button is pressed.
      * @param acitve True if autopilot should be enabled.
      */
@@ -191,7 +213,8 @@ public slots:
                         SpacecraftState spacecraftState_,
                         Vector3 thrust,
                         Vector3 targetThrust,
-                        double thrustInPercentage,
+                        Vector3 thrustInPercentage,
+                        QVector<FuelTank> tanks,
                         double fuelMass,
                         double fuelFlow,
                         QString consoleOutput);
@@ -222,7 +245,10 @@ private slots:
 
 private:
     // Members
-    double lastTimeDisplay; ///< Intermediate storage of time to calm the display down
+    double lastTimeDisplay;     ///< Intermediate storage of time to calm the display down
+    UIBuilder uibuilder;        ///< UI Building helper class
+    inputmapper *m_inputMapper; ///< Keyboard and controller input class
+    FlightCommand collectedCmd; ///< Collected flight command. This command will be send to worker thread
 
     // =====================================================
     // Internal Setup Functions
@@ -235,6 +261,23 @@ private:
      * them to the cockpit layout.
      */
     void setupUI();
+
+    /**
+     * @brief Function for dynamic storage and pointer allocation
+     * Declaration of objects can be found as private members of this class
+     */
+    void initializeQTObjects();
+
+    /**
+     * @brief Initialize all relevant object for keyboard and controller input
+     */
+    void initializeControlInput();
+
+    /**
+     * @brief Helper class for LCD Fields
+     * @return QWidget with LCD field
+     */
+    QWidget *createLcdField(const QString& title, QLCDNumber* lcd, int digits);
 
     /**
      * @brief Builds navigation elements.
@@ -253,6 +296,36 @@ private:
      * @return Fuel Box as QGroupBox.
      */
     QGroupBox *setupFuelBox();
+
+    /**
+     * @brief setupFuelDetailBox
+     * @return
+     */
+    QWidget *setupFuelDetailBox();
+
+    /**
+     * @brief Rebuilds the dynamic fuel tank UI from a tank list.
+     *
+     * Creates one row per tank including:
+     * - tank name
+     * - tank role
+     * - remaining mass LCD
+     * - fill level progress bar
+     *
+     * Existing widgets are removed and recreated.
+     *
+     * @param tanks Current list of tanks.
+     */
+    void rebuildFuelTankPanel(const QVector<FuelTank>& tanks);
+
+    /**
+     * @brief Updates dynamic fuel tank values.
+     *
+     * Assumes that the UI was already built for the same tank count/order.
+     *
+     * @param tanks Current list of tanks.
+     */
+    void updateFuelTanks(const QVector<FuelTank>& tanks);
 
     /**
      * @brief Builds status elements.
@@ -274,26 +347,69 @@ private:
      */
     void setupConnections();
 
+    /**
+     * @brief Handles key press events.
+     *
+     * This function is called by Qt when a key is pressed while this widget has focus.
+     * The event is forwarded to the input mapper for processing (e.g., thrust control).
+     *
+     * @param event Pointer to the key press event.
+     */
+    void keyPressEvent(QKeyEvent* event);
+
+        /**
+     * @brief Handles key release events.
+     *
+     * This function is called by Qt when a key is released while this widget has focus.
+     * The event is forwarded to the input mapper for processing.
+     *
+     * @param event Pointer to the key release event.
+     */
+    void keyReleaseEvent(QKeyEvent* event);
+
+    /**
+     * @brief Collect and send flight command to worker thread
+     *
+     */
+    void sendFlightCmd();
+
     // =====================================================
     // Navigation Instruments
     // =====================================================
 
-    QLCDNumber *lcdTime;        ///< Simulation time display [s]
-    QLCDNumber *lcdPosX;        ///< Position in x [m]
-    QLCDNumber *lcdPosY;        ///< Position in y [m]
-    QLCDNumber *lcdPosZ;        ///< Position in z [m]
-    QLCDNumber *lcdVSpeed;      ///< Vertical velocity [m/s]
-    QLCDNumber *lcdHSpeed;      ///< Horizontal velocity [m/s]
+    QLCDNumber *lcdTime;            ///< Simulation time display [s]
+
+    // Moon Centered Inertial (physical truth)
+    QLCDNumber *MCI_lcdPosX;        ///< Position in x [m]
+    QLCDNumber *MCI_lcdPosY;        ///< Position in y [m]
+    QLCDNumber *MCI_lcdPosZ;        ///< Position in z [m]
+
+    // Local Navigation Frame
+    QLCDNumber *LNF_lcdLat;         ///< Latitude [°]
+    QLCDNumber *LNF_lcdLon;         ///< Longitude [°]
+    QLCDNumber *LNF_lcdRot;         ///< Rotation [°]
+
+    QLCDNumber *LNF_lcdVelX;        ///< Velocity in x -> North [m/s]
+    QLCDNumber *LNF_lcdVelY;        ///< Velocity in y -> East [m/s]
+    QLCDNumber *LNF_lcdVelZ;        ///< Velocity in z -> Up [m/s]
+
+    QLCDNumber *LNF_lcdRoll;        ///< Roll [°/s]
+    QLCDNumber *LNF_lcdPitch;       ///< Pitch [°/s]
+    QLCDNumber *LNF_lcdYaw;         ///< Yaw [°/s]
+
+    QLCDNumber *LNF_totalVel;       ///< Total velocity [m/s]
 
     // =====================================================
     // Engine Instruments
     // =====================================================
 
-    QLCDNumber *lcdThrust_BX;    ///< Current engine thrust in body frame of spacecraft x direction
-    QLCDNumber *lcdThrust_BY;    ///< Current engine thrust in body frame of spacecraft y direction
-    QLCDNumber *lcdThrust_BZ;    ///< Current engine thrust in body frame of spacecraft z direction
-    QLCDNumber *lcdTargetThrust; ///< Target thrust setpoint
-    QLCDNumber *lcdAcceleration; ///< Current acceleration [m/s²]
+    QLCDNumber *LNF_lcdThrust_BX;       ///< Current engine thrust in body frame of spacecraft x direction
+    QLCDNumber *LNF_lcdThrust_BY;       ///< Current engine thrust in body frame of spacecraft y direction
+    QLCDNumber *LNF_lcdThrust_BZ;       ///< Current engine thrust in body frame of spacecraft z direction
+    QLCDNumber *LNF_lcdTargetThrust_BX; ///< Target thrust setpoint in body frame of spacecraft x direction
+    QLCDNumber *LNF_lcdTargetThrust_BY; ///< Target thrust setpoint in body frame of spacecraft y direction
+    QLCDNumber *LNF_lcdTargetThrust_BZ; ///< Target thrust setpoint in body frame of spacecraft z direction
+    QLCDNumber *lcdGLoad;               ///< Current acceleration [m/s²]
 
     // =====================================================
     // Fuel Instruments
@@ -301,6 +417,18 @@ private:
 
     QLCDNumber *lcdFuelMass; ///< Remaining fuel mass [kg]
     QLCDNumber *lcdFuelFlow; ///< Fuel consumption rate [kg/s]
+
+    // =====================================================
+    // Fuel Tank UI
+    // =====================================================
+
+    QWidget *fuelTankContainer = nullptr;          ///< Container widget for dynamic tank list
+    QVBoxLayout *fuelTankLayout = nullptr;         ///< Layout for dynamic tank rows
+
+    QVector<QLCDNumber*> lcdTankMasses;            ///< One LCD per tank
+    QVector<QProgressBar*> barTankFillLevels;      ///< One fill bar per tank
+    QVector<QLabel*> lblTankNames;                 ///< One label per tank name
+    QVector<QLabel*> lblTankRoles;                 ///< One label per tank role
 
     // =====================================================
     // Status Indicators

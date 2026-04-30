@@ -3,7 +3,7 @@
 #include "Thrust/iThrust.h"
 #include "Thrust/FuelStateStruct.h"
 #include "Thrust/EngineConfig.h"
-#include "Thrust/thrustState.h"
+#include "Thrust/ME_thrustState.h"
 
 #include <iostream>
 
@@ -73,6 +73,19 @@ public:
     // -------------------------------------------------------------------------
     // Public getter override functions
     // -------------------------------------------------------------------------
+
+    /**
+     * @brief Get the Engine ID
+     * @return Engine ID as an Integer
+     */
+    int getEngineID() const override;
+
+    /**
+     * @brief Get the Engine Type such as main, translation (RCS), rotation (RCS)
+     * @return Engine Type as steady string
+     */
+    std::string getEngineType() const override;
+
     /**
      * @brief Get the target thrust
      * @return ///< [N] target thrust
@@ -123,9 +136,15 @@ public:
      */
     double calcFuelReduction(const double &fuelMass,const double &massFlowFuel,const double &dt) override;
 
+    /**
+     * @brief Getter function for maximum thrust given by engine config
+     * @return ///< [N] Maximum Thrust
+     */
+    double getMaxThrust() const override;
+
 private:
     EngineConfig engineConfig_;      ///< [-] Configuration parameters for a spacecraft engine.
-    ThrustState thrustState_;        ///< [-] Dynamic state of the engine thrust.
+    ME_ThrustState ME_thrustState_;  ///< [-] Dynamic state of the engine thrust.
     FuelState fuelstate_;            ///< [-] Fuel-related state variables for the engine.
 
     // -------------------------------------------------------------------------

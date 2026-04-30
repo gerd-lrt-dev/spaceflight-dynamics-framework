@@ -3,6 +3,8 @@
 
 #include "vector3.h"
 #include "Thrust/EngineConfig.h"
+#include "Thrust/FueltankStruct.h"
+
 #include <vector>
 
 /**
@@ -53,6 +55,12 @@ struct customSpacecraft
      * @endcode
      */
     std::vector<EngineConfig> engines_;
+
+    // -------------------------------------------------------------------------
+    // Tank System
+    // -------------------------------------------------------------------------
+
+    std::vector<FuelTank> tanks_;
 
     // -------------------------------------------------------------------------
     // Attitude Dynamics (Rigid Body Inertia)

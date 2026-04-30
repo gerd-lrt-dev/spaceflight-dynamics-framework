@@ -100,10 +100,9 @@ void Homepage::setupConnections()
                 stackedWidget->setCurrentWidget(cockpit);
             });
 
-    connect(cockpit, &cockpitPage::startRequested, simulationWorker, &SimulationWorker::start);
-
     // Connect thrust input from user with backend
-    connect(cockpit, &cockpitPage::thrustTargetRequested, simulationWorker, &SimulationWorker::setTargetThrust);
+
+    connect(cockpit, &cockpitPage::flightCmdRequested, simulationWorker, &SimulationWorker::setFlightCommand);
 
     connect(cockpit, &cockpitPage::autopilotToggled, simulationWorker, &SimulationWorker::setAutopilotFlag);
 

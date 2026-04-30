@@ -1,9 +1,9 @@
 # Moonlander 🚀
 C++ Lunar Landing Simulation
 
-Moonlander is a **modular C++ lunar landing simulation** designed for experimenting with spacecraft guidance algorithms, control systems, and physics-based simulation.
+Moonlander is a **modular C++ lunar landing simulation** designed as a research-oriented testbed for spacecraft guidance, control systems, and physics-based simulation.
 
-The project separates a **simulation backend** from a **Qt-based cockpit UI**, enabling real-time telemetry and visualization of spacecraft descent.
+The project separates a **simulation backend** from a **Qt-based cockpit UI**, enabling real-time telemetry, system observability, and controller evaluation during descent.
 
 Moonlander is intended for developers interested in:
 
@@ -12,27 +12,36 @@ Moonlander is intended for developers interested in:
 - physics-based simulations
 - modular C++ architecture
 - autopilot and landing strategies
+- simulation-based controller evaluation
 
 🌐 **Project Website**  
-https://aerospace-simulation.dev
+[Project website](https://aerospace-simulation.dev)
 
 ---
 
 # 🚀 Demo
+
 For a detailed demonstration, visit the [project website demo](https://www.aerospace-simulation.dev/simulation/demo/).
 
-Moonlander provides a cockpit-style interface displaying spacecraft telemetry during descent.
+Moonlander provides a **research-oriented cockpit interface** displaying spacecraft telemetry during descent.
 
 Telemetry includes:
 
-- altitude
-- vertical velocity
-- thrust level
-- remaining fuel
-- hull integrity
-- autopilot status
+- full kinematic state (position and velocity in local ENU frame)
+- vertical and lateral motion components
+- propulsion state (throttle and multi-engine setup)
+- dynamic fuel tank system (per-tank mass and fill level)
+- hull integrity and spacecraft state machine
+- autopilot state and controller output
 
-The landing view visualizes the spacecraft approaching the lunar surface.
+The landing view provides a lightweight **2.5D situational visualization** of the descent.
+
+It combines:
+- a side view (East–Up) for vertical motion and descent dynamics
+- a top view (East–North) for lateral drift and target-relative motion
+
+The visualization includes trajectory history, velocity vectors and target reference,
+allowing intuitive interpretation of controller behavior without requiring full 3D rendering.
 
 ![Moonlander Cockpit](docs/cockpit.jpg)
 
@@ -51,11 +60,19 @@ The landing view visualizes the spacecraft approaching the lunar surface.
 - Runtime spacecraft selection
 - Experimental thrust optimization using NLopt
 
+### Extended Simulation Features
+
+- 2.5D situational landing visualization (ENU frame based)
+- dynamic multi-tank fuel system with per-tank monitoring
+- trajectory tracking and vector-based motion visualization
+- controller observability (telemetry + system state exposure)
+- separation of control space and physics space (commands vs forces)
+
 ---
 
 # ⚙️ Quick Start
 
-You can find a detailled installation guideline for windows and ubuntu in the folder /docs!
+You can find detailed installation guidelines for Windows and Ubuntu in the `/docs` folder.
 
 ## Requirements
 
@@ -66,34 +83,29 @@ You can find a detailled installation guideline for windows and ubuntu in the fo
 
 Install NLopt on Linux:
 
-```bash
 sudo apt install libnlopt-dev
-```
 
 ## Build
 
-```bash
-git clone https://github.com/gerd-lrt-dev/moonlander.git
-cd moonlander
-mkdir build
-cd build
-cmake ..
-make
-```
+git clone https://github.com/gerd-lrt-dev/moonlander.git  
+cd moonlander  
+mkdir build  
+cd build  
+cmake ..  
+make  
 
 ## Run
 
-```bash
 ./moonlander
-```
 
 ---
 
 # 🧠 Architecture Overview
 
-Detailed architecture with flow diagrams on [project website architecture](https://www.aerospace-simulation.dev/simulation/architecture/).
+Detailed architecture with flow diagrams on the project website:
+[project website architecture](https://www.aerospace-simulation.dev/simulation/architecture/).
 
-Moonlander follows a **modular simulation architecture** where physics, control systems, sensors, and visualization are separated.
+Moonlander follows a **modular simulation architecture** where physics, control systems, sensors, and visualization are strictly separated.
 
 The main system components include:
 
@@ -104,7 +116,7 @@ Compute forces and environmental effects such as lunar gravity.
 Advance spacecraft state using numerical integration methods.
 
 ### Controllers
-Generate thrust commands based on spacecraft state and guidance algorithms.
+Generate control commands (e.g. thrust levels) based on spacecraft state and guidance algorithms.
 
 ### Sensors
 Provide telemetry derived from spacecraft state such as proper G-load.
@@ -113,11 +125,47 @@ Provide telemetry derived from spacecraft state such as proper G-load.
 Coordinates the simulation loop and manages spacecraft state updates.
 
 ### Frontend UI
-Displays telemetry and visualizes the spacecraft during descent.
+Provides a research-oriented cockpit interface for real-time telemetry visualization.
+
+The UI is designed for:
+- controller debugging
+- trajectory analysis
+- propulsion system observation
+
+It includes:
+- ENU-based navigation display
+- dynamic fuel system visualization
+- 2.5D landing situational view
 
 📚 Detailed architecture documentation:
 
 docs/architecture.md
+
+---
+
+# 🔬 Scientific Use Case
+
+Moonlander is designed as a testbed for evaluating lunar landing control strategies.
+
+The system emphasizes:
+
+- reproducible simulation conditions
+- clear separation of physics, control and visualization
+- real-time observability of system state
+- modular integration of controllers and propulsion systems
+
+The simulator can be used to:
+
+- analyze descent trajectories
+- evaluate controller stability and robustness
+- compare fuel efficiency across control strategies
+- study multi-engine and multi-tank propulsion architectures
+
+Planned extensions include:
+
+- structured simulation data export (CSV/XML)
+- plotting and post-processing tools
+- controller benchmarking framework
 
 ---
 
@@ -138,6 +186,8 @@ Controller features include:
 📚 Technical details:
 
 docs/adaptive_descent_controller.md
+or mathmatical:
+[project website adaptive descent controller](https://www.aerospace-simulation.dev/mathematics/adaptiveDescentController/)).
 
 ---
 
@@ -151,9 +201,11 @@ Typical configuration parameters include:
 
 - spacecraft mass
 - fuel capacity
-- engine thrust limits
-- engine response characteristics
+- engine configuration (multi-engine support)
+- tank definitions (multi-tank architecture)
+- thrust limits and response characteristics
 - geometry parameters
+- initial state conditions
 
 Configurations are loaded at runtime using the `ConfigManager`.
 
@@ -163,15 +215,13 @@ Configurations are loaded at runtime using the `ConfigManager`.
 
 ## Short-Term
 
-- stabilize telemetry display
-- extend Logger with log levels
-- implement additional sensors
-- stabilize thrust optimization
+- implement reaction control system engine model (RCS)
+- full 3D spacecraft visualization with rotational dynamics
 
 ## Mid-Term
 
-- full 3D spacecraft model
-- orbital mechanics simulation
+- ROS2 integration for system decoupling
+- Controller for automatic position control
 - controller testing environment
 
 ## Long-Term
@@ -185,7 +235,8 @@ Configurations are loaded at runtime using the `ConfigManager`.
 
 # 🤝 Contributing
 
-Have a look on the [project website contributing](https://www.aerospace-simulation.dev/recruiting)
+Have a look at:  
+[project website contributing](https://www.aerospace-simulation.dev/recruiting)
 
 Contributions are welcome.
 
@@ -206,16 +257,17 @@ Typical contribution workflow:
 
 If you're looking for a starting point, check issues labeled:
 
-- `good first issue`
-- `help wanted`
+- good first issue
+- help wanted
 
 ---
 
 # 📚 Documentation
 
-Additional technical documentation can be found in the `docs` directory. 
+Additional technical documentation can be found in the `docs` directory.
 
-Detailed Documentation, including mathmateical derivations, is available on the [project website mathmatics](https://www.aerospace-simulation.dev/docs)
+Detailed documentation, including mathematical derivations, is available here:  
+[Project website mathmatical documentation](https://www.aerospace-simulation.dev/docs)
 
 Example documentation files:
 

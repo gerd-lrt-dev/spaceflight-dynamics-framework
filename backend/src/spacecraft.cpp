@@ -17,7 +17,7 @@ void spacecraft::setDefaultValues()
     state_.I_Position = landerMoon.I_initialPos;
     state_.I_Velocity = landerMoon.I_initialVelocity;
 
-    thrustOrchestration.initializeEngines(landerMoon.engines_, {landerMoon.fuelM});
+    thrustOrchestration.initializeEngines(landerMoon.engines_, landerMoon.tanks_);
 
 
     // TODO just testing here optimization
@@ -46,7 +46,7 @@ void spacecraft::updateMovementData(double dt)
 
     // --- Compute acceleration ---
     //TODO: eliminate minus with request thrust when coordinate transformation class is written
-    Vector3 acceleration = physics_->computeAcc(getPosition(), getVelocity(), getTotalMass(), -requestThrust());
+    Vector3 acceleration = physics_->computeAcc(getPosition(), getVelocity(), getTotalMass(), -requestTotalThrust());
 
     // --- Compute velocity ---
     Vector3 velocity = physics_->computeVel(getVelocity(), acceleration, dt);
@@ -149,7 +149,7 @@ spacecraft::~spacecraft()
 void spacecraft::updateStep(double dt)
 {
     // Update mass data
-    updateTotalMassOnFuelReduction(landerMoon.emptyMass, getfuelMass());
+    updateTotalMassOnFuelReduction(landerMoon.emptyMass, getTotalFuelMass());
 
     thrustOrchestration.updateThrust(dt);
 
@@ -219,11 +219,14 @@ void spacecraft::updateSpacecraftIntegrity()
     spacecraftState_ = SpacecraftState::Operational;
 }
 
-void spacecraft::setThrust(const double &targetThrustInPercentage, const int &engineNumber)
+void spacecraft::setMainEngineThrust(const double &targetThrustInPercentage)
 {
-    SpacecraftState currentSpacecraftState = getSpacecraftState();
+    (getSpacecraftState() == SpacecraftState::Operational) ? thrustOrchestration.setTargetThrustInPercentage(EngineType::MainEngine, targetThrustInPercentage) : thrustOrchestration.setTargetThrustInPercentage(EngineType::MainEngine, 0.0);
+}
 
-    (currentSpacecraftState == SpacecraftState::Operational) ? thrustOrchestration.setTargetThrustInPercentage(targetThrustInPercentage, engineNumber) : thrustOrchestration.setTargetThrust(0.0, engineNumber);
+void spacecraft::setTargetRCSThrust(const Vector3 &targetThrustInPercentage)
+{
+    (getSpacecraftState() == SpacecraftState::Operational) ? thrustOrchestration.setTargetThrustInPercentage(EngineType::RCS, 0.0, targetThrustInPercentage) : thrustOrchestration.setTargetThrustInPercentage(EngineType::RCS, 0.0, targetThrustInPercentage);
 }
 
 void spacecraft::setConsoleText(const std::string &txt)
@@ -295,26 +298,36 @@ std::vector<double> spacecraft::compute_optimization(double h0, double v0, doubl
     return optimizer.optimize(problem, 7000.0);
 }
 
-Vector3 spacecraft::requestTargetThrust() const
+Vector3 spacecraft::requestTotalThrust() const
 {
-    
-    return thrustOrchestration.getTargetThrust();
-}
-
-Vector3 spacecraft::requestThrust() const
-{
-    
     return thrustOrchestration.getCurrentThrust();
 }
 
-double spacecraft::requestThrustInPercentage() const
+Vector3 spacecraft::requestMainEngineTargetThrust() const
 {
-    return 0.0;//thrustOrchestration.getCurrentThrustInPercentage();
+    
+    return thrustOrchestration.getTargetThrust(EngineType::MainEngine);
 }
 
-double spacecraft::requestLiveFuelConsumption() const
+Vector3 spacecraft::requestMainEngineThrust() const
 {
-    return thrustOrchestration.getFuelConsumption();
+    
+    return thrustOrchestration.getCurrentThrust(EngineType::MainEngine);
+}
+
+Vector3 spacecraft::requestMainEngineThrustInPercentage() const
+{
+    return thrustOrchestration.getCurrentThrustInPercentage(EngineType::MainEngine);
+}
+
+Vector3 spacecraft::requestMainEngineDirection() const
+{
+    return thrustOrchestration.getDirectionOfThrust(EngineType::MainEngine);
+}
+
+double spacecraft::requestMainEngineLiveFuelConsumption() const
+{
+    return thrustOrchestration.getFuelConsumption(EngineType::MainEngine);
 }
 
 void spacecraft::setInitalPosition(const Vector3& position)
@@ -339,12 +352,15 @@ simData spacecraft::getFullSimulationData() const
     // Fill struct with data for emitting signal to UI
     simData_.spacecraftState_ = spacecraftState_;
 
-    simData_.thrust = requestThrust();
-    simData_.targetThrust = requestTargetThrust();
-    simData_.thrustInPercentage = requestThrustInPercentage();
 
-    simData_.fuelMass = getfuelMass();
-    simData_.fuelFlow = requestLiveFuelConsumption();
+    simData_.ME_ThrustState_.current            = requestMainEngineThrust().dot(requestMainEngineDirection());
+    simData_.ME_ThrustState_.target             = requestMainEngineTargetThrust().dot(requestMainEngineDirection());
+    simData_.ME_ThrustState_.targetPercentage   = requestMainEngineThrustInPercentage().dot(requestMainEngineDirection());
+    simData_.ME_ThrustState_.direction          = requestMainEngineDirection();
+
+    simData_.tanks    = getFuelTanks();
+    simData_.fuelMass = getTotalFuelMass();
+    simData_.fuelFlow = requestMainEngineLiveFuelConsumption();
 
     simData_.GLoad = getGload();
 
@@ -388,9 +404,14 @@ double spacecraft::getTotalMass()
     return state_.totalMass;
 }
 
-double spacecraft::getfuelMass() const
+double spacecraft::getTotalFuelMass() const
 {
-    return thrustOrchestration.getCurrentFuelMass();
+    return thrustOrchestration.getFuelMassOfAllTanks();
+}
+
+std::vector<FuelTank> spacecraft::getFuelTanks() const
+{
+    return thrustOrchestration.getFuelTanks();
 }
 
 double spacecraft::getGload() const

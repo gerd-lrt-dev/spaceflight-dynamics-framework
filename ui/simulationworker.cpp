@@ -11,7 +11,6 @@ SimulationWorker::SimulationWorker(QObject *parent)
 
     // connect timer with worker function
     connect(simulationTimer, &QTimer::timeout, this, &SimulationWorker::stepSimulation);
-
 }
 
 void SimulationWorker::start()
@@ -29,7 +28,7 @@ void SimulationWorker::start()
     running = true;
     simulationTimer->start();
 
-    qDebug("[simulationworker]-constructor-: Simulation started successfully");
+    qDebug("[simulationworker]-start-: Simulation started successfully");
 }
 
 void SimulationWorker::pause()
@@ -51,7 +50,8 @@ void SimulationWorker::stop()
                       SpacecraftState::Operational,
                       {0.0, 0.0, 0.0},
                       {0.0, 0.0, 0.0},
-                      0.0,
+                      {0.0, 0.0, 0.0},
+                      QVector<FuelTank>{},
                       0.0,
                       0.0,
                       "");
@@ -67,11 +67,11 @@ void SimulationWorker::receiveJsonConfig(const QString &json)
              << jsonConfig.size();
 }
 
-void SimulationWorker::setTargetThrust(double percent)
+void SimulationWorker::setFlightCommand(FlightCommand cmd)
 {
-    QMutexLocker locker(&mutex);  // protect access
-    double percentScaled = percent / 100.0;
-    collectControlCommands(percentScaled);
+    QMutexLocker locker(&mutex);
+
+    collectControlCommands(cmd);
 }
 
 void SimulationWorker::setAutopilotFlag(bool active)
@@ -101,25 +101,36 @@ void SimulationWorker::stepSimulation()
     // Change data type for console output
     QString consoleOutput = QString::fromStdString(spacecraftData.output);
 
+    // Change vector type for fuel tanks information
+    QVector<FuelTank> fuelTanksQVec(spacecraftData.tanks.begin(), spacecraftData.tanks.end());
+
     // signals
     emit stateUpdated(currentTime,
                       spacecraftData.statevector_.I_Position,
                       spacecraftData.statevector_.I_Velocity,
                       spacecraftData.GLoad,
                       spacecraftData.spacecraftState_,
-                      spacecraftData.thrust,
-                      spacecraftData.targetThrust,
-                      spacecraftData.thrustInPercentage,
+                      spacecraftData.ME_ThrustState_.direction * spacecraftData.ME_ThrustState_.current,
+                      spacecraftData.ME_ThrustState_.direction * spacecraftData.ME_ThrustState_.target,
+                      spacecraftData.ME_ThrustState_.direction * spacecraftData.ME_ThrustState_.targetPercentage,
+                      fuelTanksQVec,
                       spacecraftData.fuelMass,
                       spacecraftData.fuelFlow,
                       consoleOutput
                       );
 }
 
-void SimulationWorker::collectControlCommands(const double &thrustInPercentage, const double &thrustInNewton)
+void SimulationWorker::collectControlCommands(const FlightCommand &cmd, const double &thrustInPercentage, const double &thrustInNewton)
 {
-    FEControlCommands_.thrustInPercentage   = thrustInPercentage;
-    FEControlCommands_.thrustInNewton       = thrustInNewton;
+    //TODO: Do not call back end structures. Change that with Issue 19
+    FEControlCommands_.mainEngine       = cmd.mainEngine;
+    FEControlCommands_.translation.x    = cmd.translation.x;
+    FEControlCommands_.translation.y    = cmd.translation.y;
+    FEControlCommands_.translation.z    = cmd.translation.z;
+
+    FEControlCommands_.rotation.x       = cmd.rotation.x;
+    FEControlCommands_.rotation.y       = cmd.rotation.y;
+    FEControlCommands_.rotation.z       = cmd.rotation.z;
 }
 
 void SimulationWorker::collectAutopilotCommand(bool autopilotActive)
@@ -129,6 +140,8 @@ void SimulationWorker::collectAutopilotCommand(bool autopilotActive)
 
 void SimulationWorker::sendControlCommands()
 {
+    // Call Back End function
+    // TODO: Change that with Issue 19
     controller->receiveCommandFromFrontEnd(FEControlCommands_);
 }
 

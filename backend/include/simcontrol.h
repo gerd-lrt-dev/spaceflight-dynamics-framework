@@ -70,7 +70,13 @@ private:
      * @brief Sets target thrust
      * @param thrustPercent [%]
      */
-    void setTargetThrust(const double& thrustPercent = 0, const double& thrustInNewton = 0);
+    void setTargetMainEngineThrust(const double& thrustPercent = 0, const double& thrustInNewton = 0);
+
+    /**
+     * @brief Set RCS Thrust
+     * @param Vector3 translation with thrust in cartasian coordinates within the principle ENU (East North Up)
+     */
+    void setTargetRCSThrust(const Vector3 &ENU_translation);
 
     /**
      * @brief Process commands
