@@ -64,6 +64,11 @@ int basicMainEngineModel::getEngineID() const
     return engineConfig_.id;
 }
 
+std::string basicMainEngineModel::getEngineName() const
+{
+    return engineConfig_.name;
+}
+
 std::string basicMainEngineModel::getEngineType() const
 {
     return engineConfig_.type;

@@ -167,6 +167,16 @@ public:
     int getEngineID() const override;
 
     /**
+     * @brief Returns the engine name
+     *
+     * The engine Name specifies the function of engine
+     * Example: "RCS_PosZ"
+     *
+     * @return Engine name string
+     */
+    std::string getEngineName() const override;
+
+    /**
      * @brief Returns the engine type.
      *
      * The engine type describes the propulsion model category, for example

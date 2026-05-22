@@ -21,6 +21,13 @@ basicRCSModel::basicRCSModel(const RCSEngineConfig& rcsConfig, FuelState fState)
                 ),
     fuelstate_(fState)
 {
+    // Set meta data for thrust state struct
+    thruststate_.engineID   = rcsConfig_.id;
+    thruststate_.engineName = rcsConfig_.name;
+    thruststate_.axis       = rcsConfig_.axis;
+    thruststate_.direction  = rcsConfig_.direction;
+
+    // Activate engine
     rcsConfig_.engineActivated = true;
 }
 
@@ -37,12 +44,13 @@ void basicRCSModel::updateThrust(const double &dt)
         commandBuffer.pop_front();
     }
 
-    thruststate_.currentThrust = calcThrust(cmdInputDelayed, rcsConfig_.tauOn, rcsConfig_.tauOff, dt, rcsConfig_.maxThrust);
+    thruststate_.currentThrust  = calcThrust(cmdInputDelayed, rcsConfig_.tauOn, rcsConfig_.tauOff, dt, rcsConfig_.maxThrust);
 
-    fuelstate_.consumptionRate = calcMassFlow(thruststate_.currentThrust, rcsConfig_.Isp, envConfig_.earthGravity);
+    fuelstate_.consumptionRate  = calcMassFlow(thruststate_.currentThrust, rcsConfig_.Isp, envConfig_.earthGravity);
 
-    fuelstate_.massCurrent = calcFuelReduction(fuelstate_.massCurrent, fuelstate_.consumptionRate, dt);
+    fuelstate_.massCurrent      = calcFuelReduction(fuelstate_.massCurrent, fuelstate_.consumptionRate, dt);
 
+    /*
     std::cout
         << "[basicRCSModel]-updateThrust | "
         << "Engine: " << rcsConfig_.name
@@ -53,6 +61,7 @@ void basicRCSModel::updateThrust(const double &dt)
         << " | FuelFlow: " << fuelstate_.consumptionRate << " kg/s"
         << " | FuelRemaining: " << fuelstate_.massCurrent << " kg"
         << std::endl;
+    */
 }
 
 // -------------------------------------------------------------------------
@@ -73,6 +82,10 @@ void basicRCSModel::setTarget(const double& tThrust)
     }
 
     double normalizedCommand = tThrust / rcsConfig_.maxThrust;
+
+    // Process dynamic target state to thrustState Struct
+    thruststate_.targetThrust           = tThrust;
+    thruststate_.targetThrustPercentage = normalizedCommand;
 
     setTargetInPercentage(normalizedCommand);
 }
@@ -102,6 +115,11 @@ int basicRCSModel::getEngineID() const
     return rcsConfig_.id;
 }
 
+std::string basicRCSModel::getEngineName() const
+{
+    return rcsConfig_.name;
+}
+
 std::string basicRCSModel::getEngineType() const
 {
     return rcsConfig_.type;
@@ -109,7 +127,8 @@ std::string basicRCSModel::getEngineType() const
 
 double basicRCSModel::getTargetThrust() const
 {
-    return cmdInput * rcsConfig_.maxThrust;
+    return thruststate_.targetThrust;
+    //return cmdInput * rcsConfig_.maxThrust;
 }
 
 double basicRCSModel::getCurrentThrust() const

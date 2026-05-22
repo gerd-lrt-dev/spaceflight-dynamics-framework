@@ -330,6 +330,11 @@ double spacecraft::requestMainEngineLiveFuelConsumption() const
     return thrustOrchestration.getFuelConsumption(EngineType::MainEngine);
 }
 
+std::vector<RCS_ThrustState> spacecraft::requestFullRCSEngineData() const
+{
+    return thrustOrchestration.getFullRCSEngineData();
+}
+
 void spacecraft::setInitalPosition(const Vector3& position)
 {
     landerMoon.I_initialPos = position;
@@ -357,8 +362,10 @@ simData spacecraft::getFullSimulationData() const
     simData_.ME_ThrustState_.targetPercentage   = requestMainEngineThrustInPercentage().dot(requestMainEngineDirection());
     simData_.ME_ThrustState_.direction          = requestMainEngineDirection();
 
-    simData_.tanks    = getFuelTanks();
-    simData_.fuelMass = getTotalFuelMass();
+    simData_.RCS_ThrustState_ = requestFullRCSEngineData();
+
+    simData_.tanks    = getFuelTanks(); //TODO: Should be a request
+    simData_.fuelMass = getTotalFuelMass(); //TODO: Should be a request
     simData_.fuelFlow = requestMainEngineLiveFuelConsumption();
 
     simData_.GLoad = getGload();

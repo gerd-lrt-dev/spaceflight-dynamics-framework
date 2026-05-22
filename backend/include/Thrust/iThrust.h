@@ -20,6 +20,8 @@ public:
 
     virtual int         getEngineID() const = 0;
 
+    virtual std::string getEngineName() const = 0;
+
     virtual std::string getEngineType() const = 0;
 
     virtual double      getTargetThrust() const = 0;

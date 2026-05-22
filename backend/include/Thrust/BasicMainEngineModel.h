@@ -87,6 +87,16 @@ public:
     std::string getEngineType() const override;
 
     /**
+     * @brief Returns the engine name
+     *
+     * The engine Name specifies the function of engine
+     * Example: "MainEngine"
+     *
+     * @return Engine name string
+     */
+    std::string getEngineName() const override;
+
+    /**
      * @brief Get the target thrust
      * @return ///< [N] target thrust
      */

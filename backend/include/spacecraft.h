@@ -390,6 +390,31 @@ public:
     double requestMainEngineLiveFuelConsumption() const;
 
     /**
+     * @brief Returns the complete runtime state of all configured RCS engines.
+     *
+     * Requests the current dynamic state of every Reaction Control System (RCS)
+     * thruster managed by the propulsion subsystem.
+     *
+     * The returned container includes one state entry per individual RCS engine
+     * and contains both:
+     * - dynamic runtime data (thrust levels, actuator state)
+     * - lightweight engine metadata (ID, name, axis, direction)
+     *
+     * The data is primarily intended for:
+     * - cockpit visualization
+     * - frontend telemetry
+     * - debugging and validation
+     * - telemetry export and post-processing
+     * - future research workflows
+     *
+     * Both translational and rotational RCS thrusters may be included depending
+     * on the active spacecraft configuration.
+     *
+     * @return Vector containing the runtime state of all configured RCS engines.
+     */
+    std::vector<RCS_ThrustState> requestFullRCSEngineData() const;
+
+    /**
      * @brief Returns the commanded RCS thrust vector.
      *
      * Queries the propulsion model for the desired RCS thrust vector prior to
