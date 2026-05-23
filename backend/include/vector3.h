@@ -1,5 +1,5 @@
-#ifndef VECTOR3
-#define VECTOR3
+#ifndef VECTOR3_H
+#define VECTOR3_H
 
 #include <cmath>
 
@@ -17,6 +17,8 @@ struct Vector3
     double x{0.0}; ///< X-component
     double y{0.0}; ///< Y-component
     double z{0.0}; ///< Z-component
+
+    static constexpr double EPSILON = 1e-12; ///< Numerical tolerance used for small-magnitude checks
 
     // -------------------------------------------------------------------------
     // Vector-vector operations
@@ -99,34 +101,80 @@ struct Vector3
     // -------------------------------------------------------------------------
 
     /**
-     * @brief Euclidean norm (magnitude) of the vector.
+     * @brief Computes the squared Euclidean norm.
      *
      * \f[
-     * \|\mathbf{v}\| = \sqrt{x^2 + y^2 + z^2}
+     * \|\mathbf{v}\|^2 = x^2 + y^2 + z^2
+     * \f]
+     *
+     * This function avoids the square-root operation required by norm()
+     * and is therefore useful in performance-sensitive calculations.
+     *
+     * @return Squared vector magnitude
+     */
+    double normSquared() const
+    {
+        return x * x + y * y + z * z;
+    }
+
+    /**
+     * @brief Computes the Euclidean norm (magnitude).
+     *
+     * \f[
+     * \|\mathbf{v}\| =
+     * \sqrt{x^2 + y^2 + z^2}
      * \f]
      *
      * @return Vector magnitude
      */
     double norm() const
     {
-        return std::sqrt(x * x + y * y + z * z);
+        return std::sqrt(normSquared());
     }
 
     /**
-     * @brief Returns a normalized (unit length) vector.
+     * @brief Returns a normalized unit-length vector.
      *
      * \f[
-     * \hat{\mathbf{v}} = \frac{\mathbf{v}}{\|\mathbf{v}\|}
+     * \hat{\mathbf{v}} =
+     * \frac{\mathbf{v}}{\|\mathbf{v}\|}
      * \f]
      *
-     * If the vector has zero magnitude, the original vector is returned.
+     * If the vector magnitude is smaller than EPSILON,
+     * the zero vector is returned.
      *
      * @return Normalized vector
      */
     Vector3 normalized() const
     {
         double n = norm();
-        return n == 0.0 ? *this : *this * (1.0 / n);
+
+        if (n < EPSILON)
+        {
+            return {};
+        }
+
+        return *this / n;
+    }
+
+    /**
+     * @brief Normalizes the vector in-place.
+     *
+     * If the vector magnitude is smaller than EPSILON,
+     * the vector remains unchanged.
+     */
+    void normalize()
+    {
+        double n = norm();
+
+        if (n < EPSILON)
+        {
+            return;
+        }
+
+        x /= n;
+        y /= n;
+        z /= n;
     }
 
     /**
@@ -163,15 +211,6 @@ struct Vector3
      * @param other Second vector
      * @return Resulting vector
      */
-    Vector3 cross(const Vector3& other) const
-    {
-        return {
-            y * other.z - z * other.y,
-            z * other.x - x * other.z,
-            x * other.y - y * other.x
-        };
-    }
-
     Vector3 cross(const Vector3 &other) const {
         double x = this->y * other.z - this->z * other.y;
         double y = this->z * other.x - this->x * other.z;
