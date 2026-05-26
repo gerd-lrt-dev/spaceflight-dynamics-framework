@@ -30,7 +30,9 @@
 #include "landingview.h"
 #include "uibuilder.h"
 #include "inputmapper.h"
-#include "Thrust/FueltankStruct.h"
+#include "datastructs.h"
+
+#include "Thrust/FueltankStruct.h" // TODO: Refactor! This is a backend struct!
 
 /**
  * @class cockpitPage
@@ -119,6 +121,16 @@ public:
     void updateTargetThrust(Vector3 target);
 
     /**
+     * @brief Updates the dynamic RCS thruster telemetry panel.
+     *
+     * Rebuilds the panel if the number of RCS engines has changed and updates
+     * all displayed runtime values otherwise.
+     *
+     * @param rcsStates Current runtime state of all configured RCS thrusters.
+     */
+    void updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates);
+
+    /**
      * @brief Updates the remaining fuel mass.
      * @param fuel Remaining fuel mass in kilograms.
      */
@@ -161,7 +173,7 @@ signals:
      */
     void pauseRequested();
 
-    /**
+    /**RCSCockpitTelemetry
      * @brief Emitted after the user confirmed a simulation stop/reset.
      */
     void stopConfirmed();
@@ -214,6 +226,7 @@ public slots:
                         Vector3 thrust,
                         Vector3 targetThrust,
                         Vector3 thrustInPercentage,
+                        QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
                         QVector<FuelTank> tanks,
                         double fuelMass,
                         double fuelFlow,
@@ -291,6 +304,17 @@ private:
      */
     QGroupBox *setupEngineBox();
 
+    /**
+     * @brief Rebuilds the dynamic RCS thruster UI from a list of RCS engine states.
+     *
+     * Creates one compact row per RCS thruster including engine name, axis,
+     * current thrust, target thrust, and actuator state.
+     *
+     * @param rcsStates Current list of RCS thruster states.
+     */
+    void rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rcsStates);
+
+    QVector<RCSCockpitTelemetry> filterActiveRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates) const;
     /**
      * @brief Builds fuel elements.
      * @return Fuel Box as QGroupBox.
@@ -403,6 +427,7 @@ private:
     // Engine Instruments
     // =====================================================
 
+    // Main Engine
     QLCDNumber *LNF_lcdThrust_BX;       ///< Current engine thrust in body frame of spacecraft x direction
     QLCDNumber *LNF_lcdThrust_BY;       ///< Current engine thrust in body frame of spacecraft y direction
     QLCDNumber *LNF_lcdThrust_BZ;       ///< Current engine thrust in body frame of spacecraft z direction
@@ -410,6 +435,20 @@ private:
     QLCDNumber *LNF_lcdTargetThrust_BY; ///< Target thrust setpoint in body frame of spacecraft y direction
     QLCDNumber *LNF_lcdTargetThrust_BZ; ///< Target thrust setpoint in body frame of spacecraft z direction
     QLCDNumber *lcdGLoad;               ///< Current acceleration [m/s²]
+
+    // RCS Engines
+    // =====================================================
+    // RCS Thruster UI
+    // =====================================================
+
+    QWidget *rcsThrusterContainer = nullptr;      ///< Container widget for dynamic RCS thruster list
+    QVBoxLayout *rcsThrusterLayout = nullptr;     ///< Layout for dynamic RCS thruster rows
+
+    QVector<QLabel*> lblRCSEngineNames;           ///< One label per RCS thruster name
+    QVector<QLabel*> lblRCSAxes;                  ///< One label per RCS thruster axis
+    QVector<QLCDNumber*> lcdRCSCurrentThrust;     ///< One LCD per current RCS thrust value
+    QVector<QLCDNumber*> lcdRCSTargetThrust;      ///< One LCD per target RCS thrust value
+    QVector<QProgressBar*> barRCSActuatorStates;  ///< One progress bar per normalized RCS actuator state
 
     // =====================================================
     // Fuel Instruments

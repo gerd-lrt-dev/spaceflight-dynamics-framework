@@ -243,9 +243,15 @@ QGroupBox *cockpitPage::setupNavBox()
 // ================= ENGINE =================
 QGroupBox *cockpitPage::setupEngineBox()
 {
+    // Main Engine
     QGroupBox *engineBox = new QGroupBox("ENGINE");
     QGridLayout *engineLayout = new QGridLayout(engineBox);
 
+    // RCS Engines
+    QLabel *rcsSectionTitle = new QLabel("RCS THRUSTER STATUS");
+    rcsSectionTitle->setStyleSheet("color: #4FC3F7; font-weight: bold;");
+
+    // Main Engine
     QVector<QLCDNumber*> currentThrustPanel;
     QVector<QLCDNumber*> targetThrustPanel;
 
@@ -260,17 +266,146 @@ QGroupBox *cockpitPage::setupEngineBox()
     QWidget *targetThrustDetailBox  = uibuilder.setupDetailBox(targetThrustPanel, {"Thrust [N] X:", "Thrust [N] Y:", "Thrust [N] Z:"}, "LNF_TARGET THRUST", 3);
     QWidget *GLoadDetailBox         = uibuilder.setupDetailBox({lcdGLoad}, {"GLoad [m/s²]"}, "ACCELERATION", 1);
 
+    // RCS Engines
+    rcsThrusterContainer = new QWidget();
+    rcsThrusterLayout = new QVBoxLayout(rcsThrusterContainer);
+    rcsThrusterLayout->setContentsMargins(0, 0, 0, 0);
+    rcsThrusterLayout->setSpacing(6);
+
+    QScrollArea *rcsScrollArea = new QScrollArea();
+    rcsScrollArea->setWidgetResizable(true);
+    rcsScrollArea->setFrameShape(QFrame::NoFrame);
+    rcsScrollArea->setWidget(rcsThrusterContainer);
+    rcsScrollArea->setMinimumHeight(160);
+
     engineLayout->addWidget(currentThrustDetailBox, 0, 0);
     engineLayout->addWidget(targetThrustDetailBox, 0, 1);
     engineLayout->addWidget(GLoadDetailBox, 1, 0, 1, 2);
-
-    engineLayout->setColumnStretch(0, 1);
-    engineLayout->setColumnStretch(1, 1);
+    engineLayout->addWidget(rcsSectionTitle, 2, 0, 1, 2);
+    engineLayout->addWidget(rcsScrollArea, 3, 0, 1, 2);
 
     engineLayout->setRowStretch(0, 1);
     engineLayout->setRowStretch(1, 1);
+    engineLayout->setRowStretch(2, 0);
+    engineLayout->setRowStretch(3, 2);
 
     return engineBox;
+}
+
+void cockpitPage::rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rcsStates)
+{
+    if (!rcsThrusterLayout)
+        return;
+
+    QLayoutItem *item;
+    while ((item = rcsThrusterLayout->takeAt(0)) != nullptr)
+    {
+        if (item->widget())
+            delete item->widget();
+        delete item;
+    }
+
+    lblRCSEngineNames.clear();
+    lblRCSAxes.clear();
+    lcdRCSCurrentThrust.clear();
+    lcdRCSTargetThrust.clear();
+    barRCSActuatorStates.clear();
+
+    for (const RCSCockpitTelemetry& state : rcsStates)
+    {
+        QGroupBox *thrusterBox = new QGroupBox();
+        QVBoxLayout *thrusterLayout = new QVBoxLayout(thrusterBox);
+        thrusterLayout->setContentsMargins(8, 8, 8, 8);
+        thrusterLayout->setSpacing(4);
+
+        QLabel *lblName = new QLabel(state.name);
+        lblName->setStyleSheet("color: #D6E1F0; font-weight: bold;");
+
+        QLabel *lblAxis = new QLabel(QString("Axis: %1").arg(state.axis));
+        lblAxis->setStyleSheet("color: #AFC7DF; font-size: 10px;");
+
+        QGridLayout *metricsLayout = new QGridLayout();
+
+        QLCDNumber *lcdCurrent = new QLCDNumber();
+        QLCDNumber *lcdTarget = new QLCDNumber();
+
+        configureLCD(lcdCurrent, 8);
+        configureLCD(lcdTarget, 8);
+
+        lcdCurrent->display(QString::number(state.currentThrust, 'f', 1));
+        lcdTarget->display(QString::number(state.targetThrust, 'f', 1));
+
+        QProgressBar *barState = new QProgressBar();
+        barState->setRange(0, 100);
+        barState->setValue(static_cast<int>(qBound(0.0, state.actuatorState * 100.0, 100.0)));
+        barState->setTextVisible(true);
+        barState->setFormat("%p%");
+
+        barState->setStyleSheet(
+            "QProgressBar {"
+            "  border: 1px solid #2F4A72;"
+            "  border-radius: 4px;"
+            "  background-color: #09111B;"
+            "  color: #D6E1F0;"
+            "  text-align: center;"
+            "}"
+            "QProgressBar::chunk {"
+            "  background-color: #4FC3F7;"
+            "  border-radius: 3px;"
+            "}"
+            );
+
+        QLabel *lblCurrent = new QLabel("Current [N]");
+        QLabel *lblTarget = new QLabel("Target [N]");
+        QLabel *lblState = new QLabel("State [%]");
+
+        lblCurrent->setStyleSheet("color: #AFC7DF;");
+        lblTarget->setStyleSheet("color: #AFC7DF;");
+        lblState->setStyleSheet("color: #AFC7DF;");
+
+        metricsLayout->addWidget(lblCurrent, 0, 0);
+        metricsLayout->addWidget(lblTarget, 0, 1);
+        metricsLayout->addWidget(lblState, 0, 2);
+
+        metricsLayout->addWidget(lcdCurrent, 1, 0);
+        metricsLayout->addWidget(lcdTarget, 1, 1);
+        metricsLayout->addWidget(barState, 1, 2);
+
+        metricsLayout->setColumnStretch(0, 1);
+        metricsLayout->setColumnStretch(1, 1);
+        metricsLayout->setColumnStretch(2, 2);
+
+        thrusterLayout->addWidget(lblName);
+        thrusterLayout->addWidget(lblAxis);
+        thrusterLayout->addLayout(metricsLayout);
+
+        rcsThrusterLayout->addWidget(thrusterBox);
+
+        lblRCSEngineNames.push_back(lblName);
+        lblRCSAxes.push_back(lblAxis);
+        lcdRCSCurrentThrust.push_back(lcdCurrent);
+        lcdRCSTargetThrust.push_back(lcdTarget);
+        barRCSActuatorStates.push_back(barState);
+    }
+
+    rcsThrusterLayout->addStretch();
+}
+
+QVector<RCSCockpitTelemetry> cockpitPage::filterActiveRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates) const
+{
+    QVector<RCSCockpitTelemetry> active;
+
+    for (const auto& state : rcsStates)
+    {
+        if (std::abs(state.currentThrust) > 0.01 ||
+            std::abs(state.targetThrust) > 0.01 ||
+            state.actuatorState > 0.01)
+        {
+            active.push_back(state);
+        }
+    }
+
+    return active;
 }
 
 // ================= FUEL =================
@@ -319,6 +454,100 @@ QGroupBox *cockpitPage::setupFuelBox()
     fuelMainLayout->addWidget(scrollArea);
 
     return fuelBox;
+}
+
+void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
+{
+    if (!fuelTankLayout)
+        return;
+
+    QLayoutItem *item;
+    while ((item = fuelTankLayout->takeAt(0)) != nullptr)
+    {
+        if (item->widget())
+            delete item->widget();
+        delete item;
+    }
+
+    lcdTankMasses.clear();
+    barTankFillLevels.clear();
+    lblTankNames.clear();
+    lblTankRoles.clear();
+
+    for (const FuelTank& tank : tanks)
+    {
+        QGroupBox *tankBox = new QGroupBox();
+        QVBoxLayout *tankBoxLayout = new QVBoxLayout(tankBox);
+        tankBoxLayout->setContentsMargins(8, 8, 8, 8);
+        tankBoxLayout->setSpacing(4);
+
+        // Header
+        QLabel *lblName = new QLabel(QString::fromStdString(tank.name));
+        lblName->setStyleSheet("color: #D6E1F0; font-weight: bold;");
+
+        QLabel *lblRole = new QLabel(QString("Role: %1").arg(QString::fromStdString(tank.role)));
+        lblRole->setStyleSheet("color: #AFC7DF; font-size: 10px;");
+
+        tankBoxLayout->addWidget(lblName);
+        tankBoxLayout->addWidget(lblRole);
+
+        // Metrics row
+        QGridLayout *metricsLayout = new QGridLayout();
+
+        QLCDNumber *lcdMass = new QLCDNumber();
+        configureLCD(lcdMass, 8);
+        lcdMass->display(QString::number(tank.mass, 'f', 1));
+
+        QProgressBar *barFill = new QProgressBar();
+        barFill->setRange(0, 100);
+        barFill->setValue(static_cast<int>(tank.fillRatio() * 100.0));
+        barFill->setTextVisible(true);
+        barFill->setFormat("%p%");
+
+        barFill->setStyleSheet(
+            "QProgressBar {"
+            "  border: 1px solid #2F4A72;"
+            "  border-radius: 4px;"
+            "  background-color: #09111B;"
+            "  color: #D6E1F0;"
+            "  text-align: center;"
+            "}"
+            "QProgressBar::chunk {"
+            "  background-color: #4FC3F7;"
+            "  border-radius: 3px;"
+            "}"
+            );
+
+        QLabel *lblMass = new QLabel("Remaining [kg]");
+        QLabel *lblFill = new QLabel(
+            QString("Fill Level [%]  (%1 / %2 kg)")
+                .arg(tank.mass, 0, 'f', 1)
+                .arg(tank.capacity, 0, 'f', 1)
+            );
+
+        lblMass->setStyleSheet("color: #AFC7DF;");
+        lblFill->setStyleSheet("color: #AFC7DF;");
+
+        metricsLayout->addWidget(lblMass, 0, 0);
+        metricsLayout->addWidget(lblFill, 0, 1);
+
+        metricsLayout->addWidget(lcdMass, 1, 0);
+        metricsLayout->addWidget(barFill, 1, 1);
+
+        metricsLayout->setColumnStretch(0, 1);
+        metricsLayout->setColumnStretch(1, 2);
+
+        tankBoxLayout->addLayout(metricsLayout);
+
+        fuelTankLayout->addWidget(tankBox);
+
+        lcdTankMasses.push_back(lcdMass);
+        barTankFillLevels.push_back(barFill);
+        lblTankNames.push_back(lblName);
+        lblTankRoles.push_back(lblRole);
+    }
+
+    fuelTankLayout->addStretch();
 }
 
 // ================= STATUS =================
@@ -476,100 +705,6 @@ void cockpitPage::updateAngularVelocity(Vector3 angV)
     LNF_lcdYaw->display(QString::number(angV.z, 'f', 1));
 }
 
-void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
-{
-    if (!fuelTankLayout)
-        return;
-
-    QLayoutItem *item;
-    while ((item = fuelTankLayout->takeAt(0)) != nullptr)
-    {
-        if (item->widget())
-            delete item->widget();
-        delete item;
-    }
-
-    lcdTankMasses.clear();
-    barTankFillLevels.clear();
-    lblTankNames.clear();
-    lblTankRoles.clear();
-
-    for (const FuelTank& tank : tanks)
-    {
-        QGroupBox *tankBox = new QGroupBox();
-        QVBoxLayout *tankBoxLayout = new QVBoxLayout(tankBox);
-        tankBoxLayout->setContentsMargins(8, 8, 8, 8);
-        tankBoxLayout->setSpacing(4);
-
-        // Header
-        QLabel *lblName = new QLabel(QString::fromStdString(tank.name));
-        lblName->setStyleSheet("color: #D6E1F0; font-weight: bold;");
-
-        QLabel *lblRole = new QLabel(QString("Role: %1").arg(QString::fromStdString(tank.role)));
-        lblRole->setStyleSheet("color: #AFC7DF; font-size: 10px;");
-
-        tankBoxLayout->addWidget(lblName);
-        tankBoxLayout->addWidget(lblRole);
-
-        // Metrics row
-        QGridLayout *metricsLayout = new QGridLayout();
-
-        QLCDNumber *lcdMass = new QLCDNumber();
-        configureLCD(lcdMass, 8);
-        lcdMass->display(QString::number(tank.mass, 'f', 1));
-
-        QProgressBar *barFill = new QProgressBar();
-        barFill->setRange(0, 100);
-        barFill->setValue(static_cast<int>(tank.fillRatio() * 100.0));
-        barFill->setTextVisible(true);
-        barFill->setFormat("%p%");
-
-        barFill->setStyleSheet(
-            "QProgressBar {"
-            "  border: 1px solid #2F4A72;"
-            "  border-radius: 4px;"
-            "  background-color: #09111B;"
-            "  color: #D6E1F0;"
-            "  text-align: center;"
-            "}"
-            "QProgressBar::chunk {"
-            "  background-color: #4FC3F7;"
-            "  border-radius: 3px;"
-            "}"
-            );
-
-        QLabel *lblMass = new QLabel("Remaining [kg]");
-        QLabel *lblFill = new QLabel(
-            QString("Fill Level [%]  (%1 / %2 kg)")
-                .arg(tank.mass, 0, 'f', 1)
-                .arg(tank.capacity, 0, 'f', 1)
-            );
-
-        lblMass->setStyleSheet("color: #AFC7DF;");
-        lblFill->setStyleSheet("color: #AFC7DF;");
-
-        metricsLayout->addWidget(lblMass, 0, 0);
-        metricsLayout->addWidget(lblFill, 0, 1);
-
-        metricsLayout->addWidget(lcdMass, 1, 0);
-        metricsLayout->addWidget(barFill, 1, 1);
-
-        metricsLayout->setColumnStretch(0, 1);
-        metricsLayout->setColumnStretch(1, 2);
-
-        tankBoxLayout->addLayout(metricsLayout);
-
-        fuelTankLayout->addWidget(tankBox);
-
-        lcdTankMasses.push_back(lcdMass);
-        barTankFillLevels.push_back(barFill);
-        lblTankNames.push_back(lblName);
-        lblTankRoles.push_back(lblRole);
-    }
-
-    fuelTankLayout->addStretch();
-}
-
 void cockpitPage::updateFuelTanks(const QVector<FuelTank>& tanks)
 {
     if (tanks.size() != lcdTankMasses.size())
@@ -643,6 +778,41 @@ void cockpitPage::updateTargetThrust(Vector3 t)
     LNF_lcdTargetThrust_BX->display(QString::number(t.x, 'f', 1));
     LNF_lcdTargetThrust_BY->display(QString::number(t.y, 'f', 1));
     LNF_lcdTargetThrust_BZ->display(QString::number(t.z, 'f', 1));
+}
+
+void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates)
+{
+    const QVector<RCSCockpitTelemetry> activeStates =
+        filterActiveRCSThrusters(rcsStates);
+
+    if (activeStates.size() != lcdRCSCurrentThrust.size())
+    {
+        rebuildRCSThrusterPanel(activeStates);
+    }
+
+    if (activeStates.isEmpty())
+    {
+        // Optional: "No active RCS thrusters" anzeigen
+        return;
+    }
+
+    const int count = qMin(activeStates.size(), lcdRCSCurrentThrust.size());
+
+    for (int i = 0; i < count; ++i)
+    {
+        const RCSCockpitTelemetry& state = activeStates[i];
+
+        lblRCSEngineNames[i]->setText(state.name);
+        lblRCSAxes[i]->setText(QString("Axis: %1").arg(state.axis));
+
+        lcdRCSCurrentThrust[i]->display(QString::number(state.currentThrust, 'f', 1));
+        lcdRCSTargetThrust[i]->display(QString::number(state.targetThrust, 'f', 1));
+
+        const int actuatorPercent =
+            static_cast<int>(qBound(0.0, state.actuatorState * 100.0, 100.0));
+
+        barRCSActuatorStates[i]->setValue(actuatorPercent);
+    }
 }
 
 void cockpitPage::updateFuelMass(double f)
@@ -733,6 +903,7 @@ void cockpitPage::onStateUpdated(double time,
                                  Vector3 thrust,
                                  Vector3 targetThrust,
                                  Vector3 thrustInPercentage,
+                                 QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
                                  QVector<FuelTank> tanks,
                                  double fuelMass,
                                  double fuelFlow,
@@ -750,6 +921,7 @@ void cockpitPage::onStateUpdated(double time,
     updateFuelTanks(tanks);
     updateFuelMass(qRound(fuelMass * 10.0) / 10.0);
     updateFuelFlow(qRound(fuelFlow * 100.0) / 100.0);
+    updateRCSThrusters(RCSTelemetryVec_);
     updateHullStatus(spacecraftState_);
 
     landingView->setPositionENU(pos);
