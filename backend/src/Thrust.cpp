@@ -378,12 +378,12 @@ std::vector<RCS_ThrustState> Thrust::getFullRCSEngineData() const
         {
             RCS_ThrustState state{};
 
-            state.engineID = model->getEngineID();
-            state.engineName = model->getEngineName();
-
-            state.currentThrust = model->getCurrentThrust();
-            state.targetThrust = model->getTargetThrust();
-            state.direction = model->getDirectionOfThrust();
+            state.engineID                  = model->getEngineID();
+            state.engineName                = model->getEngineName();
+            state.currentThrust             = model->getCurrentThrust();
+            state.targetThrust              = model->getTargetThrust();
+            state.targetThrustPercentage    = model->getTargetThrust() / model->getMaxThrust();
+            state.direction                 = model->getDirectionOfThrust();
 
             rcsThrustStates.push_back(state);
         }

@@ -94,6 +94,7 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
             RCS.id                  = e.at("id").get<int>();
             RCS.name                = e.at("name").get<std::string>();
             RCS.type                = e.at("type").get<std::string>();
+            RCS.axis                = e.at("axis").get<std::string>();
             RCS.tankID              = e.at("tankID").get<int>();
 
             RCS.Isp                 = e.at("Isp").get<double>();

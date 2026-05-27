@@ -576,6 +576,16 @@ QGroupBox *cockpitPage::setupStatusBox()
     lblControllerOutput->setStyleSheet("Color: white; font-weight: bold;");
     statusLayout->addWidget(lblControllerOutput);
 
+    // --- RCS Thruster ---
+    lblRCSActivity = new QLabel("RCS Active: 0 / 0");
+    lblRCSActivity->setStyleSheet(
+        "color: #AFC7DF;"
+        "font-size: 14px;"
+        "font-weight: bold;"
+        );
+
+    statusLayout->addWidget(lblRCSActivity);
+
     statusLayout->addStretch();
 
     return statusBox;
@@ -643,24 +653,24 @@ void cockpitPage::setupConnections()
     connect(btnSimStop,  &QPushButton::clicked, this, &cockpitPage::onStopClicked);     ///< Combined with private slot
 
     connect(thrustSlider, &QSlider::valueChanged, this, [this](int value)
-    {
-        lblThrustCmd->setText(QString("Commanded Thrust: %1 %").arg(value));
-        collectedCmd.mainEngine = static_cast<float>(value) / 100.0;
-        sendFlightCmd();
-    });
+            {
+                lblThrustCmd->setText(QString("Commanded Thrust: %1 %").arg(value));
+                collectedCmd.mainEngine = static_cast<float>(value) / 100.0;
+                sendFlightCmd();
+            });
 
     connect(btnAutopilot, &QPushButton::clicked, this, &cockpitPage::onAutopilotClicked);
 
     connect(autopilotBlinkTimer, &QTimer::timeout, this, &cockpitPage::onAutopilotBlinkTimeout);
 
     connect(m_inputMapper, &inputmapper::RCS_cmdRequested, this, [this](FlightCommand cmd)
-    {
-        collectedCmd.translation = cmd.translation;
-        collectedCmd.rotation    = cmd.rotation;
-        collectedCmd.stabilize   = cmd.stabilize;
-        collectedCmd.killRotation = cmd.killRotation;
-        sendFlightCmd();
-    });
+            {
+                collectedCmd.translation = cmd.translation;
+                collectedCmd.rotation    = cmd.rotation;
+                collectedCmd.stabilize   = cmd.stabilize;
+                collectedCmd.killRotation = cmd.killRotation;
+                sendFlightCmd();
+            });
 }
 
 // ------------------------------------------------
@@ -785,6 +795,8 @@ void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStat
     const QVector<RCSCockpitTelemetry> activeStates =
         filterActiveRCSThrusters(rcsStates);
 
+    updateRCSActivity(activeStates.size(), rcsStates.size());
+
     if (activeStates.size() != lcdRCSCurrentThrust.size())
     {
         rebuildRCSThrusterPanel(activeStates);
@@ -792,7 +804,7 @@ void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStat
 
     if (activeStates.isEmpty())
     {
-        // Optional: "No active RCS thrusters" anzeigen
+        //consoleOutput("No active RCS thrusters");
         return;
     }
 
@@ -812,6 +824,35 @@ void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStat
             static_cast<int>(qBound(0.0, state.actuatorState * 100.0, 100.0));
 
         barRCSActuatorStates[i]->setValue(actuatorPercent);
+    }
+}
+
+void cockpitPage::updateRCSActivity(int active, int total)
+{
+    if (!lblRCSActivity)
+        return;
+
+    lblRCSActivity->setText(
+        QString("RCS Active: %1 / %2")
+            .arg(active)
+            .arg(total)
+        );
+
+    if (active > 0)
+    {
+        lblRCSActivity->setStyleSheet(
+            "color: #4FC3F7;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            );
+    }
+    else
+    {
+        lblRCSActivity->setStyleSheet(
+            "color: #607D8B;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            );
     }
 }
 

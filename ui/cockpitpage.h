@@ -131,6 +131,14 @@ public:
     void updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates);
 
     /**
+     * @brief Updates the current number of active RCS thrusters.
+     *
+     * @param active Number of currently active RCS thrusters.
+     * @param total Total number of configured RCS thrusters.
+     */
+    void updateRCSActivity(int active, int total);
+
+    /**
      * @brief Updates the remaining fuel mass.
      * @param fuel Remaining fuel mass in kilograms.
      */
@@ -441,14 +449,14 @@ private:
     // RCS Thruster UI
     // =====================================================
 
-    QWidget *rcsThrusterContainer = nullptr;      ///< Container widget for dynamic RCS thruster list
-    QVBoxLayout *rcsThrusterLayout = nullptr;     ///< Layout for dynamic RCS thruster rows
+    QWidget *rcsThrusterContainer = nullptr;        ///< Container widget for dynamic RCS thruster list
+    QVBoxLayout *rcsThrusterLayout = nullptr;       ///< Layout for dynamic RCS thruster rows
 
-    QVector<QLabel*> lblRCSEngineNames;           ///< One label per RCS thruster name
-    QVector<QLabel*> lblRCSAxes;                  ///< One label per RCS thruster axis
-    QVector<QLCDNumber*> lcdRCSCurrentThrust;     ///< One LCD per current RCS thrust value
-    QVector<QLCDNumber*> lcdRCSTargetThrust;      ///< One LCD per target RCS thrust value
-    QVector<QProgressBar*> barRCSActuatorStates;  ///< One progress bar per normalized RCS actuator state
+    QVector<QLabel*> lblRCSEngineNames;             ///< One label per RCS thruster name
+    QVector<QLabel*> lblRCSAxes;                    ///< One label per RCS thruster axis
+    QVector<QLCDNumber*> lcdRCSCurrentThrust;       ///< One LCD per current RCS thrust value
+    QVector<QLCDNumber*> lcdRCSTargetThrust;        ///< One LCD per target RCS thrust value
+    QVector<QProgressBar*> barRCSActuatorStates;    ///< One progress bar per normalized RCS actuator state
 
     // =====================================================
     // Fuel Instruments
@@ -473,8 +481,9 @@ private:
     // Status Indicators
     // =====================================================
 
-    QLabel* lblHullStatus;        ///< Displays the hull integrity status
-    QLabel* lblControllerOutput;  ///< Displays the controller or console output in the cockpit UI
+    QLabel* lblHullStatus;          ///< Displays the hull integrity status
+    QLabel* lblControllerOutput;    ///< Displays the controller or console output in the cockpit UI
+    QLabel* lblRCSActivity;         ///< Displays number of currently active RCS thrusters
 
 
     // =====================================================
