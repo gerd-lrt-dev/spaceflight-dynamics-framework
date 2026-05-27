@@ -35,9 +35,18 @@ void Thrust::setTargetThrustInNewton(EngineType engine, const double &tMainEngin
                 }
             }
         }
-        else if (engine == EngineType::RCS)
+
+        if (engine == EngineType::RCS)
         {
-            // To be done...
+            for (const auto& model : models_)
+            {
+                if (model->getEngineType() == "translation")
+                {
+                    const double command = RCSControlAllocator::mapAxisCommandToThrusterNewton(tRCSThrust, model->getDirectionOfThrust());
+
+                    model->setTarget(command);
+                }
+            }
         }
 }
 
@@ -49,6 +58,7 @@ void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainE
         return;
     }
 
+    int counter(0);
     if (engine == EngineType::MainEngine)
     {
         for (const auto& model : models_)
@@ -59,14 +69,18 @@ void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainE
             }
         }
     }
-    else if (engine == EngineType::RCS)
+
+    if (engine == EngineType::RCS)
     {
-        // To be done...
-        std::cout << "RCS Thrust: \n"
-                  << "x: " << tRCSThrust.x << "\n"
-                  << "y: " << tRCSThrust.y << "\n"
-                  << "z: " << tRCSThrust.z << "\n"
-                  << std::endl;
+        for (const auto& model : models_)
+        {
+            if (model->getEngineType() == "translation")
+            {
+                const double command = RCSControlAllocator::mapAxisCommandToThrusterPercentage(tRCSThrust, model->getDirectionOfThrust());
+
+                model->setTargetInPercentage(command);
+            }
+        }
     }
 }
 
@@ -78,7 +92,7 @@ void Thrust::shutDownAllEngines() const
     }
 }
 
-void Thrust::initializeEngines(std::vector<EngineConfig> &engineConfigs, const std::vector<FuelTank> &tanks)
+void Thrust::initializeEngines(std::vector<EngineConfig>& engineConfigs, std::vector<RCSEngineConfig>& RCSEngines, const std::vector<FuelTank>& tanks)
 {
     // -----------------------------------------
     // Initialize tanks
@@ -86,34 +100,71 @@ void Thrust::initializeEngines(std::vector<EngineConfig> &engineConfigs, const s
     addFuelTank(tanks);
 
     // -----------------------------------------
-    // Initialize engine configs
+    // Initialize main engines
     // -----------------------------------------
 
-    for (const auto &cfg_ : engineConfigs)
+    for (const auto& cfg_ : engineConfigs)
     {
         FuelState state;
         state.consumptionRate = 0.0;
+
         if (cfg_.type == "main")
         {
-            std::cout << "[Thrust]-initializeEngines- Configured Main Engine" << std::endl;
+            std::cout
+                << "[Thrust]-initializeEngines- Configured Main Engine | "
+                << cfg_.name
+                << " | Direction: ("
+                << cfg_.direction.x << ", "
+                << cfg_.direction.y << ", "
+                << cfg_.direction.z << ")"
+                << std::endl;
+
             addModel(std::make_unique<basicMainEngineModel>(cfg_, state));
-        }
-        else if (cfg_.type == "translation")
-        {
-            std::cout << "[Thrust]-initializeEngines- Configured RCS translational engine" << std::endl;
-            std::cout << "[Thrust]-initializeEngines- RCS Model not included yet" << std::endl;
-            addModel(std::make_unique<basicMainEngineModel>(cfg_, state));
-        }
-        else if (cfg_.type == "rotation")
-        {
-            std::cout << "[Thrust]-initializeEngines- Configured RCS rotational engine" << std::endl;
         }
         else
         {
-            std::cerr << "[Thrust]-initializeEngines- Engine Type unknown!!" << std::endl;
+            std::cerr << "[Thrust]-initializeEngines- Engine Type unknown!!"
+                      << std::endl;
             return;
         }
+    }
 
+    // -----------------------------------------
+    // Initialize RCS engines
+    // -----------------------------------------
+
+    for (const auto& rcscfg_ : RCSEngines)
+    {
+        FuelState RCSFuelState;
+        RCSFuelState.consumptionRate = 0.0;
+
+        if (rcscfg_.type == "translation")
+        {
+            std::cout
+                << "[Thrust]-initializeEngines- Configured Translational RCS Engine | "
+                << rcscfg_.name
+                << " | Axis: " << rcscfg_.axis
+                << " | Direction: ("
+                << rcscfg_.direction.x << ", "
+                << rcscfg_.direction.y << ", "
+                << rcscfg_.direction.z << ")"
+                << std::endl;
+
+            addModel(std::make_unique<basicRCSModel>(rcscfg_, RCSFuelState));
+        }
+        else if (rcscfg_.type == "rotation")
+        {
+            std::cout
+                << "[Thrust]-initializeEngines- Configured Rotational RCS Engine | "
+                << rcscfg_.name
+                << std::endl;
+        }
+        else
+        {
+            std::cerr << "[Thrust]-initializeEngines- Engine Type unknown!!"
+                      << std::endl;
+            return;
+        }
     }
 }
 
@@ -315,6 +366,30 @@ Vector3 Thrust::getDirectionOfThrust(EngineType engine, int engineID) const
         return {0.0, 0.0, 0.0};
     }
     return dir;
+}
+
+std::vector<RCS_ThrustState> Thrust::getFullRCSEngineData() const
+{
+    std::vector<RCS_ThrustState> rcsThrustStates;
+
+    for (const auto& model : models_)
+    {
+        if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
+        {
+            RCS_ThrustState state{};
+
+            state.engineID                  = model->getEngineID();
+            state.engineName                = model->getEngineName();
+            state.currentThrust             = model->getCurrentThrust();
+            state.targetThrust              = model->getTargetThrust();
+            state.targetThrustPercentage    = model->getTargetThrust() / model->getMaxThrust();
+            state.direction                 = model->getDirectionOfThrust();
+
+            rcsThrustStates.push_back(state);
+        }
+    }
+
+    return rcsThrustStates;
 }
 
 double Thrust::getFuelConsumption(EngineType engine) const

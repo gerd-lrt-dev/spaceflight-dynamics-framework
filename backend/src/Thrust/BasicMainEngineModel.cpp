@@ -36,6 +36,7 @@ void basicMainEngineModel::updateThrust(const double &dt)
     {
         throw std::runtime_error("time constant tau is zero!");
     }
+    //std::cout << "[BasicMainEngineModel]-updateThrust-Current Thrust: " << ME_thrustState_.current << std::endl;
 }
 
 // -------------------------------------------------------------------------
@@ -62,6 +63,11 @@ void basicMainEngineModel::setTargetInPercentage(const double &tThrustInPercenta
 int basicMainEngineModel::getEngineID() const
 {
     return engineConfig_.id;
+}
+
+std::string basicMainEngineModel::getEngineName() const
+{
+    return engineConfig_.name;
 }
 
 std::string basicMainEngineModel::getEngineType() const

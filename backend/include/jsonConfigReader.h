@@ -6,6 +6,7 @@
 
 #include "spacecraft.h"
 #include "vector3.h"
+#include "Thrust/RCSConfig.h"
 
 /**
  * @class JsonConfigReader

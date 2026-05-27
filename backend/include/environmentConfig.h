@@ -32,7 +32,7 @@
 struct EnvironmentConfig {
     // Constants
     const double moonGravity      = 1.635;     ///< [m/s²], Moon gravity
-    const double earthGravity     = 9.81;      ///< [m/s2], earth gravity 
+    const double earthGravity     = 9.81;      ///< [m/s^2], earth gravity
 
     // Planetary informations
     const double radiusMoon       = 1.7374e6;   ///< [m] Middle moon radius 

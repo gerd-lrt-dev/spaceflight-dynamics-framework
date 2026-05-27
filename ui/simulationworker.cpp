@@ -51,6 +51,7 @@ void SimulationWorker::stop()
                       {0.0, 0.0, 0.0},
                       {0.0, 0.0, 0.0},
                       {0.0, 0.0, 0.0},
+                      QVector<RCSCockpitTelemetry>{},
                       QVector<FuelTank>{},
                       0.0,
                       0.0,
@@ -89,10 +90,11 @@ void SimulationWorker::stepSimulation()
         return;
 
     // times
+    // TODO: Should be change by timer event
     dt = 0.05; // TODO: should specified in json as well
     currentTime += dt;
 
-    // Calling backend simulator
+    // Calling backend simulator --> Will be refactored with Issue 19 Frontend should no know data structs from backend!
     spacecraftData = controller->runSimulation(dt);
 
     // Withdraw user input due to thrust
@@ -104,6 +106,22 @@ void SimulationWorker::stepSimulation()
     // Change vector type for fuel tanks information
     QVector<FuelTank> fuelTanksQVec(spacecraftData.tanks.begin(), spacecraftData.tanks.end());
 
+    QVector<RCSCockpitTelemetry> RCSTelemetryVec;
+
+    // TODO: This wrapper is going to be transfered with Issue 19 into own Translater class
+    for (const auto  &RCS_State_: spacecraftData.RCS_ThrustState_)
+    {
+        RCSCockpitTelemetry RCSTelemetry_;
+        RCSTelemetry_.engineID = RCS_State_.engineID;
+        RCSTelemetry_.name = QString::fromStdString(RCS_State_.engineName);
+        RCSTelemetry_.axis = QString::fromStdString(RCS_State_.axis);
+        RCSTelemetry_.currentThrust = RCS_State_.currentThrust;
+        RCSTelemetry_.targetThrust = RCS_State_.targetThrust;
+        RCSTelemetry_.actuatorState = RCS_State_.targetThrustPercentage;
+
+        RCSTelemetryVec.push_back(RCSTelemetry_);
+    }
+
     // signals
     emit stateUpdated(currentTime,
                       spacecraftData.statevector_.I_Position,
@@ -113,6 +131,7 @@ void SimulationWorker::stepSimulation()
                       spacecraftData.ME_ThrustState_.direction * spacecraftData.ME_ThrustState_.current,
                       spacecraftData.ME_ThrustState_.direction * spacecraftData.ME_ThrustState_.target,
                       spacecraftData.ME_ThrustState_.direction * spacecraftData.ME_ThrustState_.targetPercentage,
+                      RCSTelemetryVec,
                       fuelTanksQVec,
                       spacecraftData.fuelMass,
                       spacecraftData.fuelFlow,

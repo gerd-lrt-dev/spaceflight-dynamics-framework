@@ -17,6 +17,7 @@
 
 #include "simcontrol.h"
 #include "flightcommandstruct.h"
+#include "datastructs.h"
 
 /**
  * @class SimulationWorker
@@ -103,6 +104,7 @@ signals:
                       Vector3 thrust,
                       Vector3 targetThrust,
                       Vector3 thrustInPercentage,
+                      QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
                       QVector<FuelTank> fuelTanks,
                       double fuelMass,
                       double fuelFlow,

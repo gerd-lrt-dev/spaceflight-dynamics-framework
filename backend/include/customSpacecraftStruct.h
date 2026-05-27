@@ -3,6 +3,7 @@
 
 #include "vector3.h"
 #include "Thrust/EngineConfig.h"
+#include "Thrust/RCSConfig.h"
 #include "Thrust/FueltankStruct.h"
 
 #include <vector>
@@ -36,7 +37,7 @@ struct customSpacecraft
     // -------------------------------------------------------------------------
 
     /**
-     * @brief List of engine configurations for the spacecraft.
+     * @brief List of main engine configurations for the spacecraft.
      *
      * Each element in this vector represents a single engine of the spacecraft,
      * including its thrust capabilities, specific impulse, orientation, and
@@ -44,7 +45,6 @@ struct customSpacecraft
      *
      * Examples of engine types:
      * - Main descent engine
-     * - Attitude control thrusters (RCS)
      *
      * Access example:
      * @code
@@ -55,6 +55,26 @@ struct customSpacecraft
      * @endcode
      */
     std::vector<EngineConfig> engines_;
+
+    /**
+     * @brief List of rcs engine configurations for the spacecraft.
+     *
+     * Each element in this vector represents a single engine of the spacecraft,
+     * including its thrust capabilities, specific impulse, orientation, and
+     * dynamic response properties.
+     *
+     * Examples of engine types:
+     * - Attitude control thrusters (RCS)
+     *
+     * Access example:
+     * @code
+     * for(const auto& eng : spacecraft.engines_) {
+     *     double thrust = eng.maxThrust;
+     *     Vector3 dir = eng.direction;
+     * }
+     * @endcode
+     */
+    std::vector<RCSEngineConfig> RCSengines_;
 
     // -------------------------------------------------------------------------
     // Tank System

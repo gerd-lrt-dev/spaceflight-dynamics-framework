@@ -8,7 +8,7 @@
       "Iyy": 910.0,
       "Izz": 720.0,
 
-      "I_initialPos": { "x": 0.0, "y": 0.0, "z": 1738900.0 },
+      "I_initialPos": { "x": 100.0, "y": -20.0, "z": 1738900.0 },
       "B_initialRot": { "x": 0.0, "y": 0.0, "z": 0.0 },
       "B_initialCenterOfMass": { "x": 0.0, "y": 0.0, "z": -0.2 },
 
@@ -34,6 +34,7 @@
 
       "engines": [
         {
+          "engineActivated": true,
           "id": 0,
           "name": "MainEngine",
           "type": "main",
@@ -50,6 +51,7 @@
         },
 
         {
+          "engineActivated": true,
           "id": 1,
           "name": "RCS_PosX",
           "type": "translation",
@@ -57,14 +59,17 @@
           "tankID": 1,
 
           "Isp": 285.0,
-          "timeConstant": 0.08,
-          "responseRate": 25.0,
-          "maxThrust": 40.0,
+          "maxThrust": 200.0,
+          "commandDelay": 0.02,
+          "tauOn": 0.08,
+          "tauOff": 0.08,
+          "minimumPulseWidth": 0.0,
 
           "direction": { "x": 1.0, "y": 0.0, "z": 0.0 },
           "position":  { "x": 0.0, "y": 0.8, "z": 0.6 }
         },
         {
+          "engineActivated": true,
           "id": 2,
           "name": "RCS_NegX",
           "type": "translation",
@@ -72,15 +77,17 @@
           "tankID": 1,
 
           "Isp": 285.0,
-          "timeConstant": 0.08,
-          "responseRate": 25.0,
-          "maxThrust": 40.0,
+          "maxThrust": 200.0,
+          "commandDelay": 0.02,
+          "tauOn": 0.08,
+          "tauOff": 0.08,
+          "minimumPulseWidth": 0.0,
 
           "direction": { "x": -1.0, "y": 0.0, "z": 0.0 },
           "position":  { "x": 0.0, "y": -0.8, "z": 0.6 }
         },
-
         {
+          "engineActivated": true,
           "id": 3,
           "name": "RCS_PosY",
           "type": "translation",
@@ -88,14 +95,17 @@
           "tankID": 1,
 
           "Isp": 285.0,
-          "timeConstant": 0.08,
-          "responseRate": 25.0,
-          "maxThrust": 40.0,
+          "maxThrust": 200.0,
+          "commandDelay": 0.02,
+          "tauOn": 0.08,
+          "tauOff": 0.08,
+          "minimumPulseWidth": 0.0,
 
           "direction": { "x": 0.0, "y": 1.0, "z": 0.0 },
           "position":  { "x": -0.8, "y": 0.0, "z": 0.6 }
         },
         {
+          "engineActivated": true,
           "id": 4,
           "name": "RCS_NegY",
           "type": "translation",
@@ -103,15 +113,17 @@
           "tankID": 1,
 
           "Isp": 285.0,
-          "timeConstant": 0.08,
-          "responseRate": 25.0,
-          "maxThrust": 40.0,
+          "maxThrust": 200.0,
+          "commandDelay": 0.02,
+          "tauOn": 0.08,
+          "tauOff": 0.08,
+          "minimumPulseWidth": 0.0,
 
           "direction": { "x": 0.0, "y": -1.0, "z": 0.0 },
           "position":  { "x": 0.8, "y": 0.0, "z": 0.6 }
         },
-
         {
+          "engineActivated": true,
           "id": 5,
           "name": "RCS_PosZ",
           "type": "translation",
@@ -119,14 +131,17 @@
           "tankID": 1,
 
           "Isp": 285.0,
-          "timeConstant": 0.08,
-          "responseRate": 25.0,
-          "maxThrust": 30.0,
+          "maxThrust": 150.0,
+          "commandDelay": 0.02,
+          "tauOn": 0.08,
+          "tauOff": 0.08,
+          "minimumPulseWidth": 0.0,
 
           "direction": { "x": 0.0, "y": 0.0, "z": 1.0 },
           "position":  { "x": 0.5, "y": 0.5, "z": 0.6 }
         },
         {
+          "engineActivated": true,
           "id": 6,
           "name": "RCS_NegZ",
           "type": "translation",
@@ -134,9 +149,11 @@
           "tankID": 1,
 
           "Isp": 285.0,
-          "timeConstant": 0.08,
-          "responseRate": 25.0,
-          "maxThrust": 30.0,
+          "maxThrust": 150.0,
+          "commandDelay": 0.02,
+          "tauOn": 0.08,
+          "tauOff": 0.08,
+          "minimumPulseWidth": 0.0,
 
           "direction": { "x": 0.0, "y": 0.0, "z": -1.0 },
           "position":  { "x": -0.5, "y": -0.5, "z": 0.6 }

@@ -129,13 +129,10 @@ public:
 
     /**
      * @brief Updates RCS active switch
-     * @param current thrust vector
-     * - x → East thrust [N]
-     * - y → North thrust [N]
-     * - z → Vertical thrust [N]
+     * @param boolean
      * @param thrust
      */
-    void setRCSActive(Vector3 thrust);
+    void setRCSActive(bool active);
 
     /**
      * @brief Updates hull integrity state.
