@@ -36,6 +36,7 @@ void basicMainEngineModel::updateThrust(const double &dt)
     {
         throw std::runtime_error("time constant tau is zero!");
     }
+    //std::cout << "[BasicMainEngineModel]-updateThrust-Current Thrust: " << ME_thrustState_.current << std::endl;
 }
 
 // -------------------------------------------------------------------------

@@ -35,13 +35,17 @@ void Thrust::setTargetThrustInNewton(EngineType engine, const double &tMainEngin
                 }
             }
         }
-        else if (engine == EngineType::RCS)
+
+        if (engine == EngineType::RCS)
         {
             for (const auto& model : models_)
             {
-                const double command = RCSControlAllocator::mapAxisCommandToThrusterNewton(tRCSThrust, model->getDirectionOfThrust());
+                if (model->getEngineType() == "translation")
+                {
+                    const double command = RCSControlAllocator::mapAxisCommandToThrusterNewton(tRCSThrust, model->getDirectionOfThrust());
 
-                model->setTarget(command);
+                    model->setTarget(command);
+                }
             }
         }
 }
@@ -54,6 +58,7 @@ void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainE
         return;
     }
 
+    int counter(0);
     if (engine == EngineType::MainEngine)
     {
         for (const auto& model : models_)
@@ -64,13 +69,17 @@ void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainE
             }
         }
     }
-    else if (engine == EngineType::RCS)
+
+    if (engine == EngineType::RCS)
     {
         for (const auto& model : models_)
         {
-            const double command = RCSControlAllocator::mapAxisCommandToThrusterPercentage(tRCSThrust, model->getDirectionOfThrust());
+            if (model->getEngineType() == "translation")
+            {
+                const double command = RCSControlAllocator::mapAxisCommandToThrusterPercentage(tRCSThrust, model->getDirectionOfThrust());
 
-            model->setTargetInPercentage(command);
+                model->setTargetInPercentage(command);
+            }
         }
     }
 }
