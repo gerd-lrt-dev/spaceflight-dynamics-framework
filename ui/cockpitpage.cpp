@@ -840,6 +840,7 @@ void cockpitPage::updateRCSActivity(int active, int total)
 
     if (active > 0)
     {
+        landingView->setRCSActive(true);
         lblRCSActivity->setStyleSheet(
             "color: #4FC3F7;"
             "font-size: 14px;"
@@ -848,6 +849,7 @@ void cockpitPage::updateRCSActivity(int active, int total)
     }
     else
     {
+        landingView->setRCSActive(false);
         lblRCSActivity->setStyleSheet(
             "color: #607D8B;"
             "font-size: 14px;"
@@ -970,7 +972,6 @@ void cockpitPage::onStateUpdated(double time,
     landingView->setYawDeg(0.0);          // DUMMY later from Quaternion/Euler
     landingView->setTargetENU({0,0,0});   // DUMMY
     landingView->setThrust(-thrustInPercentage.z);
-    landingView->setRCSActive(thrust);
     landingView->setHullIntact(spacecraftState_);
 
     (autopilotActive) ? consoleOutput(consoleOutput_) : consoleOutput("No controlling active");

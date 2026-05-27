@@ -59,16 +59,9 @@ void LandingView::setThrust(double percent)
     update();
 }
 
-void LandingView::setRCSActive(Vector3 thrust)
+void LandingView::setRCSActive(bool active)
 {
-    if (thrust.x != 0 || thrust.y != 0 || thrust.z < 0)
-    {
-        RCSActive = true;
-    }
-    else
-    {
-        RCSActive = false;
-    }
+    RCSActive = active;
 }
 
 void LandingView::setHullIntact(SpacecraftState spacecraftState_)

@@ -8,7 +8,7 @@
       "Iyy": 910.0,
       "Izz": 720.0,
 
-      "I_initialPos": { "x": 0.0, "y": 0.0, "z": 1738900.0 },
+      "I_initialPos": { "x": 100.0, "y": -20.0, "z": 1738900.0 },
       "B_initialRot": { "x": 0.0, "y": 0.0, "z": 0.0 },
       "B_initialCenterOfMass": { "x": 0.0, "y": 0.0, "z": -0.2 },
 
