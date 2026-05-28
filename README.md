@@ -339,11 +339,6 @@ Detailed mathematical derivations and subsystem documentation are available on t
 - [Adaptive Descent Controller](https://www.aerospace-simulation.dev/mathematics/adaptiveDescentController/)
 - [Impact & Structural Integrity](https://www.aerospace-simulation.dev/mathematics/impact/)
 
-Example documentation files:
-
-- `docs/architecture.md`
-- `docs/adaptive_descent_controller.md`
-
 ---
 
 # 📜 License
