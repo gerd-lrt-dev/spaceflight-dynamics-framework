@@ -98,10 +98,10 @@ void cockpitPage::setupUI()
     mainLayout->setColumnStretch(2, 1);
 
     setStyleSheet(
-        "QWidget { background-color: #0E1624; color: #D6E1F0; }"
-        "QGroupBox { border: 1px solid #2F4A72; border-radius: 8px; margin-top: 22px; padding-top: 18px; font-weight: bold; }"
-        "QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; left: 12px; top: 6px; padding: 0 6px; color: #4FC3F7; }"
-        "QLCDNumber { background-color: #000000; color: #4FC3F7; border: 2px solid #2F4A72; border-radius: 4px; min-height: 26px; }"
+        "QWidget { background-color: #07111F; color: #E6EEF8; }"
+        "QGroupBox { border: 1px solid #223A5E; border-radius: 8px; margin-top: 22px; padding-top: 18px; font-weight: bold; }"
+        "QGroupBox::title { color: #38BDF8; }"
+        "QLCDNumber { background-color: #020617; color: #38BDF8; border: 1px solid #223A5E; border-radius: 4px; }"
         "QSlider::groove:horizontal { height: 6px; background: #2F4A72; }"
         "QSlider::handle:horizontal { width: 14px; background: #4FC3F7; margin: -4px 0; border-radius: 3px; }"
         );

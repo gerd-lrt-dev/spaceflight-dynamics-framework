@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/new/logo">
         <file>Resources/Images/logo.png</file>
+        <file>Resources/Images/newlogo.png</file>
     </qresource>
     <qresource prefix="/configs">
         <file>Resources/configs/lander.json</file>

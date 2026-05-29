@@ -4,19 +4,46 @@ UIBuilder::UIBuilder() {}
 
 const QString UIBuilder::STDButtonLayout::styleSheet =
     "QPushButton#STDButton { "
-        "background-color: #1B2A44; "
-        "color: white; font-size: "
-        "20px; font-weight: bold; "
-        "padding: 12px 24px; "
-        "border-radius: 12px; "
-        "border: 2px solid #2F4A72; "
-        "letter-spacing: 1px; }"
+    "background-color: #102033; "
+    "color: #E6EEF8; "
+    "font-size: 18px; "
+    "font-weight: 600; "
+    "padding: 12px 24px; "
+    "border-radius: 10px; "
+    "border: 1px solid rgba(220,230,240,0.18); "
+    "}"
+
     "QPushButton#STDButton:hover { "
-        "background-color: #24385A; "
-        "border-color: #3B5C8A; }"
+    "background-color: #162A44; "
+    "border: 1px solid #38BDF8; "
+    "}"
+
     "QPushButton#STDButton:pressed { "
-        "background-color: #162133; "
-        "border-color: #203252; }";
+    "background-color: #0B1624; "
+    "border: 1px solid #38BDF8; "
+    "color: #38BDF8; "
+    "}";
+
+const QString UIBuilder::TopBarButtonLayout::styleSheet =
+    "QPushButton#TopBarButton { "
+    "background-color: #13233A; "
+    "color: #E6EEF8; "
+    "font-size: 14px; "
+    "font-weight: 600; "
+    "padding: 6px 14px; "
+    "border-radius: 6px; "
+    "border: 1px solid #223A5E; "
+    "}"
+    "QPushButton#TopBarButton:hover { "
+    "background-color: #1E3A5F; "
+    "border-color: #38BDF8; "
+    "color: #FFFFFF; "
+    "}"
+    "QPushButton#TopBarButton:pressed { "
+    "background-color: #0E1A2B; "
+    "border-color: #38BDF8; "
+    "color: #38BDF8; "
+    "}";
 
 QPushButton* UIBuilder::createButton(const QString &buttonName, QWidget *parent)
 {
@@ -25,6 +52,18 @@ QPushButton* UIBuilder::createButton(const QString &buttonName, QWidget *parent)
     button->setFixedSize(STDButtonLayout::buttonwidth, STDButtonLayout::buttonHeight);
 
     button->setStyleSheet(STDButtonLayout::styleSheet);
+
+    return button;
+}
+
+QPushButton* UIBuilder::createTopBarButton(const QString &buttonName, QWidget *parent)
+{
+    QPushButton *button = new QPushButton(buttonName, parent);
+    button->setObjectName("TopBarButton");
+    button->setFixedSize(TopBarButtonLayout::buttonWidth,
+                         TopBarButtonLayout::buttonHeight);
+
+    button->setStyleSheet(TopBarButtonLayout::styleSheet);
 
     return button;
 }

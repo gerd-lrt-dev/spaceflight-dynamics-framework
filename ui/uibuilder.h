@@ -52,6 +52,18 @@ public:
     QPushButton* createButton(const QString &buttonName, QWidget *parent);
 
     /**
+     * @brief Creates a compact QPushButton for the persistent top navigation bar.
+     *
+     * Top bar buttons are visually lighter than standard page action buttons.
+     * They are intended for global navigation and utility actions.
+     *
+     * @param buttonName Text displayed on the button.
+     * @param parent Optional parent widget.
+     * @return Pointer to the created QPushButton.
+     */
+    QPushButton* createTopBarButton(const QString &buttonName, QWidget *parent);
+
+    /**
      * @brief Creates a QLabel displaying a copyright message.
      * @param copyRightStr Text for the copyright.
      * @param parent Optional parent widget.
@@ -86,6 +98,13 @@ private:
         static const QString styleSheet; ///< Style sheet for standard buttons
         static const int buttonwidth     = 300; ///< Standard button width
         static const int buttonHeight    = 50;  ///< Standard button height
+    };
+
+    struct TopBarButtonLayout
+    {
+        static const QString styleSheet;      ///< Style sheet for top bar buttons
+        static const int buttonWidth  = 170;  ///< Top bar button width
+        static const int buttonHeight = 34;   ///< Top bar button height
     };
 
     QWidget* createLcdField(const QString& title, QLCDNumber* lcd, int digits);
