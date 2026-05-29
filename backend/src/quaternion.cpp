@@ -1,20 +1,43 @@
 #include "quaternion.h"
 #include <cmath>
 
-// public
+// ========================================
+// Public constructors
+// ========================================
+
 Quaternion::Quaternion()
     : q0_(1.0), q1_(0.0), q2_(0.0), q3_(0.0)
-{}
-
-Quaternion::Quaternion(double q0, double q1, double q2, double q3)
 {
-    double qN = norm(q0, q1, q2, q3);
+}
 
-    if (qN == 0.0) qN = 1.0;
-    q0_ = q0 / qN;
-    q1_ = q1 / qN;
-    q2_ = q2 / qN;
-    q3_ = q3 / qN;
+Quaternion::Quaternion(
+    double q0,
+    double q1,
+    double q2,
+    double q3)
+    : Quaternion(q0, q1, q2, q3, true)
+{
+}
+
+// ========================================
+// Private/internal constructor
+// ========================================
+
+Quaternion::Quaternion(
+    double q0,
+    double q1,
+    double q2,
+    double q3,
+    bool normalizeQuaternion)
+    : q0_(q0),
+    q1_(q1),
+    q2_(q2),
+    q3_(q3)
+{
+    if (normalizeQuaternion)
+    {
+        normalize();
+    }
 }
 
 double Quaternion::getQ0() const
@@ -46,28 +69,76 @@ double Quaternion::norm(double q0, double q1, double q2, double q3) const
 void Quaternion::normalize()
 {
     double qN = norm(q0_, q1_, q2_, q3_);
+
+    if (qN == 0.0)
+    {
+        q0_ = 1.0;
+        q1_ = 0.0;
+        q2_ = 0.0;
+        q3_ = 0.0;
+        return;
+    }
+
     q0_ /= qN;
     q1_ /= qN;
     q2_ /= qN;
     q3_ /= qN;
 }
 
-Vector3 Quaternion::rotate(const Vector3 &vector) const {
-    Quaternion vq(0.0, vector.x, vector.y, vector.z);
+Vector3 Quaternion::rotate(const Vector3 &vector) const
+{
+    Quaternion vq(
+        0.0,
+        vector.x,
+        vector.y,
+        vector.z,
+        false
+        );
 
-    Quaternion result = (*this) * vq * this->inverse();
+    Quaternion result =
+        (*this) * vq * inverse();
 
-    return Vector3(result.q1_, result.q2_, result.q3_);
+    return Vector3(
+        result.q1_,
+        result.q2_,
+        result.q3_
+        );
 }
 
-Quaternion Quaternion::inverse() const {
-    return Quaternion(this->q0_, -this->q1_, -this->q2_, -this->q3_);
-}
-
-Quaternion Quaternion::operator*(const Quaternion &other) const {
+Quaternion Quaternion::inverse() const
+{
     return Quaternion(
-        this->q0_ * other.q0_- this->q1_ * other.q1_ - this->q2_ * other.q2_ - this->q3_ * other.q3_,
-        this->q0_ * other.q1_ + this->q1_ * other.q0_ + this->q2_ * other.q3_ + this->q3_ * other.q2_,
-        this->q0_ * other.q2_ - this->q1_ * other.q3_ + this->q2_ * other.q0_ + this->q3_ * other.q1_,
-        this->q0_ * other.q3_ + this->q1_ * other.q2_ - this->q2_ * other.q1_ + this->q3_ * other.q0_);
+        q0_,
+        -q1_,
+        -q2_,
+        -q3_,
+        false
+        );
+}
+
+Quaternion Quaternion::operator*(const Quaternion &other) const
+{
+    return Quaternion(
+        q0_ * other.q0_
+            - q1_ * other.q1_
+            - q2_ * other.q2_
+            - q3_ * other.q3_,
+
+        q0_ * other.q1_
+            + q1_ * other.q0_
+            + q2_ * other.q3_
+            - q3_ * other.q2_,
+
+        q0_ * other.q2_
+            - q1_ * other.q3_
+            + q2_ * other.q0_
+            + q3_ * other.q1_,
+
+        q0_ * other.q3_
+            + q1_ * other.q2_
+            - q2_ * other.q1_
+            + q3_ * other.q0_,
+
+        false
+        );
 }

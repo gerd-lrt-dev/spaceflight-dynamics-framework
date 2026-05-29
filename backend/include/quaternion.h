@@ -42,7 +42,11 @@ public:
      * @param q2 Second vector component
      * @param q3 Third vector component
      */
-    Quaternion(double q0, double q1, double q2, double q3);
+    Quaternion(
+        double q0,
+        double q1,
+        double q2,
+        double q3);
 
     /// @return Scalar component of the quaternion
     double getQ0() const;
@@ -83,6 +87,14 @@ public:
 
     Quaternion operator*(const Quaternion &other) const;
 private:
+    /// Internal constructor that optionally skips normalization
+    Quaternion(
+        double q0,
+        double q1,
+        double q2,
+        double q3,
+        bool normalizeQuaternion);
+
     /// Quaternion scalar component
     double q0_;
 
