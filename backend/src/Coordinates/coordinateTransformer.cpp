@@ -9,32 +9,74 @@ CoordinateTransformer::CoordinateTransformer() {}
 // MCI <-> MCMF
 //=========================================================
 
-Vector3 CoordinateTransformer::mciToMcmf(
-    const Vector3& v,
-    double theta) const
+CoordinateTransformer::State CoordinateTransformer::MCItoMCMF(
+    const State& inertial,
+    double t) const
 {
-    double c = std::cos(theta);
-    double s = std::sin(theta);
+    const double theta =
+        MOON_ROTATION_RATE * t;
 
-    return Vector3(
-        c * v.x + s * v.y,
-        -s * v.x + c * v.y,
-        v.z
+    Quaternion q(
+        std::cos(theta * 0.5),
+        0.0,
+        0.0,
+        std::sin(theta * 0.5)
         );
+
+    Vector3 omega(
+        0.0,
+        0.0,
+        MOON_ROTATION_RATE
+        );
+
+    State fixed;
+
+    fixed.position =
+        q.rotate(inertial.position);
+
+    fixed.velocity =
+        q.rotate(
+            inertial.velocity
+            - omega.cross(inertial.position)
+            );
+
+    return fixed;
 }
 
-Vector3 CoordinateTransformer::mcmfToMci(
-    const Vector3& v,
-    double theta) const
+CoordinateTransformer::State CoordinateTransformer::MCMFtoMCI(
+    const State& fixed,
+    double t) const
 {
-    double c = std::cos(theta);
-    double s = std::sin(theta);
+    const double theta =
+        MOON_ROTATION_RATE * t;
 
-    return Vector3(
-        c * v.x - s * v.y,
-        s * v.x + c * v.y,
-        v.z
+    Quaternion q(
+        std::cos(theta * 0.5),
+        0.0,
+        0.0,
+        std::sin(theta * 0.5)
         );
+
+    Quaternion qInv = q.inverse();
+
+    Vector3 omega(
+        0.0,
+        0.0,
+        MOON_ROTATION_RATE
+        );
+
+    State inertial;
+
+    inertial.position =
+        qInv.rotate(fixed.position);
+
+    inertial.velocity =
+        qInv.rotate(
+            fixed.velocity
+            + omega.cross(fixed.position)
+            );
+
+    return inertial;
 }
 
 
@@ -43,37 +85,61 @@ Vector3 CoordinateTransformer::mcmfToMci(
 //=========================================================
 
 CoordinateTransformer::MoonSurfaceCoordinates
-CoordinateTransformer::mcmfToMSC(
-    const Vector3& position) const
+CoordinateTransformer::MCMFtoMSC(
+    const State& fixed) const
 {
-    double r = position.norm();
-
     MoonSurfaceCoordinates msc;
 
+    const Vector3& r = fixed.position;
+
+    const double radius = r.norm();
+
     msc.latitude =
-        std::asin(position.z / r);
+        std::asin(r.z / radius);
 
     msc.longitude =
-        std::atan2(position.y, position.x);
+        std::atan2(r.y, r.x);
 
     msc.altitude =
-        r - R_MOON;
+        radius - R_MOON;
 
     return msc;
 }
 
-Vector3 CoordinateTransformer::mscToMcmf(
+CoordinateTransformer::State CoordinateTransformer::MSCtoMCMF(
     const MoonSurfaceCoordinates& msc) const
 {
-    double r = R_MOON + msc.altitude;
+    const double r =
+        R_MOON + msc.altitude;
 
-    double clat = std::cos(msc.latitude);
+    const double cosLat =
+        std::cos(msc.latitude);
 
-    return Vector3(
-        r * clat * std::cos(msc.longitude),
-        r * clat * std::sin(msc.longitude),
-        r * std::sin(msc.latitude)
+    const double sinLat =
+        std::sin(msc.latitude);
+
+    const double cosLon =
+        std::cos(msc.longitude);
+
+    const double sinLon =
+        std::sin(msc.longitude);
+
+    State fixed;
+
+    fixed.position = Vector3(
+        r * cosLat * cosLon,
+        r * cosLat * sinLon,
+        r * sinLat
         );
+
+    // Stationary in Moon-fixed frame
+    fixed.velocity = Vector3(
+        0.0,
+        0.0,
+        0.0
+        );
+
+    return fixed;
 }
 
 
@@ -83,48 +149,107 @@ Vector3 CoordinateTransformer::mscToMcmf(
 
 CoordinateTransformer::ENUFrame
 CoordinateTransformer::computeENUFrame(
-    const Vector3& positionMCMF) const
+    const State& fixed) const
 {
-    Vector3 up =
-        positionMCMF.normalized();
+    ENUFrame frame;
 
-    Vector3 zAxis(0.0, 0.0, 1.0);
+    frame.origin = fixed;
 
-    Vector3 east =
-        zAxis.cross(up);
+    // Local up direction
+    frame.up =
+        fixed.position.normalized();
 
-    if (east.norm() < 1e-8)
+    // Moon rotation axis
+    Vector3 zAxis(
+        0.0,
+        0.0,
+        1.0
+        );
+
+    // Detect pole singularity
+    const double alignment =
+        std::abs(frame.up.dot(zAxis));
+
+    Vector3 referenceAxis;
+
+    if (alignment > ALIGNMENT_THRESHOLD)
     {
-        east = Vector3(1.0, 0.0, 0.0);
+        // Near poles:
+        // use global X axis instead
+        referenceAxis = Vector3(
+            1.0,
+            0.0,
+            0.0
+            );
+    }
+    else
+    {
+        // Normal case
+        referenceAxis = zAxis;
     }
 
-    east = east.normalized();
+    // Local east direction
+    frame.east =
+        referenceAxis.cross(frame.up)
+            .normalized();
+    // Local north direction
+    frame.north =
+        frame.up.cross(frame.east)
+            .normalized();
 
-    Vector3 north =
-        up.cross(east);
-
-    return {east, north, up};
+    return frame;
 }
 
-Vector3 CoordinateTransformer::enuToMcmf(
-    const Vector3& vENU,
-    const ENUFrame& enu) const
+CoordinateTransformer::State CoordinateTransformer::ENUtoMCMF(
+    const State& targetENU,
+    const ENUFrame& frame) const
 {
-    return
-        enu.east  * vENU.x +
-        enu.north * vENU.y +
-        enu.up    * vENU.z;
+    State fixed;
+
+    fixed.position =
+        frame.origin.position
+        + frame.east  * targetENU.position.x
+        + frame.north * targetENU.position.y
+        + frame.up    * targetENU.position.z;
+
+    fixed.velocity =
+        frame.origin.velocity
+        + frame.east  * targetENU.velocity.x
+        + frame.north * targetENU.velocity.y
+        + frame.up    * targetENU.velocity.z;
+
+    return fixed;
 }
 
-Vector3 CoordinateTransformer::mcmfToEnu(
-    const Vector3& vMCMF,
-    const ENUFrame& enu) const
+CoordinateTransformer::State CoordinateTransformer::MCMFtoENU(
+    const State& target,
+    const ENUFrame& frame) const
 {
-    return Vector3(
-        vMCMF.dot(enu.east),
-        vMCMF.dot(enu.north),
-        vMCMF.dot(enu.up)
+    State enu;
+
+    // Relative position
+    Vector3 deltaPosition =
+        target.position
+        - frame.origin.position;
+
+    enu.position = Vector3(
+        deltaPosition.dot(frame.east),
+        deltaPosition.dot(frame.north),
+        deltaPosition.dot(frame.up)
         );
+
+    // Relative velocity
+    Vector3 deltaVelocity =
+        target.velocity
+        - frame.origin.velocity;
+
+    enu.velocity = Vector3(
+        deltaVelocity.dot(frame.east),
+        deltaVelocity.dot(frame.north),
+        deltaVelocity.dot(frame.up)
+        );
+
+    return enu;
 }
 
 
@@ -134,69 +259,154 @@ Vector3 CoordinateTransformer::mcmfToEnu(
 
 CoordinateTransformer::LVLHFrame
 CoordinateTransformer::computeLVLHFrame(
-    const State& state) const
+    const State& inertial) const
 {
-    Vector3 r =
-        state.position.normalized();
+    LVLHFrame frame;
 
-    Vector3 v =
-        state.velocity.normalized();
+    frame.origin = inertial;
 
+    Vector3 r = inertial.position;
+    Vector3 v = inertial.velocity;
+
+    // Local vertical (nadir)
+    frame.down =
+        (-r).normalized();
+
+    // Orbital angular momentum
     Vector3 h =
-        state.position.cross(
-                          state.velocity).normalized();
+        r.cross(v);
 
-    Vector3 down = -r;
+    const double hNorm =
+        h.norm();
 
-    Vector3 forward = v;
+    // Degenerate trajectory handling
+    if (hNorm < ANGULAR_MOMENTUM_EPSILON)
+    {
+        // Fallback reference direction
+        Vector3 fallback(0.0, 0.0, 1.0);
 
-    Vector3 right =
-        forward.cross(down).normalized();
+        // Avoid parallel vectors
+        if (std::abs(frame.down.dot(fallback)) > ALIGNMENT_THRESHOLD)
+        {
+            fallback = Vector3(
+                1.0,
+                0.0,
+                0.0
+                );
+        }
 
-    forward =
-        down.cross(right).normalized();
+        frame.right =
+            fallback.cross(frame.down)
+                .normalized();
+    }
+    else
+    {
+        frame.right =
+            (-h).normalized();
+    }
 
-    return {forward, right, down};
+    frame.forward =
+        frame.right.cross(frame.down).normalized();
+
+    return frame;
 }
 
-Vector3 CoordinateTransformer::lvlhToMci(
-    const Vector3& vLVLH,
-    const LVLHFrame& lvlh) const
+CoordinateTransformer::State CoordinateTransformer::LVLHtoMCI(
+    const State& targetLVLH,
+    const LVLHFrame& frame) const
 {
-    return
-        lvlh.forward * vLVLH.x +
-        lvlh.right   * vLVLH.y +
-        lvlh.down    * vLVLH.z;
+    State inertial;
+
+    // Position
+    inertial.position =
+        frame.origin.position
+        + frame.forward * targetLVLH.position.x
+        + frame.right   * targetLVLH.position.y
+        + frame.down    * targetLVLH.position.z;
+
+    // Velocity
+    inertial.velocity =
+        frame.origin.velocity
+        + frame.forward * targetLVLH.velocity.x
+        + frame.right   * targetLVLH.velocity.y
+        + frame.down    * targetLVLH.velocity.z;
+
+    return inertial;
 }
 
-Vector3 CoordinateTransformer::mciToLvlh(
-    const Vector3& vMCI,
-    const LVLHFrame& lvlh) const
+CoordinateTransformer::State CoordinateTransformer::MCItoLVLH(
+    const State& target,
+    const LVLHFrame& frame) const
 {
-    return Vector3(
-        vMCI.dot(lvlh.forward),
-        vMCI.dot(lvlh.right),
-        vMCI.dot(lvlh.down)
+    State lvlh;
+
+    // Relative position
+    Vector3 deltaPosition =
+        target.position
+        - frame.origin.position;
+
+    lvlh.position = Vector3(
+        deltaPosition.dot(frame.forward),
+        deltaPosition.dot(frame.right),
+        deltaPosition.dot(frame.down)
         );
+
+    // Relative velocity
+    Vector3 deltaVelocity =
+        target.velocity
+        - frame.origin.velocity;
+
+    lvlh.velocity = Vector3(
+        deltaVelocity.dot(frame.forward),
+        deltaVelocity.dot(frame.right),
+        deltaVelocity.dot(frame.down)
+        );
+
+    return lvlh;
 }
 
 
 //=========================================================
 // Spacecraft Body Frame
-// Quaternion convention:
-// q_IB transforms inertial -> body
 //=========================================================
 
-Vector3 CoordinateTransformer::mciToSbf(
-    const Vector3& vMCI,
-    const Quaternion& q_IB) const
+CoordinateTransformer::State CoordinateTransformer::MCItoSBF(
+    const State& inertial,
+    const SpacecraftBodyFrame& body) const
 {
-    return q_IB.rotate(vMCI);
+    State local;
+
+    Quaternion qInv =
+        body.orientation.inverse();
+
+    local.position =
+        qInv.rotate(
+            inertial.position
+            - body.origin.position);
+
+    local.velocity =
+        qInv.rotate(
+            inertial.velocity
+            - body.origin.velocity);
+
+    return local;
 }
 
-Vector3 CoordinateTransformer::sbfToMci(
-    const Vector3& vBody,
-    const Quaternion& q_IB) const
+CoordinateTransformer::State CoordinateTransformer::SBFtoMCI(
+    const State& bodyState,
+    const SpacecraftBodyFrame& body) const
 {
-    return q_IB.inverse().rotate(vBody);
+    State inertial;
+
+    inertial.position =
+        body.origin.position
+        + body.orientation.rotate(
+            bodyState.position);
+
+    inertial.velocity =
+        body.origin.velocity
+        + body.orientation.rotate(
+            bodyState.velocity);
+
+    return inertial;
 }
