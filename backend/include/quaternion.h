@@ -1,6 +1,9 @@
 #ifndef QUATERNION_H
 #define QUATERNION_H
 
+#include "vector3.h"
+
+
 /**
  * @class Quaternion
  * @brief Mathematical representation of a 3D rotation using unit quaternions.
@@ -39,7 +42,11 @@ public:
      * @param q2 Second vector component
      * @param q3 Third vector component
      */
-    Quaternion(double q0, double q1, double q2, double q3);
+    Quaternion(
+        double q0,
+        double q1,
+        double q2,
+        double q3);
 
     /// @return Scalar component of the quaternion
     double getQ0() const;
@@ -73,7 +80,21 @@ public:
      *
      */
     void normalize();
+
+    Vector3 rotate(const Vector3 &vector) const;
+
+    Quaternion inverse() const;
+
+    Quaternion operator*(const Quaternion &other) const;
 private:
+    /// Internal constructor that optionally skips normalization
+    Quaternion(
+        double q0,
+        double q1,
+        double q2,
+        double q3,
+        bool normalizeQuaternion);
+
     /// Quaternion scalar component
     double q0_;
 
