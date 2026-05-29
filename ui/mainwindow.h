@@ -1,46 +1,47 @@
 /**
- * @file mainWindow.h
+ * @file mainwindow.h
  * @brief Main GUI window for the Lunar Lander simulator application.
  *
- * The MainWindow class manages the central GUI of the application.
- * It provides navigation between different pages of the simulator using
- * a QStackedWidget. The main pages include:
- * - Homepage
- * - Cockpit / Simulation view
- * - Settings and configuration (if applicable)
- *
- * The class also handles screen detection and layout adjustments to
- * ensure proper scaling on different monitors.
- *
- * @author Schendzielorz Gerd
- * @date 2025-11-27
+ * MainWindow is the central frontend shell of the application.
+ * It owns the global navigation structure, the page stack, the shared
+ * configuration manager and the simulation worker thread.
  */
 
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QLabel>
 #include <QMainWindow>
-#include <QPixmap>
-#include <QPushButton>
 #include <QRect>
 #include <QScreen>
 #include <QShowEvent>
 #include <QStackedWidget>
+#include <QThread>
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QWindow>
 
+#include "configmanager.h"
+#include "cockpitpage.h"
 #include "homepage.h"
+#include "simulationworker.h"
+#include "spacecraftselectionpage.h"
+#include "topbarwidget.h"
+#include "controlshelppage.h"
+#include "settingspage.h"
 
 /**
  * @class MainWindow
- * @brief Main application window for the Lunar Lander simulator.
+ * @brief Main application shell and frontend coordinator.
  *
- * Inherits from QMainWindow. This class is responsible for:
- * - Creating and managing the central GUI layout
- * - Handling navigation between different pages via QStackedWidget
- * - Detecting screen size and adjusting layouts accordingly
+ * Responsibilities:
+ * - Owns the persistent TopBarWidget
+ * - Owns the central QStackedWidget
+ * - Owns all main frontend pages
+ * - Owns the shared ConfigManager
+ * - Owns and manages the simulation worker thread
+ * - Connects UI navigation signals to page transitions
+ * - Connects cockpit input signals to the simulation worker
+ * - Connects simulation telemetry updates back to the cockpit
  */
 class MainWindow : public QMainWindow
 {
@@ -48,46 +49,125 @@ class MainWindow : public QMainWindow
 
 public:
     /**
-     * @brief Constructor for MainWindow.
-     * @param parent Optional parent widget. Defaults to nullptr.
-     *
-     * Initializes the main window and prepares the central GUI layout.
+     * @brief Constructs the main window.
+     * @param parent Optional parent widget.
      */
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
 
     /**
-     * @brief Destructor for MainWindow.
+     * @brief Destructor.
      *
-     * Cleans up allocated resources.
+     * Stops and joins the simulation worker thread.
      */
     ~MainWindow();
 
 private:
     // ==========================================
-    // Member Variables
+    // Resources
     // ==========================================
-    QVBoxLayout *vLayout;   ///< Main vertical layout for the central widget
-    Homepage    *homepage;  ///< First page of program. Used to select initial steps.
+
+    /**
+     * @brief Shared spacecraft configuration manager.
+     */
+    ConfigManager configManager_;
+
+    /**
+     * @brief Currently selected spacecraft JSON configuration.
+     *
+     * Empty means that the default spacecraft configuration should be used.
+     */
+    QString selectedJsonConfigStr;
 
     // ==========================================
-    // Member Functions
+    // Widgets & Layouts
     // ==========================================
-    void setupUI();          ///< Sets up the main window UI components
+
+    /**
+     * @brief Main vertical layout containing top bar and page stack.
+     */
+    QVBoxLayout *vLayout = nullptr;
+
+    /**
+     * @brief Persistent top navigation bar.
+     */
+    TopBarWidget *topBar = nullptr;
+
+    /**
+     * @brief Central page stack.
+     */
+    QStackedWidget *stackedWidget = nullptr;
+
+    // ==========================================
+    // Pages
+    // ==========================================
+
+    /**
+     * @brief Application landing page.
+     */
+    Homepage *homepage = nullptr;
+
+    /**
+     * @brief Spacecraft selection page.
+     */
+    SpacecraftSelectionPage *selectionPage = nullptr;
+
+    /**
+     * @brief Main simulation cockpit page.
+     */
+    cockpitPage *cockpit = nullptr;
+
+    /**
+     * @brief Controls Help Page
+     */
+    ControlsHelpPage *controlsHelpPage = nullptr;
+
+    /**
+     * @brief Settings Page
+     */
+    SettingsPage *settingsPage = nullptr;
+
+    // ==========================================
+    // Simulation Thread / Worker
+    // ==========================================
+
+    /**
+     * @brief Thread used to run the simulation worker.
+     */
+    QThread *simulationThread = nullptr;
+
+    /**
+     * @brief Worker object executing the simulation loop.
+     */
+    SimulationWorker *simulationWorker = nullptr;
+
+    // ==========================================
+    // Setup Functions
+    // ==========================================
+
+    /**
+     * @brief Builds the main UI shell and creates all pages.
+     */
+    void setupUI();
+
+    /**
+     * @brief Creates and starts the simulation worker thread.
+     */
+    void setupThread();
+
+    /**
+     * @brief Connects navigation, UI and simulation signals.
+     */
+    void setupConnections();
+
+    /**
+     * @brief Sends the selected or default spacecraft JSON to the worker.
+     */
+    void sendCurrentConfigToWorker();
 
 protected:
     /**
-     * @brief Handles the show event to detect the current screen and adjust window size.
-     *
-     * Reimplementation of the QWidget/QMainWindow showEvent, automatically
-     * called by Qt when the window becomes visible (after show() is invoked).
-     * It retrieves the screen on which the window is currently displayed and
-     * its available geometry to scale UI elements appropriately.
-     *
-     * Note: windowHandle() must be valid when accessing the screen. This method
-     * is preferred over accessing the primary screen directly, especially
-     * in multi-monitor setups.
-     *
-     * @param event Pointer to the QShowEvent triggered when the widget is shown.
+     * @brief Handles initial window sizing after the window is shown.
+     * @param event Qt show event.
      */
     void showEvent(QShowEvent *event) override;
 };

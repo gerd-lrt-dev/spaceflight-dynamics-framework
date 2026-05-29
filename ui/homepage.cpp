@@ -1,176 +1,143 @@
 #include "homepage.h"
 #include "uibuilder.h"
 
-Homepage::Homepage(QWidget *parent) :
-    QMainWindow(parent)
+#include <QPixmap>
+
+Homepage::Homepage(QWidget *parent)
+    : QWidget(parent)
 {
-    setupStackedWidget();
-    setupThread();
+    setupUI();
     setupConnections();
-
-    bool jsonLoaded = configManager_.loadConfig(":/configs/Resources/configs/lander.json");
-    qDebug() << "[homepage] constructor: Json config file successfully loaded";
 }
 
-Homepage::~Homepage()
+void Homepage::setupUI()
 {
-    simulationThread->quit();
-    simulationThread->wait();
-}
-
-void Homepage::setupStackedWidget()
-{
-    // Build central QWidget
-    centralWidget = new QWidget(this);
-
-    // Build vertical box layout
-    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
-
-    // Build stackedWidget for pages
-    stackedWidget = new QStackedWidget(this);
-
-    // Create pages
-    QWidget *homepage = createHomePage(stackedWidget);
-    cockpit = new cockpitPage(this);
-
-    spacecraftSelectionPage_ = new SpacecraftSelectionPage(configManager_, this);
-
-    // Add pages to stacked widget
-    stackedWidget->addWidget(homepage);
-    stackedWidget->addWidget(cockpit);
-    stackedWidget->addWidget(spacecraftSelectionPage_);
-
-    // Add stackedwidget to Layout
-    layout->addWidget(stackedWidget);
-
-    // Set central page
-    setCentralWidget(centralWidget);
-}
-
-QWidget* Homepage::createHomePage(QStackedWidget *stackedWidget)
-{
-    //Create Widget
-    QWidget *homepage = new QWidget(this);
-
-    // Build instance for ui building class
     UIBuilder uiBuilder;
 
-    // Initialize Layout
-    vHomepageLayout = new QVBoxLayout(homepage);
+    vHomepageLayout = new QVBoxLayout(this);
 
-    // Add title
-    QLabel *title = uiBuilder.createPageTitle("Lunar Lander Simulation", this);
+    vHomepageLayout->setContentsMargins(40, 30, 40, 30);
+    vHomepageLayout->setSpacing(0);
 
-    // Add logo
-    QLabel *logoLabel   = new QLabel(this);
-    QPixmap logoPixmap(":/new/logo/Resources/Images/logo.png");
-    logoPixmap = logoPixmap.scaled(200, 200, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    // =====================================================
+    // Logo
+    // =====================================================
+
+    QLabel *logoLabel = new QLabel(this);
+
+    QPixmap logoPixmap(":/new/logo/Resources/Images/newlogo.png");
+
+    logoPixmap = logoPixmap.scaled(
+        600,
+        600,
+        Qt::KeepAspectRatio,
+        Qt::SmoothTransformation);
+
     logoLabel->setPixmap(logoPixmap);
     logoLabel->setAlignment(Qt::AlignCenter);
 
-    // Add copryright
-    QLabel *copyright = uiBuilder.createCopyright("© gerd-lrt-dev", this);
+    // =====================================================
+    // Framework Description
+    // =====================================================
 
-    // Add Buttons
-    selectSpacecraftButton = uiBuilder.createButton("Select Spacecraft", this);
-    startSimulationButton = uiBuilder.createButton("Start Simulation", this);
+    QLabel *description = new QLabel(
+        "High Fidelity Spaceflight Simulation\n"
+        "and Research Environment",
+        this);
 
-    // Add widgets to Layout
-    vHomepageLayout->addSpacing(30);
-    vHomepageLayout->addWidget(title);
-    vHomepageLayout->addSpacing(15);
+    description->setAlignment(Qt::AlignCenter);
+
+    description->setStyleSheet(
+        "font-size: 18px;"
+        "font-weight: 500;"
+        "color: #AFC2D6;"
+        "letter-spacing: 0.5px;"
+        "line-height: 28px;"
+        );
+
+    // =====================================================
+    // Release Information
+    // =====================================================
+
+    QLabel *releaseInfo = new QLabel(
+        "Development Build\n"
+        "Current Milestone: M1 - Full 6DOF Simulation",
+        this);
+
+    releaseInfo->setAlignment(Qt::AlignCenter);
+
+    releaseInfo->setStyleSheet(
+        "font-size: 14px;"
+        "color: #7F93AA;"
+        "padding-top: 10px;"
+        "line-height: 22px;"
+        );
+
+    // =====================================================
+    // Navigation Buttons
+    // =====================================================
+
+    selectSpacecraftButton =
+        uiBuilder.createButton("Select Spacecraft", this);
+
+    startSimulationButton =
+        uiBuilder.createButton("Start Simulation", this);
+
+    // =====================================================
+    // Copyright
+    // =====================================================
+
+    QLabel *copyright =
+        uiBuilder.createCopyright(
+            "© 2026 gerd-lrt-dev | Spaceflight Dynamics Framework",
+            this);
+
+    // =====================================================
+    // Layout Assembly
+    // =====================================================
+
+    vHomepageLayout->addStretch();
+
     vHomepageLayout->addWidget(logoLabel);
-    vHomepageLayout->addSpacing(15);
-    vHomepageLayout->addWidget(copyright);
-    vHomepageLayout->addSpacing(15);
-    vHomepageLayout->addWidget(selectSpacecraftButton, 0, Qt::AlignHCenter);
-    vHomepageLayout->addSpacing(15);
-    vHomepageLayout->addWidget(startSimulationButton, 0, Qt::AlignHCenter);
-    vHomepageLayout->setAlignment(Qt::AlignTop);
-    vHomepageLayout->setAlignment(Qt::AlignCenter);
 
-    return homepage;
+    vHomepageLayout->addSpacing(10);
+
+    vHomepageLayout->addWidget(description);
+
+    vHomepageLayout->addSpacing(20);
+
+    vHomepageLayout->addWidget(releaseInfo);
+
+    vHomepageLayout->addSpacing(40);
+
+    vHomepageLayout->addWidget(
+        selectSpacecraftButton,
+        0,
+        Qt::AlignHCenter);
+
+    vHomepageLayout->addSpacing(15);
+
+    vHomepageLayout->addWidget(
+        startSimulationButton,
+        0,
+        Qt::AlignHCenter);
+
+    vHomepageLayout->addStretch();
+
+    vHomepageLayout->addWidget(copyright);
+
+    vHomepageLayout->setAlignment(Qt::AlignCenter);
 }
 
 void Homepage::setupConnections()
 {
-    connect(startSimulationButton, &QPushButton::clicked, this, [this]
-            {
-                handleJsonConfig(jsonConfigStr);
-                stackedWidget->setCurrentWidget(cockpit);
-            });
+    connect(selectSpacecraftButton,
+            &QPushButton::clicked,
+            this,
+            &Homepage::selectSpacecraftRequested);
 
-    // Connect thrust input from user with backend
-
-    connect(cockpit, &cockpitPage::flightCmdRequested, simulationWorker, &SimulationWorker::setFlightCommand);
-
-    connect(cockpit, &cockpitPage::autopilotToggled, simulationWorker, &SimulationWorker::setAutopilotFlag);
-
-    connect(selectSpacecraftButton, &QPushButton::clicked, this, [this]
-            {
-                stackedWidget->setCurrentWidget(spacecraftSelectionPage_);
-            });
-
-    connect(spacecraftSelectionPage_, &SpacecraftSelectionPage::backRequested, this, [this]
-            {
-                stackedWidget->setCurrentIndex(0);
-            });
-
-    connect(spacecraftSelectionPage_, &SpacecraftSelectionPage::spacecraftSelected, this, [this](QString spacecraft)
-            {
-                selectedJsonConfigStr = spacecraft;
-                handleJsonConfig(jsonConfigStr);
-                stackedWidget->setCurrentWidget(cockpit);
-            });
-    connect(this, &Homepage::sendJsonToSpacecraftSelectPage, spacecraftSelectionPage_, &SpacecraftSelectionPage::receiveJsonConfigStr);
+    connect(startSimulationButton,
+            &QPushButton::clicked,
+            this,
+            &Homepage::startSimulationRequested);
 }
-
-void Homepage::setupThread()
-{
-    // Instance thread
-    simulationThread = new QThread(this);
-
-    // Instance class
-    simulationWorker = new SimulationWorker();
-
-    simulationWorker->moveToThread(simulationThread);
-
-    // Build connections
-    connect(simulationThread, &QThread::finished, simulationWorker, &QObject::deleteLater);
-
-    connect(this, &QObject::destroyed, simulationThread, &QThread::quit);
-
-    connect(cockpit, &cockpitPage::startRequested,
-            simulationWorker, &SimulationWorker::start);
-
-    connect(cockpit, &cockpitPage::pauseRequested,
-            simulationWorker, &SimulationWorker::pause);
-
-    connect(cockpit, &cockpitPage::stopConfirmed,
-            simulationWorker, &SimulationWorker::stop);
-
-    connect(this, &Homepage::sendJsonToWorker, simulationWorker,
-            &SimulationWorker::receiveJsonConfig, Qt::QueuedConnection);
-
-    connect(simulationWorker, &SimulationWorker::stateUpdated,
-            cockpit, &cockpitPage::onStateUpdated);
-
-
-    // Start simulation
-    simulationThread->start();
-}
-
-void Homepage::handleJsonConfig(const QString &jsonConfigStr_)
-{
-// Catch failure when config file is empty
-    if (selectedJsonConfigStr.isEmpty())
-    {
-        QString jsonConfigDefault = configManager_.defaultSpacecraftJson();
-        emit sendJsonToWorker(jsonConfigDefault);
-    }
-    else
-    {
-        emit sendJsonToWorker(selectedJsonConfigStr);
-    }
-}
-
