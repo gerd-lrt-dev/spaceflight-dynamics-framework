@@ -11,15 +11,26 @@
 #include <vector>
 
 /**
- * @brief This data will be return to UI by runSimulation
-     * @param pos                   ///< [m] positions in three dimensions
-     * @param vel                   ///< [m/s] velocity in three dimensions
-     * @param acc                   ///< [s/s²] acceleration in three dimensions
-     * @param spacecraftIntegrity   ///< [0/1] flag that represents spacecraft integrity
-     * @param thrust                ///< [%] current thrust of spacecraft
-     * @param targetThrust          ///< [%] target thrust of spacecraft
-     * @param fuelMass              ///< [kg] current fuel mass of spacecraft
-     * @param fuelFlow              ///< [kg/s] mass flow of fuel
+ * @brief Aggregated simulation telemetry and runtime state data exchanged
+ * between backend and frontend.
+ *
+ * This structure represents the primary simulation data container returned by
+ * the simulation backend during runtime execution.
+ *
+ * It contains:
+ * - spacecraft navigation and kinematic data
+ * - spacecraft integrity and operational state
+ * - propulsion telemetry
+ * - fuel system telemetry
+ * - force and acceleration data
+ * - backend debug output
+ *
+ * The structure is used for:
+ * - real-time cockpit visualization
+ * - backend/frontend communication
+ * - telemetry export (e.g. XML/CSV)
+ * - debugging and validation
+ * - future research-oriented data analysis workflows
  */
 struct simData
 {
@@ -37,14 +48,39 @@ struct simData
     ME_ThrustState ME_ThrustState_;
 
     // RCSEngine data
-    RCS_ThrustState RCS_ThrustState_;
+    std::vector<RCS_ThrustState> RCS_ThrustState_;
 
     // Fuel data
     std::vector<FuelTank> tanks;
-    double fuelMass; ///< Fuel Mass summed by all installed tanks[kg]
+
+    /**
+     * @brief Total remaining fuel mass of all installed tanks.
+     *
+     * Represents the summed fuel mass across the complete propulsion system.
+     *
+     * Unit: kg
+     */
+    double fuelMass;
+
+    /**
+     * @brief Total fuel mass flow rate.
+     *
+     * Represents the combined instantaneous fuel consumption of all active
+     * propulsion elements.
+     *
+     * Unit: kg/s
+     */
     double fuelFlow;
 
     // Forces
+    /**
+     * @brief Experienced spacecraft g-load.
+     *
+     * Represents the proper acceleration acting on the spacecraft structure
+     * and crew.
+     *
+     * Unit: g
+     */
     double GLoad;
 };
 

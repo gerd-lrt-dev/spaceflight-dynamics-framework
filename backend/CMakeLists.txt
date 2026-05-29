@@ -21,6 +21,7 @@ add_library(moonlander_backend
     src/Controller/pd_controller.cpp
     src/Coordinates/coordinateTransformer.cpp
     src/Thrust/BasicMainEngineModel.cpp
+    src/Thrust/BasicRCSModel.cpp
     include/Integrators/Dynamics.h
     include/Integrators/iIntegrator.h
     include/Integrators/eulerIntegrator.h
@@ -42,9 +43,12 @@ add_library(moonlander_backend
     include/Thrust/BasicMainEngineModel.h
     include/Thrust/FuelStateStruct.h
     include/Thrust/EngineConfig.h
+    include/Thrust/RCSConfig.h
     include/Thrust/ME_thrustState.h
     include/Thrust/RCS_ThrustState.h
     include/Thrust/FueltankStruct.h
+    include/Thrust/BasicRCSModel.h
+    include/Thrust/RCSControlAllocator.h
 )
 
 target_include_directories(moonlander_backend

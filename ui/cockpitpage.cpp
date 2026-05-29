@@ -243,9 +243,15 @@ QGroupBox *cockpitPage::setupNavBox()
 // ================= ENGINE =================
 QGroupBox *cockpitPage::setupEngineBox()
 {
+    // Main Engine
     QGroupBox *engineBox = new QGroupBox("ENGINE");
     QGridLayout *engineLayout = new QGridLayout(engineBox);
 
+    // RCS Engines
+    QLabel *rcsSectionTitle = new QLabel("RCS THRUSTER STATUS");
+    rcsSectionTitle->setStyleSheet("color: #4FC3F7; font-weight: bold;");
+
+    // Main Engine
     QVector<QLCDNumber*> currentThrustPanel;
     QVector<QLCDNumber*> targetThrustPanel;
 
@@ -260,17 +266,146 @@ QGroupBox *cockpitPage::setupEngineBox()
     QWidget *targetThrustDetailBox  = uibuilder.setupDetailBox(targetThrustPanel, {"Thrust [N] X:", "Thrust [N] Y:", "Thrust [N] Z:"}, "LNF_TARGET THRUST", 3);
     QWidget *GLoadDetailBox         = uibuilder.setupDetailBox({lcdGLoad}, {"GLoad [m/s²]"}, "ACCELERATION", 1);
 
+    // RCS Engines
+    rcsThrusterContainer = new QWidget();
+    rcsThrusterLayout = new QVBoxLayout(rcsThrusterContainer);
+    rcsThrusterLayout->setContentsMargins(0, 0, 0, 0);
+    rcsThrusterLayout->setSpacing(6);
+
+    QScrollArea *rcsScrollArea = new QScrollArea();
+    rcsScrollArea->setWidgetResizable(true);
+    rcsScrollArea->setFrameShape(QFrame::NoFrame);
+    rcsScrollArea->setWidget(rcsThrusterContainer);
+    rcsScrollArea->setMinimumHeight(160);
+
     engineLayout->addWidget(currentThrustDetailBox, 0, 0);
     engineLayout->addWidget(targetThrustDetailBox, 0, 1);
     engineLayout->addWidget(GLoadDetailBox, 1, 0, 1, 2);
-
-    engineLayout->setColumnStretch(0, 1);
-    engineLayout->setColumnStretch(1, 1);
+    engineLayout->addWidget(rcsSectionTitle, 2, 0, 1, 2);
+    engineLayout->addWidget(rcsScrollArea, 3, 0, 1, 2);
 
     engineLayout->setRowStretch(0, 1);
     engineLayout->setRowStretch(1, 1);
+    engineLayout->setRowStretch(2, 0);
+    engineLayout->setRowStretch(3, 2);
 
     return engineBox;
+}
+
+void cockpitPage::rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rcsStates)
+{
+    if (!rcsThrusterLayout)
+        return;
+
+    QLayoutItem *item;
+    while ((item = rcsThrusterLayout->takeAt(0)) != nullptr)
+    {
+        if (item->widget())
+            delete item->widget();
+        delete item;
+    }
+
+    lblRCSEngineNames.clear();
+    lblRCSAxes.clear();
+    lcdRCSCurrentThrust.clear();
+    lcdRCSTargetThrust.clear();
+    barRCSActuatorStates.clear();
+
+    for (const RCSCockpitTelemetry& state : rcsStates)
+    {
+        QGroupBox *thrusterBox = new QGroupBox();
+        QVBoxLayout *thrusterLayout = new QVBoxLayout(thrusterBox);
+        thrusterLayout->setContentsMargins(8, 8, 8, 8);
+        thrusterLayout->setSpacing(4);
+
+        QLabel *lblName = new QLabel(state.name);
+        lblName->setStyleSheet("color: #D6E1F0; font-weight: bold;");
+
+        QLabel *lblAxis = new QLabel(QString("Axis: %1").arg(state.axis));
+        lblAxis->setStyleSheet("color: #AFC7DF; font-size: 10px;");
+
+        QGridLayout *metricsLayout = new QGridLayout();
+
+        QLCDNumber *lcdCurrent = new QLCDNumber();
+        QLCDNumber *lcdTarget = new QLCDNumber();
+
+        configureLCD(lcdCurrent, 8);
+        configureLCD(lcdTarget, 8);
+
+        lcdCurrent->display(QString::number(state.currentThrust, 'f', 1));
+        lcdTarget->display(QString::number(state.targetThrust, 'f', 1));
+
+        QProgressBar *barState = new QProgressBar();
+        barState->setRange(0, 100);
+        barState->setValue(static_cast<int>(qBound(0.0, state.actuatorState * 100.0, 100.0)));
+        barState->setTextVisible(true);
+        barState->setFormat("%p%");
+
+        barState->setStyleSheet(
+            "QProgressBar {"
+            "  border: 1px solid #2F4A72;"
+            "  border-radius: 4px;"
+            "  background-color: #09111B;"
+            "  color: #D6E1F0;"
+            "  text-align: center;"
+            "}"
+            "QProgressBar::chunk {"
+            "  background-color: #4FC3F7;"
+            "  border-radius: 3px;"
+            "}"
+            );
+
+        QLabel *lblCurrent = new QLabel("Current [N]");
+        QLabel *lblTarget = new QLabel("Target [N]");
+        QLabel *lblState = new QLabel("State [%]");
+
+        lblCurrent->setStyleSheet("color: #AFC7DF;");
+        lblTarget->setStyleSheet("color: #AFC7DF;");
+        lblState->setStyleSheet("color: #AFC7DF;");
+
+        metricsLayout->addWidget(lblCurrent, 0, 0);
+        metricsLayout->addWidget(lblTarget, 0, 1);
+        metricsLayout->addWidget(lblState, 0, 2);
+
+        metricsLayout->addWidget(lcdCurrent, 1, 0);
+        metricsLayout->addWidget(lcdTarget, 1, 1);
+        metricsLayout->addWidget(barState, 1, 2);
+
+        metricsLayout->setColumnStretch(0, 1);
+        metricsLayout->setColumnStretch(1, 1);
+        metricsLayout->setColumnStretch(2, 2);
+
+        thrusterLayout->addWidget(lblName);
+        thrusterLayout->addWidget(lblAxis);
+        thrusterLayout->addLayout(metricsLayout);
+
+        rcsThrusterLayout->addWidget(thrusterBox);
+
+        lblRCSEngineNames.push_back(lblName);
+        lblRCSAxes.push_back(lblAxis);
+        lcdRCSCurrentThrust.push_back(lcdCurrent);
+        lcdRCSTargetThrust.push_back(lcdTarget);
+        barRCSActuatorStates.push_back(barState);
+    }
+
+    rcsThrusterLayout->addStretch();
+}
+
+QVector<RCSCockpitTelemetry> cockpitPage::filterActiveRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates) const
+{
+    QVector<RCSCockpitTelemetry> active;
+
+    for (const auto& state : rcsStates)
+    {
+        if (std::abs(state.currentThrust) > 0.01 ||
+            std::abs(state.targetThrust) > 0.01 ||
+            state.actuatorState > 0.01)
+        {
+            active.push_back(state);
+        }
+    }
+
+    return active;
 }
 
 // ================= FUEL =================
@@ -319,161 +454,6 @@ QGroupBox *cockpitPage::setupFuelBox()
     fuelMainLayout->addWidget(scrollArea);
 
     return fuelBox;
-}
-
-// ================= STATUS =================
-QGroupBox *cockpitPage::setupStatusBox()
-{
-    QGroupBox *statusBox = new QGroupBox("STATUS");
-    QVBoxLayout *statusLayout = new QVBoxLayout(statusBox);
-
-    // --- HULL ---
-    lblHullStatus = new QLabel("HULL: OK");
-    lblHullStatus->setStyleSheet("color: lime; font-weight: bold;");
-    statusLayout->addWidget(lblHullStatus);
-
-    // --- Autopilot ---
-    lblAutopilotStatus = new QLabel("AUTOPILOT: OFF");
-    lblAutopilotStatus->setStyleSheet("color: gray; font-weight: bold;");
-    statusLayout->addWidget(lblAutopilotStatus);
-
-    // --- Autopilot blink timer ---
-    autopilotBlinkTimer = new QTimer(this);
-    autopilotBlinkTimer->setInterval(500); // ms
-    autopilotBlinkOn = false;
-
-    // --- Controller output ---
-    lblControllerOutput = new QLabel("Controller Output: OK");
-    lblControllerOutput->setStyleSheet("Color: white; font-weight: bold;");
-    statusLayout->addWidget(lblControllerOutput);
-
-    statusLayout->addStretch();
-
-    return statusBox;
-}
-
-// ================= LANDING VIEW =================
-QGroupBox *cockpitPage::setupLandingBox()
-{
-    QGroupBox *landingBox = new QGroupBox("LANDING VIEW");
-    QVBoxLayout *landingLayout = new QVBoxLayout(landingBox);
-
-    landingView = new LandingView(this);
-    landingView->setMinimumSize(240, 180);
-    landingLayout->addWidget(landingView, 1);
-
-    // === Thrust Control Console ===
-    QGroupBox *thrustBox = new QGroupBox("CONTROL UNIT");
-    QVBoxLayout *thrustLayout = new QVBoxLayout(thrustBox);
-
-    thrustSlider = new QSlider(Qt::Horizontal);
-    thrustSlider->setRange(0, 100);
-    thrustSlider->setValue(0);
-
-    lblThrustCmd = new QLabel("Commanded Thrust: 0 %");
-    lblThrustCmd->setAlignment(Qt::AlignCenter);
-
-    thrustLayout->addWidget(thrustSlider);
-    thrustLayout->addWidget(lblThrustCmd);
-
-    landingLayout->addWidget(thrustBox);
-
-    // === Simulation Controls ===
-    QHBoxLayout *simControlLayout = new QHBoxLayout();
-    btnSimStart = new QPushButton("START");
-    btnSimPause = new QPushButton("PAUSE");
-    btnSimStop  = new QPushButton("STOP");
-
-    simControlLayout->addWidget(btnSimStart);
-    simControlLayout->addWidget(btnSimPause);
-    simControlLayout->addWidget(btnSimStop);
-
-    // === Autopilot Toggle ===
-    btnAutopilot = new QPushButton("AUTOPILOT OFF");
-    btnAutopilot->setCheckable(true);
-    btnAutopilot->setStyleSheet(
-        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 6px; }"
-        "QPushButton:checked { background-color: #00BCD4; color: black; }"
-        );
-
-    thrustLayout->addWidget(btnAutopilot);
-
-
-    landingLayout->addLayout(simControlLayout);
-
-    return landingBox;
-}
-
-// ------------------------------------------------
-// Connections
-// ------------------------------------------------
-void cockpitPage::setupConnections()
-{
-    connect(btnSimStart, &QPushButton::clicked, this, &cockpitPage::startRequested);    ///< Emits signal
-    connect(btnSimPause, &QPushButton::clicked, this, &cockpitPage::pauseRequested);    ///< Emits signal
-    connect(btnSimStop,  &QPushButton::clicked, this, &cockpitPage::onStopClicked);     ///< Combined with private slot
-
-    connect(thrustSlider, &QSlider::valueChanged, this, [this](int value)
-    {
-        lblThrustCmd->setText(QString("Commanded Thrust: %1 %").arg(value));
-        collectedCmd.mainEngine = static_cast<float>(value) / 100.0;
-        sendFlightCmd();
-    });
-
-    connect(btnAutopilot, &QPushButton::clicked, this, &cockpitPage::onAutopilotClicked);
-
-    connect(autopilotBlinkTimer, &QTimer::timeout, this, &cockpitPage::onAutopilotBlinkTimeout);
-
-    connect(m_inputMapper, &inputmapper::RCS_cmdRequested, this, [this](FlightCommand cmd)
-    {
-        collectedCmd.translation = cmd.translation;
-        collectedCmd.rotation    = cmd.rotation;
-        collectedCmd.stabilize   = cmd.stabilize;
-        collectedCmd.killRotation = cmd.killRotation;
-        sendFlightCmd();
-    });
-}
-
-// ------------------------------------------------
-// Update Interface
-// ------------------------------------------------
-void cockpitPage::updateTime(double t)
-{
-    if (!lcdTime)
-    {
-        qDebug() << "lcdTime is nullptr!";
-        return;
-    }
-    lcdTime->display(QString::number(t, 'f', 2));
-}
-void cockpitPage::updatePosition(Vector3 pos)
-{
-    MCI_lcdPosX->display(QString::number(pos.x, 'f', 1));
-    MCI_lcdPosY->display(QString::number(pos.y, 'f', 1));
-    MCI_lcdPosZ->display(QString::number(pos.z, 'f', 1));
-}
-
-void cockpitPage::updateRotation(Vector3 rot)
-{
-    // TODO: Build own data type for rotational parameters
-    LNF_lcdLat->display(QString::number(rot.x, 'f', 1));
-    LNF_lcdLon->display(QString::number(rot.y, 'f', 1));
-    LNF_lcdRot->display(QString::number(rot.z, 'f', 1));
-}
-
-void cockpitPage::updateVelocity(Vector3 v)
-{
-    LNF_lcdVelX->display(QString::number(v.x, 'f', 1));
-    LNF_lcdVelY->display(QString::number(v.y, 'f', 1));
-    LNF_lcdVelZ->display(QString::number(v.z, 'f', 1));
-}
-
-void cockpitPage::updateAngularVelocity(Vector3 angV)
-{
-    // TODO: Build own data type for rotational parameters
-    LNF_lcdRoll->display(QString::number(angV.x, 'f', 1));
-    LNF_lcdPitch->display(QString::number(angV.y, 'f', 1));
-    LNF_lcdYaw->display(QString::number(angV.z, 'f', 1));
 }
 
 void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
@@ -570,6 +550,171 @@ void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
     fuelTankLayout->addStretch();
 }
 
+// ================= STATUS =================
+QGroupBox *cockpitPage::setupStatusBox()
+{
+    QGroupBox *statusBox = new QGroupBox("STATUS");
+    QVBoxLayout *statusLayout = new QVBoxLayout(statusBox);
+
+    // --- HULL ---
+    lblHullStatus = new QLabel("HULL: OK");
+    lblHullStatus->setStyleSheet("color: lime; font-weight: bold;");
+    statusLayout->addWidget(lblHullStatus);
+
+    // --- Autopilot ---
+    lblAutopilotStatus = new QLabel("AUTOPILOT: OFF");
+    lblAutopilotStatus->setStyleSheet("color: gray; font-weight: bold;");
+    statusLayout->addWidget(lblAutopilotStatus);
+
+    // --- Autopilot blink timer ---
+    autopilotBlinkTimer = new QTimer(this);
+    autopilotBlinkTimer->setInterval(500); // ms
+    autopilotBlinkOn = false;
+
+    // --- Controller output ---
+    lblControllerOutput = new QLabel("Controller Output: OK");
+    lblControllerOutput->setStyleSheet("Color: white; font-weight: bold;");
+    statusLayout->addWidget(lblControllerOutput);
+
+    // --- RCS Thruster ---
+    lblRCSActivity = new QLabel("RCS Active: 0 / 0");
+    lblRCSActivity->setStyleSheet(
+        "color: #AFC7DF;"
+        "font-size: 14px;"
+        "font-weight: bold;"
+        );
+
+    statusLayout->addWidget(lblRCSActivity);
+
+    statusLayout->addStretch();
+
+    return statusBox;
+}
+
+// ================= LANDING VIEW =================
+QGroupBox *cockpitPage::setupLandingBox()
+{
+    QGroupBox *landingBox = new QGroupBox("LANDING VIEW");
+    QVBoxLayout *landingLayout = new QVBoxLayout(landingBox);
+
+    landingView = new LandingView(this);
+    landingView->setMinimumSize(240, 180);
+    landingLayout->addWidget(landingView, 1);
+
+    // === Thrust Control Console ===
+    QGroupBox *thrustBox = new QGroupBox("CONTROL UNIT");
+    QVBoxLayout *thrustLayout = new QVBoxLayout(thrustBox);
+
+    thrustSlider = new QSlider(Qt::Horizontal);
+    thrustSlider->setRange(0, 100);
+    thrustSlider->setValue(0);
+
+    lblThrustCmd = new QLabel("Commanded Thrust: 0 %");
+    lblThrustCmd->setAlignment(Qt::AlignCenter);
+
+    thrustLayout->addWidget(thrustSlider);
+    thrustLayout->addWidget(lblThrustCmd);
+
+    landingLayout->addWidget(thrustBox);
+
+    // === Simulation Controls ===
+    QHBoxLayout *simControlLayout = new QHBoxLayout();
+    btnSimStart = new QPushButton("START");
+    btnSimPause = new QPushButton("PAUSE");
+    btnSimStop  = new QPushButton("STOP");
+
+    simControlLayout->addWidget(btnSimStart);
+    simControlLayout->addWidget(btnSimPause);
+    simControlLayout->addWidget(btnSimStop);
+
+    // === Autopilot Toggle ===
+    btnAutopilot = new QPushButton("AUTOPILOT OFF");
+    btnAutopilot->setCheckable(true);
+    btnAutopilot->setStyleSheet(
+        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 6px; }"
+        "QPushButton:checked { background-color: #00BCD4; color: black; }"
+        );
+
+    thrustLayout->addWidget(btnAutopilot);
+
+
+    landingLayout->addLayout(simControlLayout);
+
+    return landingBox;
+}
+
+// ------------------------------------------------
+// Connections
+// ------------------------------------------------
+void cockpitPage::setupConnections()
+{
+    connect(btnSimStart, &QPushButton::clicked, this, &cockpitPage::startRequested);    ///< Emits signal
+    connect(btnSimPause, &QPushButton::clicked, this, &cockpitPage::pauseRequested);    ///< Emits signal
+    connect(btnSimStop,  &QPushButton::clicked, this, &cockpitPage::onStopClicked);     ///< Combined with private slot
+
+    connect(thrustSlider, &QSlider::valueChanged, this, [this](int value)
+            {
+                lblThrustCmd->setText(QString("Commanded Thrust: %1 %").arg(value));
+                collectedCmd.mainEngine = static_cast<float>(value) / 100.0;
+                sendFlightCmd();
+            });
+
+    connect(btnAutopilot, &QPushButton::clicked, this, &cockpitPage::onAutopilotClicked);
+
+    connect(autopilotBlinkTimer, &QTimer::timeout, this, &cockpitPage::onAutopilotBlinkTimeout);
+
+    connect(m_inputMapper, &inputmapper::RCS_cmdRequested, this, [this](FlightCommand cmd)
+            {
+                collectedCmd.translation = cmd.translation;
+                collectedCmd.rotation    = cmd.rotation;
+                collectedCmd.stabilize   = cmd.stabilize;
+                collectedCmd.killRotation = cmd.killRotation;
+                sendFlightCmd();
+            });
+}
+
+// ------------------------------------------------
+// Update Interface
+// ------------------------------------------------
+void cockpitPage::updateTime(double t)
+{
+    if (!lcdTime)
+    {
+        qDebug() << "lcdTime is nullptr!";
+        return;
+    }
+    lcdTime->display(QString::number(t, 'f', 2));
+}
+void cockpitPage::updatePosition(Vector3 pos)
+{
+    MCI_lcdPosX->display(QString::number(pos.x, 'f', 1));
+    MCI_lcdPosY->display(QString::number(pos.y, 'f', 1));
+    MCI_lcdPosZ->display(QString::number(pos.z, 'f', 1));
+}
+
+void cockpitPage::updateRotation(Vector3 rot)
+{
+    // TODO: Build own data type for rotational parameters
+    LNF_lcdLat->display(QString::number(rot.x, 'f', 1));
+    LNF_lcdLon->display(QString::number(rot.y, 'f', 1));
+    LNF_lcdRot->display(QString::number(rot.z, 'f', 1));
+}
+
+void cockpitPage::updateVelocity(Vector3 v)
+{
+    LNF_lcdVelX->display(QString::number(v.x, 'f', 1));
+    LNF_lcdVelY->display(QString::number(v.y, 'f', 1));
+    LNF_lcdVelZ->display(QString::number(v.z, 'f', 1));
+}
+
+void cockpitPage::updateAngularVelocity(Vector3 angV)
+{
+    // TODO: Build own data type for rotational parameters
+    LNF_lcdRoll->display(QString::number(angV.x, 'f', 1));
+    LNF_lcdPitch->display(QString::number(angV.y, 'f', 1));
+    LNF_lcdYaw->display(QString::number(angV.z, 'f', 1));
+}
+
 void cockpitPage::updateFuelTanks(const QVector<FuelTank>& tanks)
 {
     if (tanks.size() != lcdTankMasses.size())
@@ -643,6 +788,74 @@ void cockpitPage::updateTargetThrust(Vector3 t)
     LNF_lcdTargetThrust_BX->display(QString::number(t.x, 'f', 1));
     LNF_lcdTargetThrust_BY->display(QString::number(t.y, 'f', 1));
     LNF_lcdTargetThrust_BZ->display(QString::number(t.z, 'f', 1));
+}
+
+void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates)
+{
+    const QVector<RCSCockpitTelemetry> activeStates =
+        filterActiveRCSThrusters(rcsStates);
+
+    updateRCSActivity(activeStates.size(), rcsStates.size());
+
+    if (activeStates.size() != lcdRCSCurrentThrust.size())
+    {
+        rebuildRCSThrusterPanel(activeStates);
+    }
+
+    if (activeStates.isEmpty())
+    {
+        //consoleOutput("No active RCS thrusters");
+        return;
+    }
+
+    const int count = qMin(activeStates.size(), lcdRCSCurrentThrust.size());
+
+    for (int i = 0; i < count; ++i)
+    {
+        const RCSCockpitTelemetry& state = activeStates[i];
+
+        lblRCSEngineNames[i]->setText(state.name);
+        lblRCSAxes[i]->setText(QString("Axis: %1").arg(state.axis));
+
+        lcdRCSCurrentThrust[i]->display(QString::number(state.currentThrust, 'f', 1));
+        lcdRCSTargetThrust[i]->display(QString::number(state.targetThrust, 'f', 1));
+
+        const int actuatorPercent =
+            static_cast<int>(qBound(0.0, state.actuatorState * 100.0, 100.0));
+
+        barRCSActuatorStates[i]->setValue(actuatorPercent);
+    }
+}
+
+void cockpitPage::updateRCSActivity(int active, int total)
+{
+    if (!lblRCSActivity)
+        return;
+
+    lblRCSActivity->setText(
+        QString("RCS Active: %1 / %2")
+            .arg(active)
+            .arg(total)
+        );
+
+    if (active > 0)
+    {
+        landingView->setRCSActive(true);
+        lblRCSActivity->setStyleSheet(
+            "color: #4FC3F7;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            );
+    }
+    else
+    {
+        landingView->setRCSActive(false);
+        lblRCSActivity->setStyleSheet(
+            "color: #607D8B;"
+            "font-size: 14px;"
+            "font-weight: bold;"
+            );
+    }
 }
 
 void cockpitPage::updateFuelMass(double f)
@@ -733,6 +946,7 @@ void cockpitPage::onStateUpdated(double time,
                                  Vector3 thrust,
                                  Vector3 targetThrust,
                                  Vector3 thrustInPercentage,
+                                 QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
                                  QVector<FuelTank> tanks,
                                  double fuelMass,
                                  double fuelFlow,
@@ -750,6 +964,7 @@ void cockpitPage::onStateUpdated(double time,
     updateFuelTanks(tanks);
     updateFuelMass(qRound(fuelMass * 10.0) / 10.0);
     updateFuelFlow(qRound(fuelFlow * 100.0) / 100.0);
+    updateRCSThrusters(RCSTelemetryVec_);
     updateHullStatus(spacecraftState_);
 
     landingView->setPositionENU(pos);
@@ -757,7 +972,6 @@ void cockpitPage::onStateUpdated(double time,
     landingView->setYawDeg(0.0);          // DUMMY later from Quaternion/Euler
     landingView->setTargetENU({0,0,0});   // DUMMY
     landingView->setThrust(-thrustInPercentage.z);
-    landingView->setRCSActive(thrust);
     landingView->setHullIntact(spacecraftState_);
 
     (autopilotActive) ? consoleOutput(consoleOutput_) : consoleOutput("No controlling active");

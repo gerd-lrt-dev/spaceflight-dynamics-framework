@@ -87,6 +87,16 @@ public:
     std::string getEngineType() const override;
 
     /**
+     * @brief Returns the engine name
+     *
+     * The engine Name specifies the function of engine
+     * Example: "MainEngine"
+     *
+     * @return Engine name string
+     */
+    std::string getEngineName() const override;
+
+    /**
      * @brief Get the target thrust
      * @return ///< [N] target thrust
      */
@@ -127,16 +137,6 @@ public:
     Vector3 getDirectionOfThrust() const override;
 
     /**
-     * @brief Calculate fuel cunsomption
-     * @param fuelMass      ///< [kg] Mass of fuel
-     * @param massflowFuel  ///< [kg/s] Mass flow of fuel
-     * @param dt            ///< [s] discrete time step and update parameter
-     *
-     * Reduces fuel supply depending on fuel consumption through the thrust provision process
-     */
-    double calcFuelReduction(const double &fuelMass,const double &massFlowFuel,const double &dt) override;
-
-    /**
      * @brief Getter function for maximum thrust given by engine config
      * @return ///< [N] Maximum Thrust
      */
@@ -158,5 +158,22 @@ private:
     // -------------------------------------------------------------------------
     // Private calculation methods
     // -------------------------------------------------------------------------
+    /**
+     * @brief Calculate fuel cunsomption
+     * @param fuelMass      ///< [kg] Mass of fuel
+     * @param massflowFuel  ///< [kg/s] Mass flow of fuel
+     * @param dt            ///< [s] discrete time step and update parameter
+     *
+     * Reduces fuel supply depending on fuel consumption through the thrust provision process
+     */
+    double calcFuelReduction(const double &fuelMass,const double &massFlowFuel,const double &dt) override;
+
+    /**
+     * @brief Calculate mass flow rate
+     * @param currenThrust      ///<[N] Current Thrust in Newton
+     * @param Isp               ///<[s] Specific Impulse
+     * @param earthGravity      ///<[m/s^2] Normal earth gravity
+     * @return                  ///<[kg/s] Mass flow rate
+     */
     double calcMassFlow(const double &currenThrust, const double &Isp, const double &earthGravity);
 };

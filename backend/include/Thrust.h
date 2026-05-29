@@ -8,8 +8,11 @@
 #include "vector3.h"
 #include "Thrust/iThrust.h"
 #include "Thrust/BasicMainEngineModel.h"
+#include "Thrust/BasicRCSModel.h"
+#include "Thrust/RCSControlAllocator.h"
 #include "Thrust/FuelStateStruct.h"
 #include "Thrust/ME_thrustState.h"
+#include "Thrust/RCS_ThrustState.h"
 #include "Thrust/EngineConfig.h"
 #include "Thrust/FueltankStruct.h"
 
@@ -157,7 +160,7 @@ public:
      * @param engines Vector of engine configurations
      * @param tanks Vector of tank masses / capacities [kg]
      */
-    void initializeEngines(std::vector<EngineConfig> &engines, const std::vector<FuelTank> &tanks);
+    void initializeEngines(std::vector<EngineConfig> &engines, std::vector<RCSEngineConfig> &RCSEngines, const std::vector<FuelTank> &tanks);
 
     /**
      * @brief Activates a specific engine.
@@ -270,6 +273,29 @@ public:
     Vector3 getDirectionOfThrust(EngineType engine = EngineType::MainEngine, int engineID = 0) const;
 
     /**
+     * @brief Returns the complete runtime state of all configured RCS engines.
+     *
+     * Collects and returns the current propulsion state of every registered
+     * Reaction Control System (RCS) thruster managed by the Thrust Orchestrator.
+     *
+     * Each entry in the returned container represents one individual RCS engine
+     * and contains metadata, thrust values, actuator state, and thrust direction.
+     *
+     * The returned data is intended for:
+     * - frontend telemetry visualization
+     * - cockpit instrumentation
+     * - debugging and validation
+     * - telemetry export (e.g. XML/CSV)
+     * - future research and post-processing workflows
+     *
+     * Both translational and rotational RCS engines may be included depending on
+     * the active propulsion configuration.
+     *
+     * @return Vector containing the runtime state of all RCS engines.
+     */
+    std::vector<RCS_ThrustState> getFullRCSEngineData() const;
+
+    /**
      * @brief Returns the total current fuel consumption of all engines.
      *
      * @return Total propellant mass flow rate [kg/s]
@@ -315,10 +341,6 @@ private:
     // -------------------------------------------------------------------------
     // Private Member
     // -------------------------------------------------------------------------
-
-    // -------------------------------------------------------------------------
-    // Private Methods
-    // -------------------------------------------------------------------------
     /**
      * @brief Internal list of engine models managed by the propulsion system.
      *
@@ -356,6 +378,12 @@ private:
      * Used for aggregated propulsion telemetry and backward-compatible access.
      */
     ME_ThrustState ME_thrustState_;
+
+
+
+    // -------------------------------------------------------------------------
+    // Private Methods
+    // -------------------------------------------------------------------------
 
     /**
      * @brief Adds fuel tanks to the propulsion system.

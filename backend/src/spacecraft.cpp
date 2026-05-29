@@ -17,7 +17,7 @@ void spacecraft::setDefaultValues()
     state_.I_Position = landerMoon.I_initialPos;
     state_.I_Velocity = landerMoon.I_initialVelocity;
 
-    thrustOrchestration.initializeEngines(landerMoon.engines_, landerMoon.tanks_);
+    thrustOrchestration.initializeEngines(landerMoon.engines_, landerMoon.RCSengines_, landerMoon.tanks_);
 
 
     // TODO just testing here optimization
@@ -330,6 +330,11 @@ double spacecraft::requestMainEngineLiveFuelConsumption() const
     return thrustOrchestration.getFuelConsumption(EngineType::MainEngine);
 }
 
+std::vector<RCS_ThrustState> spacecraft::requestFullRCSEngineData() const
+{
+    return thrustOrchestration.getFullRCSEngineData();
+}
+
 void spacecraft::setInitalPosition(const Vector3& position)
 {
     landerMoon.I_initialPos = position;
@@ -352,14 +357,15 @@ simData spacecraft::getFullSimulationData() const
     // Fill struct with data for emitting signal to UI
     simData_.spacecraftState_ = spacecraftState_;
 
-
     simData_.ME_ThrustState_.current            = requestMainEngineThrust().dot(requestMainEngineDirection());
     simData_.ME_ThrustState_.target             = requestMainEngineTargetThrust().dot(requestMainEngineDirection());
     simData_.ME_ThrustState_.targetPercentage   = requestMainEngineThrustInPercentage().dot(requestMainEngineDirection());
     simData_.ME_ThrustState_.direction          = requestMainEngineDirection();
 
-    simData_.tanks    = getFuelTanks();
-    simData_.fuelMass = getTotalFuelMass();
+    simData_.RCS_ThrustState_ = requestFullRCSEngineData();
+
+    simData_.tanks    = getFuelTanks(); //TODO: Should be a request
+    simData_.fuelMass = getTotalFuelMass(); //TODO: Should be a request
     simData_.fuelFlow = requestMainEngineLiveFuelConsumption();
 
     simData_.GLoad = getGload();
