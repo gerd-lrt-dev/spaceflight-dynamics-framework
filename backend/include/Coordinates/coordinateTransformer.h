@@ -274,6 +274,35 @@ public:
         const State& bodyState,
         const SpacecraftBodyFrame& body) const;
 
+    /**
+     * @brief Transforms a Vector3 from MCI coordinates into the spacecraft
+     * body frame.
+     *
+     * Converts an acceleration vector into spacecraft-local coordinates using
+     * the spacecraft attitude quaternion.
+     *
+     * @param MCI_acc Vector3 expressed in the MCI frame.
+     * @param body Spacecraft body frame definition.
+     * @return Vector3 expressed in the spacecraft body frame.
+     */
+    Vector3 MCIAcctoSBFAcc(
+        const Vector3& MCI_acc,
+        const SpacecraftBodyFrame& body) const;
+
+    /**
+     * @brief Transforms a Vector3 from SBF coordinates into the moon centered inertial frame.
+     *
+     * Converts an acceleration vector into MCI coordinates using
+     * the spacecraft attitude quaternion.
+     *
+     * @param SBF_acc Vector3 expressed in the SBF frame.
+     * @param body Spacecraft body frame definition.
+     * @return Vector3 expressed in the moon centered inertial frame.
+     */
+    Vector3 SBFAcctoMCIAcc(
+        const Vector3& SBF_acc,
+        const SpacecraftBodyFrame& body) const;
+
 private:
 
     /// Mean lunar reference radius [m]

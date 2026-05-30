@@ -410,3 +410,20 @@ CoordinateTransformer::State CoordinateTransformer::SBFtoMCI(
 
     return inertial;
 }
+
+Vector3 CoordinateTransformer::MCIAcctoSBFAcc(
+    const Vector3& MCI_acc,
+    const SpacecraftBodyFrame& body) const
+{
+    Quaternion qInv =
+        body.orientation.inverse();
+
+    return qInv.rotate(MCI_acc);
+}
+
+Vector3 CoordinateTransformer::SBFAcctoMCIAcc(
+    const Vector3& SBF_acc,
+    const SpacecraftBodyFrame& body) const
+{
+    return body.orientation.rotate(SBF_acc);
+}
