@@ -14,8 +14,8 @@ void spacecraft::setDefaultValues()
     spacecraftIntegrity = 1.0;
     spacecraftState_ = SpacecraftState::Operational;
     totalMass = landerMoon.emptyMass + landerMoon.fuelM;
-    state_.I_Position = landerMoon.I_initialPos;
-    state_.I_Velocity = landerMoon.I_initialVelocity;
+    state_.I_Position = landerMoon.MCI_initialPos;
+    state_.I_Velocity = landerMoon.MCI_initialVelocity;
 
     thrustOrchestration.initializeEngines(landerMoon.engines_, landerMoon.RCSengines_, landerMoon.tanks_);
 
@@ -337,12 +337,12 @@ std::vector<RCS_ThrustState> spacecraft::requestFullRCSEngineData() const
 
 void spacecraft::setInitalPosition(const Vector3& position)
 {
-    landerMoon.I_initialPos = position;
+    landerMoon.MCI_initialPos = position;
 }
 
 void spacecraft::setInitalVelocity(const Vector3& velocity)
 {
-    landerMoon.I_initialVelocity = velocity;
+    landerMoon.MCI_initialVelocity = velocity;
 }
 
 simData spacecraft::getFullSimulationData() const

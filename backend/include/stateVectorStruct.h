@@ -3,6 +3,7 @@
 
 #include "vector3.h"
 #include "quaternion.h"
+#include "Coordinates/coordinateTransformer.h"
 
 /**
  * @struct StateVector

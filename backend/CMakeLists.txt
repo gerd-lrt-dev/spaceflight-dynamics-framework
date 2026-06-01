@@ -39,6 +39,8 @@ add_library(moonlander_backend
     include/Controller/iController.h
     include/Controller/pd_controller.h
     include/Coordinates/coordinateTransformer.h
+    include/Coordinates/simulationFrameContext.h
+    include/Coordinates/missionContext.h
     include/Thrust/iThrust.h
     include/Thrust/BasicMainEngineModel.h
     include/Thrust/FuelStateStruct.h

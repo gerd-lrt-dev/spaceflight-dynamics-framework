@@ -5,6 +5,8 @@
 #include "simDataStruct.h"
 #include "jsonConfigReader.h"
 #include "Control/inputArbiter.h"
+#include "Coordinates/missionContext.h"
+#include "Coordinates/simulationFrameContext.h"
 
 #include <optional>
 #include <memory>
@@ -41,9 +43,12 @@ private:
     std::unique_ptr<IController>    controller_;        ///< Virtual controller instance
 
     std::string jsonConfigString;                   ///< String with raw space config data provided by frontend
-    customSpacecraft landerMoon1;                   ///< Config for used spacecraft provided by json config
+    customSpacecraft spacecraftConfig_;             ///< Config for used spacecraft provided by json config
     EnvironmentConfig config_;                      ///< Config struct for moon environment
     ControlCommand cmd_;                            ///< Command structure for autopilot
+    MissionContext missionContext_;                 ///< Stores mission-specific navigation reference data.
+    SimulationFrameContext simulationFrameContext_; ///< Stores the current spacecraft state expressed in multiple reference frames
+
     bool resetRequested;                            ///< Represents user desire to reset simulation
 
     // Inital data
@@ -58,13 +63,53 @@ private:
     void buildSimulationEnvironment(double t);
 
     /**
-     * @brief Load json config out of string provided from frontend which defines spacecraft parameters
-     * @param jsonString                            ///< String with config data
-     * @param spacecraftName                        ///< Selected spacecraft from config data
+     * @brief Loads spacecraft configuration from a JSON string provided by the frontend.
      *
-     * Working jsonconfig together with frontend!
+     * Parses the supplied JSON configuration string and extracts the selected
+     * spacecraft definition into a @ref customSpacecraft structure.
+     *
+     * The returned object contains vehicle-specific data such as mass properties,
+     * propulsion configuration, tank setup, initial MCI state, initial SBF values,
+     * and operational limits.
+     *
+     * Mission-level data such as landing sites or navigation targets should be
+     * loaded separately through @ref loadMissionDataFromJsonString.
+     *
+     * @param jsonString JSON configuration data provided by the frontend.
+     *
+     * @return Parsed @ref customSpacecraft configuration.
+     *
+     * @throws std::runtime_error If the JSON string cannot be parsed or does not
+     *         contain a valid spacecraft configuration.
+     * @throws nlohmann::json::exception If required fields are missing or have
+     *         incompatible types.
      */
-    customSpacecraft loadSpacecraftFromJsonString(const std::string& jsonString);
+        customSpacecraft loadSpacecraftFromJsonString(const std::string& jsonString);
+
+        /**
+     * @brief Loads mission context data from a JSON string provided by the frontend.
+     *
+     * Parses the supplied JSON configuration string and extracts mission-level
+     * reference data into a @ref MissionContext structure.
+     *
+     * The mission context contains data that is independent of the spacecraft
+     * hardware definition, such as the MSC landing site and later derived mission
+     * reference frames.
+     *
+     * Runtime frame representations such as MCMF, MCI and ENU landing-site states
+     * are expected to be derived during simulation initialization using the
+     * CoordinateTransformer.
+     *
+     * @param jsonString JSON configuration data provided by the frontend.
+     *
+     * @return Parsed @ref MissionContext.
+     *
+     * @throws std::runtime_error If the JSON string cannot be parsed or does not
+     *         contain valid mission data.
+     * @throws nlohmann::json::exception If required fields are missing or have
+     *         incompatible types.
+     */
+    MissionContext loadMissionDataFromJsonString(const std::string& jsonString);
 
     /**
      * @brief Sets target thrust

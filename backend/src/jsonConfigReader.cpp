@@ -1,4 +1,5 @@
 #include "jsonConfigReader.h"
+#include "stateVectorStruct.h"
 
 void from_json(const nlohmann::json& j, Vector3& v) 
 {
@@ -46,11 +47,14 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
     lander.Iyy          = j.at("Iyy").get<double>();
     lander.Izz          = j.at("Izz").get<double>();
 
-    lander.I_initialPos = j.at("I_initialPos").get<Vector3>();
-    lander.B_initialRot = j.at("B_initialRot").get<Vector3>();
-    lander.B_initialCenterOfMass = j.at("B_initialCenterOfMass").get<Vector3>();
+    const auto& initialstate = j.at("initialState");
 
-    lander.I_initialVelocity = j.at("initialVelocity").get<Vector3>();
+    lander.MCI_initialPos           = initialstate.at("MCI_InitialPosition").get<Vector3>();
+    lander.SBF_initialRot           = initialstate.at("IB_InitialOrientation").get<Vector3>();
+    lander.MCI_initialVelocity      = initialstate.at("MCI_InitialVelocity").get<Vector3>();
+    lander.SBF_initialCenterOfMass  = initialstate.at("SBF_InitialCenterOfMass").get<Vector3>();
+
+
 
     lander.structuralIntegrity = j.at("structuralIntegrity").get<double>();
     lander.safeVelocity        = j.at("safeVelocity").get<double>();
@@ -129,6 +133,31 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
     }
 
     return lander;
+}
+
+MissionContext jsonConfigReader::parseMissionContext(const nlohmann::json& j)
+{
+    MissionContext mission;
+
+    const auto& missionJson = j.at("mission");
+    const auto& landingSite = missionJson.at("landingSite");
+
+    const std::string frame = landingSite.at("frame").get<std::string>();
+
+    if (frame != "MSC")
+    {
+        throw std::runtime_error(
+            "Unsupported landingSite frame: " + frame +
+            ". Currently only MSC is supported.");
+    }
+
+    mission.MSC_LandingSite.latitude = landingSite.at("latitude").get<double>();
+
+    mission.MSC_LandingSite.longitude = landingSite.at("longitude").get<double>();
+
+    mission.MSC_LandingSite.altitude = landingSite.at("altitude").get<double>();
+
+    return mission;
 }
 
 

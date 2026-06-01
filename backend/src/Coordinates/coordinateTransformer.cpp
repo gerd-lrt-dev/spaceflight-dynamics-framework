@@ -2,7 +2,10 @@
 
 #include <cmath>
 
+// Default and trivial Constructor & Destructor
 CoordinateTransformer::CoordinateTransformer() {}
+
+CoordinateTransformer::~CoordinateTransformer() = default;
 
 
 //=========================================================

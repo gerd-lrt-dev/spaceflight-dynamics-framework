@@ -77,6 +77,7 @@ public:
      * The frame is centered on an orbiting spacecraft and rotates with the
      * orbital trajectory. It is commonly used for rendezvous, docking,
      * relative navigation, and local orbital guidance.
+     *
      */
     struct LVLHFrame {
         Vector3 forward;
@@ -234,6 +235,9 @@ public:
      * @brief Transforms a state from MCI coordinates into LVLH coordinates.
      *
      * Converts an inertial state into a spacecraft-centered orbital frame.
+     *
+     * LVLH velocities are expressed as projected relative velocities,
+     * not full rotating-frame time derivatives.
      *
      * @param target State expressed in the MCI frame.
      * @param frame LVLH frame definition.

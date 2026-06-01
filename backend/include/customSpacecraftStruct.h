@@ -101,17 +101,17 @@ struct customSpacecraft
     // State (Body Frame Coordinates)
     // -------------------------------------------------------------------------
 
-    Vector3 I_initialPos;
+    Vector3 MCI_initialPos;
     ///< [m] Initial spacecraft position expressed in body coordinates.
     ///< Typically initial (0, 0, 0) because physics handles world/Moon coordinates.
 
-    Vector3 I_initialVelocity;
+    Vector3 MCI_initialVelocity;
     ///< [m/s] Velocity in three spatial directions
 
-    Vector3 B_initialRot;
+    Vector3 SBF_initialRot;
     ///< [rad] Initial orientation (pitch, yaw, roll) in body coordinates.
 
-    Vector3 B_initialCenterOfMass;
+    Vector3 SBF_initialCenterOfMass;
     ///< [m] Center of mass location in body frame at t=0.
     ///< Should be updated dynamically if fuel mass distribution changes.
 

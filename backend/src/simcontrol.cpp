@@ -12,7 +12,7 @@
 void simcontrol::buildSimulationEnvironment(double t)
 {
     // Instance classes
-    landerSpacecraft    = std::make_unique<spacecraft>(landerMoon1);
+    landerSpacecraft    = std::make_unique<spacecraft>(spacecraftConfig_);
     inputArbiter_       = std::make_unique<InputArbiter>();
 }
 
@@ -36,10 +36,36 @@ customSpacecraft simcontrol::loadSpacecraftFromJsonString(const std::string& jso
         throw std::runtime_error("Invalid JSON: expected spacecraft object");
     }
 
-    std::cout << "simcontrol[loadSpacecraftFromJsonString]: Successfully parsed config string"
+    std::cout << "simcontrol[loadSpacecraftFromJsonString]: Successfully parsed spacecraft config string"
               << std::endl;
 
     return jsonConfigReader::parseLander(config);
+}
+
+MissionContext simcontrol::loadMissionDataFromJsonString(const std::string& jsonString)
+{
+    nlohmann::json config;
+
+    try
+    {
+        config = nlohmann::json::parse(jsonString);
+    }
+    catch (const nlohmann::json::parse_error& e)
+    {
+        throw std::runtime_error(
+            std::string("JSON parse error: ") + e.what());
+    }
+
+    // Validate root structure
+    if (!config.is_object())
+    {
+        throw std::runtime_error("Invalid JSON: expected spacecraft object");
+    }
+
+    std::cout << "simcontrol[loadMissionDataFromJsonString]: Successfully parsed mission context config string"
+              << std::endl;
+
+    return jsonConfigReader::parseMissionContext(config);
 }
 
 void simcontrol::processCommands()
@@ -56,8 +82,8 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
     if(currentSpacecraftstate == SpacecraftState::Operational)
     {
         // Autopilot is used for main engine of spacecraft with index number 0!
-        double autoThrust = autopilot_->setAutoThrustInNewton(controller_.get(), landerMoon1.engines_[0].maxThrust, landerSpacecraft->getVelocity().z, landerSpacecraft->getPosition().z - config_.radiusMoon, dt, landerMoon1.emptyMass + landerMoon1.fuelM, config_.moonGravity);
-        double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, landerMoon1.engines_[0].maxThrust);
+        double autoThrust = autopilot_->setAutoThrustInNewton(controller_.get(), spacecraftConfig_.engines_[0].maxThrust, landerSpacecraft->getVelocity().z, landerSpacecraft->getPosition().z - config_.radiusMoon, dt, spacecraftConfig_.emptyMass + spacecraftConfig_.fuelM, config_.moonGravity);
+        double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, spacecraftConfig_.engines_[0].maxThrust);
         ControlCommand autoCmd;
         autoCmd.mainEngine = autoThrustNormalized;
         receiveCommandFromAutopilot(autoCmd);
@@ -79,7 +105,7 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
 
 simcontrol::simcontrol(double t0) : initialTime(t0)
 {
-    autopilot_  = std::make_unique<AdaptiveDescentController>(landerMoon1.safeVelocity);
+    autopilot_  = std::make_unique<AdaptiveDescentController>(spacecraftConfig_.safeVelocity);
     controller_ = std::make_unique<PD_Controller>();
 }
 
@@ -90,7 +116,9 @@ simcontrol::~simcontrol()
 
 void simcontrol::initialize(const std::string& jsonConfigStr)
 {
-    landerMoon1 = loadSpacecraftFromJsonString(jsonConfigStr);
+    spacecraftConfig_   = loadSpacecraftFromJsonString(jsonConfigStr);
+
+    missionContext_     = loadMissionDataFromJsonString(jsonConfigStr);
 
     buildSimulationEnvironment(initialTime);
 }
