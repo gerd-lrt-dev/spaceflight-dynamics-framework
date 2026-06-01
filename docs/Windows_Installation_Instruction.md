@@ -1,4 +1,4 @@
-# Setting Up the Development Environment for Moonlander
+# Setting Up the Development Environment for Spaceflight Dynamics Framework
 
 This is an instruction how to install the project under Windows 11. Caution the installation is a little complex. The installation on debian based systems such as ubuntu or mac is way more easier.
 
@@ -73,11 +73,11 @@ This is an instruction how to install the project under Windows 11. Caution the 
 - execute .\bootstrap-vcpkg.bat
 - execute .\vcpkg.exe install nlopt:x64-windows
 
-## 10. Clone the Moonlander Repository
+## 10. Clone the Spaceflight Dynamics Framework Repository
 - Fork the repository into your git profil
 - Go to powershell
 - type cd <your_project_folder>
-- type git clone https://github.com/<your-username>/moonlander.git
+- type git clone https://github.com/<your-username>/spaceflight-dynamics-framework.git
 
 ## 11. Integrate vcpkg with the System
 - Go to powershell
