@@ -6,6 +6,7 @@
 #include "Thrust/FueltankStruct.h"
 #include "Thrust/ME_thrustState.h"
 #include "Thrust/RCS_ThrustState.h"
+#include "Coordinates/missionContext.h"
 
 #include <string>
 #include <vector>
@@ -82,6 +83,10 @@ struct simData
      * Unit: g
      */
     double GLoad;
+
+    // Coordiantes & Frame data
+    MissionContext missionContext_;
+
 };
 
 #endif // SIMDATASTRUCT_H

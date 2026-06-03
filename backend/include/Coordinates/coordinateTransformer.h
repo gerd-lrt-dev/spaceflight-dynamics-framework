@@ -102,7 +102,6 @@ public:
         State origin;
     };
 
-
     /**
      * @brief Constructs a CoordinateTransformer instance.
      */
@@ -279,32 +278,32 @@ public:
         const SpacecraftBodyFrame& body) const;
 
     /**
-     * @brief Transforms a Vector3 from MCI coordinates into the spacecraft
+     * @brief Transforms a Vector3 from MCI_vec coordinates into the spacecraft
      * body frame.
      *
-     * Converts an acceleration vector into spacecraft-local coordinates using
+     * Converts an generic vector into spacecraft-local coordinates using
      * the spacecraft attitude quaternion.
      *
-     * @param MCI_acc Vector3 expressed in the MCI frame.
+     * @param MCI_vec term Vector3 expressed in the MCI_vec frame.
      * @param body Spacecraft body frame definition.
      * @return Vector3 expressed in the spacecraft body frame.
      */
-    Vector3 MCIAcctoSBFAcc(
-        const Vector3& MCI_acc,
+    Vector3 GenMCItoSBF(
+        const Vector3& MCI_vec,
         const SpacecraftBodyFrame& body) const;
 
     /**
      * @brief Transforms a Vector3 from SBF coordinates into the moon centered inertial frame.
      *
-     * Converts an acceleration vector into MCI coordinates using
+     * Converts an generic vector into MCI coordinates using
      * the spacecraft attitude quaternion.
      *
-     * @param SBF_acc Vector3 expressed in the SBF frame.
+     * @param SBF term Vector3 expressed in the SBF frame.
      * @param body Spacecraft body frame definition.
      * @return Vector3 expressed in the moon centered inertial frame.
      */
-    Vector3 SBFAcctoMCIAcc(
-        const Vector3& SBF_acc,
+    Vector3 GenSBFtoMCI(
+        const Vector3& SBF_vec,
         const SpacecraftBodyFrame& body) const;
 
 private:

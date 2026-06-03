@@ -14,6 +14,7 @@
 #include "Automation/iautopilot.h"
 #include "Controller/iController.h"
 #include "Thrust/EngineConfig.h"
+#include "Coordinates/coordinateTransformer.h"
 
 #include <memory>
 
@@ -44,10 +45,13 @@ private:
     std::unique_ptr<physics> physics_;          ///< Physics engine handling lander motion
     Thrust thrustOrchestration;                 ///< Orchestrator class for engine simulation
 
-    StateVector state_;                     ///< Encapsulates the complete translational and rotational state of the spacecraft and is single source of thruth
-    EnvironmentConfig environmentConfig_;   ///< [-] Environment config struct with constant parameters.
-    SpacecraftState spacecraftState_;       ///< State of spacecraft
-    customSpacecraft landerMoon;            ///< [] Parameters which defines spacecraft. This are filled by json config data.
+    StateVector state_;                         ///< Encapsulates the complete translational and rotational state of the spacecraft and is single source of thruth
+    EnvironmentConfig environmentConfig_;       ///< [-] Environment config struct with constant parameters.
+    SpacecraftState spacecraftState_;           ///< State of spacecraft
+    customSpacecraft landerMoon;                ///< [] Parameters which defines spacecraft. This are filled by json config data.
+    CoordinateTransformer coordTransf_;         ///< Object of coordinate transformation class for transformation calculations
+
+    CoordinateTransformer::SpacecraftBodyFrame originState_;       ///< Initial State of spacecraft in MCI. This struct is needed for all coordinate transformation procedures
 
     double totalMass;               ///< [kg] Total mass of spacecraft.
     double dt = 0;                  ///< [s] Time steps. Provided by updateTime.

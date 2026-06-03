@@ -99,6 +99,11 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
     }
 }
 
+void simcontrol::updateFrames(CoordinateTransformer::State SBF_)
+{
+    // TODO: This function is going to transfer all frames
+}
+
 //***********************************************************
 //*************        Public                   ************
 //***********************************************************
@@ -144,6 +149,8 @@ simData simcontrol::runSimulation(const double dt)
 
         // --- Update spacecraft state (translation, velocity, etc.) ---
         landerSpacecraft->updateStep(dt);   ///< Updates simulation steps
+
+        // --- Update Frames ---
 
         // --- Retrieve full simulation data ---
         simdata_ = landerSpacecraft->getFullSimulationData();   ///< SimData struct can be requested from frontend

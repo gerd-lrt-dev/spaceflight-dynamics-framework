@@ -22,19 +22,19 @@ struct StateVector
      *
      * Expressed in the chosen inertial frame (e.g., Moon-centered inertial frame).
      */
-    Vector3 I_Position = {0.0, 0.0, 0.0};
+    Vector3 MCI_Position = {0.0, 0.0, 0.0};
 
     /**
      * @brief Inertial velocity vector of the spacecraft [m/s].
      *
      * Expressed in the chosen inertial frame.
      */
-    Vector3 I_Velocity = {0.0, 0.0, 0.0};
+    Vector3 MCI_Velocity = {0.0, 0.0, 0.0};
 
     /**
      * @brief Orientation quaternion of the spacecraft.
      *
-     * Represents the rotation from the body-fixed frame to the inertial frame.
+     * Represents the rotation from the body-fixed frame (SBF) to the inertial frame (MCI).
      * Default constructor creates the identity quaternion (no rotation).
      */
     Quaternion IB_Orientation;
@@ -44,7 +44,7 @@ struct StateVector
      *
      * Expressed in the body-fixed frame.
      */
-    Vector3 B_AngularVelocity = {0.0, 0.0, 0.0};
+    Vector3 SBF_AngularVelocity = {0.0, 0.0, 0.0};
 
     /**
      * @brief Total mass of the spacecraft [kg].

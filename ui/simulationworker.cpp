@@ -124,8 +124,8 @@ void SimulationWorker::stepSimulation()
 
     // signals
     emit stateUpdated(currentTime,
-                      spacecraftData.statevector_.I_Position,
-                      spacecraftData.statevector_.I_Velocity,
+                      spacecraftData.statevector_.MCI_Position,
+                      spacecraftData.statevector_.MCI_Velocity,
                       spacecraftData.GLoad,
                       spacecraftData.spacecraftState_,
                       spacecraftData.ME_ThrustState_.direction * spacecraftData.ME_ThrustState_.current,

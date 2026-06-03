@@ -14,8 +14,12 @@ void spacecraft::setDefaultValues()
     spacecraftIntegrity = 1.0;
     spacecraftState_ = SpacecraftState::Operational;
     totalMass = landerMoon.emptyMass + landerMoon.fuelM;
-    state_.I_Position = landerMoon.MCI_initialPos;
-    state_.I_Velocity = landerMoon.MCI_initialVelocity;
+    state_.MCI_Position = landerMoon.MCI_initialPos;
+    state_.MCI_Velocity = landerMoon.MCI_initialVelocity;
+
+    originState_.origin.position = landerMoon.MCI_initialPos;
+    originState_.origin.velocity = landerMoon.MCI_initialVelocity;
+    originState_.orientation = {0.0, 1.0, 0.0, 0.0};
 
     thrustOrchestration.initializeEngines(landerMoon.engines_, landerMoon.RCSengines_, landerMoon.tanks_);
 
@@ -45,14 +49,25 @@ void spacecraft::updateMovementData(double dt)
     }
 
     // --- Compute acceleration ---
-    //TODO: eliminate minus with request thrust when coordinate transformation class is written
-    Vector3 acceleration = physics_->computeAcc(getPosition(), getVelocity(), getTotalMass(), -requestTotalThrust());
+    std::cout << "SBF Thrust: " << "\n"
+              << "x: " << requestTotalThrust().x << "\n"
+              << "y: " << requestTotalThrust().y << "\n"
+              << "z: " << requestTotalThrust().z << "\n" << std::endl;
+
+    Vector3 MCI_total_Thrust = coordTransf_.GenSBFtoMCI(requestTotalThrust(), originState_);
+
+    std::cout << "MCI Thrust: " << "\n"
+              << "x: " << MCI_total_Thrust.x << "\n"
+              << "y: " << MCI_total_Thrust.y << "\n"
+              << "z: " << MCI_total_Thrust.z << "\n" << std::endl;
+
+    Vector3 MCI_acceleration = physics_->computeAcc(getPosition(), getVelocity(), getTotalMass(), MCI_total_Thrust);
 
     // --- Compute velocity ---
-    Vector3 velocity = physics_->computeVel(getVelocity(), acceleration, dt);
+    Vector3 MCI_velocity = physics_->computeVel(getVelocity(), MCI_acceleration, dt);
 
     // --- Compute position ---
-    Vector3 position = physics_->computePos(getPosition(), velocity, acceleration, dt);
+    Vector3 MCI_position = physics_->computePos(getPosition(), MCI_velocity, MCI_acceleration, dt);
 
     // --- TODO: Compute orientation and angular velocity ---
     // ...
@@ -60,11 +75,11 @@ void spacecraft::updateMovementData(double dt)
     // --- TODO: Update total mass ---
     // ...
 
-    updateGLoad(acceleration, environmentConfig_.moonGravityVec);
+    updateGLoad(MCI_acceleration, environmentConfig_.moonGravityVec);
 
     // --- Commit to state vector ---
-    setVelocity(velocity);
-    setPosition(position);
+    setVelocity(MCI_velocity);
+    setPosition(MCI_position);
     //setGload(GLoad);
 }
 
@@ -109,12 +124,12 @@ void spacecraft::applyLandingDamage(double impactVelocity)
 
 void spacecraft::setPosition(const Vector3& pos)
 {
-    state_.I_Position = pos;
+    state_.MCI_Position = pos;
 }
 
 void spacecraft::setVelocity(const Vector3& vel)
 {
-    state_.I_Velocity = vel;
+    state_.MCI_Velocity = vel;
 }
 
 void spacecraft::setOrientation(const Quaternion& q)
@@ -124,7 +139,7 @@ void spacecraft::setOrientation(const Quaternion& q)
 
 void spacecraft::setAngularVelocity(const Vector3& angVel)
 {
-    state_.B_AngularVelocity = angVel;
+    state_.SBF_AngularVelocity = angVel;
 }
 
 // -------------------------------------------------------------------------
@@ -157,9 +172,9 @@ void spacecraft::updateStep(double dt)
     time += dt;
 
     // Apply landing damage
-    if (state_.I_Position.z <= environmentConfig_.radiusMoon)
+    if (state_.MCI_Position.z <= environmentConfig_.radiusMoon)
     {
-        applyLandingDamage(state_.I_Velocity.z);
+        applyLandingDamage(state_.MCI_Velocity.z);
     }
 
     updateSpacecraftIntegrity();
@@ -352,7 +367,7 @@ simData spacecraft::getFullSimulationData() const
     simData_.statevector_ = getState();
 
     // Reduce height by radius of moon
-    simData_.statevector_.I_Position.z -= environmentConfig_.radiusMoon;
+    simData_.statevector_.MCI_Position.z -= environmentConfig_.radiusMoon;
 
     // Fill struct with data for emitting signal to UI
     simData_.spacecraftState_ = spacecraftState_;
@@ -387,12 +402,12 @@ const StateVector& spacecraft::getState() const
 
 Vector3 spacecraft::getPosition() const
 {
-    return state_.I_Position;
+    return state_.MCI_Position;
 }
 
 Vector3 spacecraft::getVelocity() const
 {
-    return state_.I_Velocity;
+    return state_.MCI_Velocity;
 }
 
 Quaternion spacecraft::getOrientation() const
@@ -402,7 +417,7 @@ Quaternion spacecraft::getOrientation() const
 
 Vector3 spacecraft::getAngularVelocity() const
 {
-    return state_.B_AngularVelocity;
+    return state_.SBF_AngularVelocity;
 }
 
 double spacecraft::getTotalMass()

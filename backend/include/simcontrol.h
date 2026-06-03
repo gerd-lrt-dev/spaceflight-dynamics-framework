@@ -142,6 +142,11 @@ private:
      */
     void runAutopilot(const SpacecraftState& currentSpacecraftstate, const int &engineNr, const double& dt);
 
+    /**
+     * @brief Update Frames
+     */
+    void updateFrames(CoordinateTransformer::State SBF_);
+
 public:
     //***********************************************************
     //*************    Memberfuctions                ************
