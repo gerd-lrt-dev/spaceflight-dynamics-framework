@@ -58,7 +58,7 @@ struct MissionContext
      * This frame is expected to become the primary frame for terminal landing
      * guidance and precision landing operations.
      */
-    CoordinateTransformer::ENUFrame landingENU;
+    CoordinateTransformer::ENUFrame ENU_landingSite;
 };
 
 #endif // NAVIGATIONCONTEXT_H

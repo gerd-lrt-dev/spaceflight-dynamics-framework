@@ -76,7 +76,7 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
     const auto& initialstate = j.at("initialState");
 
     lander.MCI_initialPos           = initialstate.at("MCI_InitialPosition").get<Vector3>();
-    lander.IB_initialRot           = initialstate.at("IB_InitialOrientation").get<Quaternion>();
+    lander.IB_initialRot            = initialstate.at("IB_InitialOrientation").get<Quaternion>();
     lander.MCI_initialVelocity      = initialstate.at("MCI_InitialVelocity").get<Vector3>();
     lander.SBF_initialCenterOfMass  = initialstate.at("SBF_InitialCenterOfMass").get<Vector3>();
 

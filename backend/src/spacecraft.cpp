@@ -21,6 +21,8 @@ void spacecraft::setDefaultValues()
     originState_.origin.velocity    = spacecraftConfig_.MCI_initialVelocity;
     originState_.orientation        = spacecraftConfig_.IB_initialRot;
 
+    initializeMissionFrames(0.0);
+
     thrustOrchestration.initializeEngines(spacecraftConfig_.engines_, spacecraftConfig_.RCSengines_, spacecraftConfig_.tanks_);
 
 
@@ -31,7 +33,15 @@ void spacecraft::setDefaultValues()
     //double m0 = totalMass;
 
     //std::vector<double> thrust = compute_optimization(h0, v0, m0, 0.5);
+}
 
+void spacecraft::initializeMissionFrames(double t0)
+{
+    missionContext_.MCMF_landingSite    = coordTransf_.MSCtoMCMF(missionContext_.MSC_LandingSite);
+
+    missionContext_.MCI_landingSite     = coordTransf_.MCMFtoMCI(missionContext_.MCMF_landingSite, t0);
+
+    missionContext_.ENU_landingSite     = coordTransf_.computeENUFrame(missionContext_.MCMF_landingSite);
 }
 
 void spacecraft::updateTotalMassOnFuelReduction(double emptyMass, double fuelMass)
@@ -59,6 +69,9 @@ void spacecraft::updateMovementData(double dt)
     // --- Compute position ---
     Vector3 MCI_position = physics_->computePos(getPosition(), MCI_velocity, MCI_acceleration, dt);
 
+    // --- Update Frames ---
+    updateFrames(time);
+
     // --- TODO: Compute orientation and angular velocity ---
     // ...
 
@@ -79,6 +92,38 @@ void spacecraft::updateMovementDataToZero(double dt)
     // --- Commit to state vector ---
     setVelocity(zeroVector);
     updateGLoad(zeroVector, environmentConfig_.moonGravityVec);
+}
+
+void spacecraft::updateFrames(double t)
+{
+    // --- MCI  ---
+    simFrameContext_.MCI_State.position = state_.MCI_Position;
+    simFrameContext_.MCI_State.velocity = state_.MCI_Velocity;
+
+    // --- MCI to MCMF ---
+    simFrameContext_.MCMF_State = coordTransf_.MCItoMCMF(simFrameContext_.MCI_State, dt);
+
+    // --- Compute ENU ---
+    simFrameContext_.ENU_Frame  = missionContext_.ENU_landingSite;
+
+    // --- Compute LVLH ---
+    simFrameContext_.LVLH_Frame = coordTransf_.computeLVLHFrame(simFrameContext_.MCI_State);
+
+    // --- MCMF to MSC
+    simFrameContext_.MSC_State  = coordTransf_.MCMFtoMSC(simFrameContext_.MCMF_State);
+
+    // --- MCMF to ENU
+    simFrameContext_.ENU_State  = coordTransf_.MCMFtoENU(simFrameContext_.MCMF_State, simFrameContext_.ENU_Frame);
+
+    // --- MCI to LVLH
+    simFrameContext_.LVLH_State = coordTransf_.MCItoLVLH(simFrameContext_.MCI_State, simFrameContext_.LVLH_Frame);
+
+    // --- SBF ---
+    simFrameContext_.SBF_Frame.orientation      = state_.IB_Orientation;
+
+    simFrameContext_.SBF_Frame.origin.position  = state_.MCI_Position;
+
+    simFrameContext_.SBF_Frame.origin.velocity  = state_.MCI_Velocity;
 }
 
 void spacecraft::updateGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration)
@@ -135,7 +180,7 @@ void spacecraft::setAngularVelocity(const Vector3& angVel)
 // -------------------------------------------------------------------------
 // Public
 // -------------------------------------------------------------------------
-spacecraft::spacecraft(customSpacecraft lMoon, MissionContext mContext) : spacecraftConfig_(lMoon), missionConfig_(mContext)
+spacecraft::spacecraft(customSpacecraft lMoon, MissionContext mContext) : spacecraftConfig_(lMoon), missionContext_(mContext)
     {
         // initialize
         std::shared_ptr<IPhysicsModel> model_       = std::make_shared<BasicMoonGravityModel>(environmentConfig_);

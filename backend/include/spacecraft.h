@@ -48,8 +48,9 @@ private:
     StateVector state_;                         ///< Encapsulates the complete translational and rotational state of the spacecraft and is single source of thruth
     EnvironmentConfig environmentConfig_;       ///< [-] Environment config struct with constant parameters.
     SpacecraftState spacecraftState_;           ///< State of spacecraft
-    customSpacecraft spacecraftConfig_;          ///< [] Parameters which defines spacecraft. This are filled by json config data.
-    MissionContext missionConfig_;
+    customSpacecraft spacecraftConfig_;         ///< [] Parameters which defines spacecraft. This are filled by json config data.
+    SimulationFrameContext simFrameContext_;    ///< Stores position & velocity states in all different frames.
+    MissionContext missionContext_;
     CoordinateTransformer coordTransf_;         ///< Object of coordinate transformation class for transformation calculations
 
     CoordinateTransformer::SpacecraftBodyFrame originState_;       ///< Initial State of spacecraft in MCI. This struct is needed for all coordinate transformation procedures
@@ -82,6 +83,32 @@ private:
      * Called automatically in the constructor.
      */
     void setDefaultValues();
+
+    /**
+     * @brief Initializes all mission-dependent reference frames.
+     *
+     * This method constructs the static mission reference data required for
+     * navigation, guidance, and coordinate transformations.
+     *
+     * Starting from the landing site definition stored in the MissionContext
+     * as Moon Surface Coordinates (MSC), the method computes:
+     *
+     * - The landing site expressed in the Moon-Centered Moon-Fixed frame (MCMF)
+     * - The landing site expressed in the Moon-Centered Inertial frame (MCI)
+     * - The local East-North-Up (ENU) frame attached to the landing site
+     *
+     * These reference frames are generally constant throughout the simulation
+     * and therefore only need to be recomputed when:
+     *
+     * - A new mission is loaded
+     * - The landing site changes
+     * - The simulation is reset
+     *
+     * @param t0 Simulation start time in seconds. Used when transforming the
+     *           landing site from the rotating MCMF frame into the inertial
+     *           MCI frame.
+     */
+    void initializeMissionFrames(double t0);
 
     // -------------------------------------------------------------------------
     // Private update functions
@@ -118,6 +145,31 @@ private:
      * Function is used for landed or crashed states
      */
     void updateMovementDataToZero(double dt);
+
+    /**
+     * @brief Updates all derived coordinate frame representations of the spacecraft state.
+     *
+     * This method computes the current spacecraft state expressed in all supported
+     * coordinate systems based on the current MCI truth state stored in the
+     * StateVector.
+     *
+     * The update includes transformations between:
+     *
+     * - MCI (Moon-Centered Inertial)
+     * - MCMF (Moon-Centered Moon-Fixed)
+     * - MSC (Moon Surface Coordinates)
+     * - ENU (East-North-Up)
+     * - SBF (Spacecraft Body Frame)
+     *
+     * The provided MissionContext supplies mission-specific reference information,
+     * such as the landing site definition used for ENU frame generation.
+     *
+     * This method should be called once per simulation step after the spacecraft
+     * state has been propagated.
+     *
+     * @param t absolute time
+     */
+    void updateFrames(double dt);
 
     /**
      * @brief Update G-Load in preperation for sending to UI
