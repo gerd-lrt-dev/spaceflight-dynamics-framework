@@ -15,6 +15,32 @@ void from_json(const nlohmann::json& j, Vector3& v)
     }
 }
 
+void from_json(const nlohmann::json& j, Quaternion& q)
+{
+    if (j.is_array())
+    {
+        if (j.size() != 4)
+        {
+            throw std::runtime_error("Quaternion array must contain exactly 4 elements.");
+        }
+
+        q = Quaternion(
+            j[0].get<double>(),
+            j[1].get<double>(),
+            j[2].get<double>(),
+            j[3].get<double>()
+            );
+    }
+    else
+    {
+        q = Quaternion(
+            j.at("w").get<double>(),
+            j.at("x").get<double>(),
+            j.at("y").get<double>(),
+            j.at("z").get<double>()
+            );
+    }
+}
 
 void to_json(nlohmann::json& j, const Vector3& v) {
     j = nlohmann::json{{"x", v.x}, {"y", v.y}, {"z", v.z}};
@@ -50,7 +76,7 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
     const auto& initialstate = j.at("initialState");
 
     lander.MCI_initialPos           = initialstate.at("MCI_InitialPosition").get<Vector3>();
-    lander.SBF_initialRot           = initialstate.at("IB_InitialOrientation").get<Vector3>();
+    lander.IB_initialRot           = initialstate.at("IB_InitialOrientation").get<Quaternion>();
     lander.MCI_initialVelocity      = initialstate.at("MCI_InitialVelocity").get<Vector3>();
     lander.SBF_initialCenterOfMass  = initialstate.at("SBF_InitialCenterOfMass").get<Vector3>();
 

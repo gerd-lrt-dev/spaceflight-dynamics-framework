@@ -19,7 +19,12 @@ void spacecraft::setDefaultValues()
 
     originState_.origin.position = landerMoon.MCI_initialPos;
     originState_.origin.velocity = landerMoon.MCI_initialVelocity;
-    originState_.orientation = {0.0, 1.0, 0.0, 0.0};
+    std::cout << "origin orientation: \n"
+              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n"
+              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n"
+              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n"
+              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n" << std::endl;
+    originState_.orientation = landerMoon.IB_initialRot;
 
     thrustOrchestration.initializeEngines(landerMoon.engines_, landerMoon.RCSengines_, landerMoon.tanks_);
 

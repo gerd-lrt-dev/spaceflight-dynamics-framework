@@ -2,6 +2,7 @@
 #define CUSTOMSPACECRAFTSTRUCT_H
 
 #include "vector3.h"
+#include "quaternion.h"
 #include "Thrust/EngineConfig.h"
 #include "Thrust/RCSConfig.h"
 #include "Thrust/FueltankStruct.h"
@@ -108,7 +109,7 @@ struct customSpacecraft
     Vector3 MCI_initialVelocity;
     ///< [m/s] Velocity in three spatial directions
 
-    Vector3 SBF_initialRot;
+    Quaternion IB_initialRot;
     ///< [rad] Initial orientation (pitch, yaw, roll) in body coordinates.
 
     Vector3 SBF_initialCenterOfMass;
