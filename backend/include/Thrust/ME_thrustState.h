@@ -47,14 +47,14 @@ struct ME_ThrustState
     double targetPercentage{0.0};
 
     /**
-     * @brief Current Thrust direction
+     * @brief Current Thrust SBF_direction
      *
-     * Represents the thrust direction. Normally this direction is fixed. Nevertheless it
+     * Represents the thrust SBF_direction. Normally this SBF_direction is fixed. Nevertheless it
      * could become a state, when thrust vectorizing is implemented.
      *
      * Unit: [-]
      */
-    Vector3 direction{0.0, 0.0, 0.0};
+    Vector3 SBF_direction{0.0, 0.0, 0.0};
 };
 
 #endif // ME_THRUSTSTATE_H

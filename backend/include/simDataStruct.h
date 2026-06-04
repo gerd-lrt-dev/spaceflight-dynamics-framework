@@ -7,6 +7,7 @@
 #include "Thrust/ME_thrustState.h"
 #include "Thrust/RCS_ThrustState.h"
 #include "Coordinates/missionContext.h"
+#include "Coordinates/simulationFrameContext.h"
 
 #include <string>
 #include <vector>
@@ -86,6 +87,7 @@ struct simData
 
     // Coordiantes & Frame data
     MissionContext missionContext_;
+    SimulationFrameContext simFrameContext_;
 
 };
 

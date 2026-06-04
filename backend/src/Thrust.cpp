@@ -42,7 +42,7 @@ void Thrust::setTargetThrustInNewton(EngineType engine, const double &tMainEngin
             {
                 if (model->getEngineType() == "translation")
                 {
-                    const double command = RCSControlAllocator::mapAxisCommandToThrusterNewton(tRCSThrust, model->getDirectionOfThrust());
+                    const double command = RCSControlAllocator::mapAxisCommandToThrusterNewton(tRCSThrust, model->getSBF_DirectionOfThrust());
 
                     model->setTarget(command);
                 }
@@ -76,7 +76,7 @@ void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainE
         {
             if (model->getEngineType() == "translation")
             {
-                const double command = RCSControlAllocator::mapAxisCommandToThrusterPercentage(tRCSThrust, model->getDirectionOfThrust());
+                const double command = RCSControlAllocator::mapAxisCommandToThrusterPercentage(tRCSThrust, model->getSBF_DirectionOfThrust());
 
                 model->setTargetInPercentage(command);
             }
@@ -214,7 +214,7 @@ Vector3 Thrust::getTargetThrust(EngineType engine) const
     {
         for (const auto& model : models_)
         {
-            dir = model->getDirectionOfThrust();
+            dir = model->getSBF_DirectionOfThrust();
             thrust = model->getTargetThrust();
 
             total += dir * thrust;
@@ -226,7 +226,7 @@ Vector3 Thrust::getTargetThrust(EngineType engine) const
         {
             if (model->getEngineType() == "main")
             {
-                dir = model->getDirectionOfThrust();
+                dir = model->getSBF_DirectionOfThrust();
                 thrust = model->getTargetThrust();
                 total += dir * thrust;
             }
@@ -238,7 +238,7 @@ Vector3 Thrust::getTargetThrust(EngineType engine) const
         {
             if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
             {
-                dir = model->getDirectionOfThrust();
+                dir = model->getSBF_DirectionOfThrust();
                 thrust = model->getTargetThrust();
                 total += dir * thrust;
             }
@@ -258,7 +258,7 @@ Vector3 Thrust::getCurrentThrust(EngineType engine) const
     {
         for (const auto& model : models_)
         {
-            dir = model->getDirectionOfThrust();
+            dir = model->getSBF_DirectionOfThrust();
             thrust = model->getCurrentThrust();
 
             total += dir * thrust;
@@ -270,7 +270,7 @@ Vector3 Thrust::getCurrentThrust(EngineType engine) const
         {
             if (model->getEngineType() == "main")
             {
-                dir = model->getDirectionOfThrust();
+                dir = model->getSBF_DirectionOfThrust();
                 thrust = model->getCurrentThrust();
 
                 total += dir * thrust;
@@ -283,7 +283,7 @@ Vector3 Thrust::getCurrentThrust(EngineType engine) const
         {
             if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
             {
-                dir = model->getDirectionOfThrust();
+                dir = model->getSBF_DirectionOfThrust();
                 thrust = model->getCurrentThrust();
 
                 total += dir * thrust;
@@ -303,7 +303,7 @@ Vector3 Thrust::getCurrentThrustInPercentage(EngineType engine) const
     {
         for (const auto& model : models_)
         {
-            dir = model->getDirectionOfThrust();
+            dir = model->getSBF_DirectionOfThrust();
             thrustInPercentage = model->getCurrentThrust() / model->getMaxThrust();
 
             total += dir * thrustInPercentage;
@@ -315,7 +315,7 @@ Vector3 Thrust::getCurrentThrustInPercentage(EngineType engine) const
         {
             if (model->getEngineType() == "main")
             {
-                dir = model->getDirectionOfThrust();
+                dir = model->getSBF_DirectionOfThrust();
                 thrustInPercentage = model->getCurrentThrust() / model->getMaxThrust();
             }
 
@@ -328,7 +328,7 @@ Vector3 Thrust::getCurrentThrustInPercentage(EngineType engine) const
         {
             if (model->getEngineType() == "translation" || model->getEngineType() == "rotation")
             {
-                dir = model->getDirectionOfThrust();
+                dir = model->getSBF_DirectionOfThrust();
                 thrustInPercentage = model->getCurrentThrust() / model->getMaxThrust();
             }
 
@@ -347,7 +347,7 @@ Vector3 Thrust::getDirectionOfThrust(EngineType engine, int engineID) const
     {
         for (const auto& model : models_)
         {
-            dir = model->getDirectionOfThrust();
+            dir = model->getSBF_DirectionOfThrust();
         }
     }
     else if(engineID > 0)
@@ -356,7 +356,7 @@ Vector3 Thrust::getDirectionOfThrust(EngineType engine, int engineID) const
         {
             if (model->getEngineID() == engineID)
             {
-                dir = model->getDirectionOfThrust();
+                dir = model->getSBF_DirectionOfThrust();
             }
         }
     }
@@ -383,7 +383,7 @@ std::vector<RCS_ThrustState> Thrust::getFullRCSEngineData() const
             state.currentThrust             = model->getCurrentThrust();
             state.targetThrust              = model->getTargetThrust();
             state.targetThrustPercentage    = model->getTargetThrust() / model->getMaxThrust();
-            state.direction                 = model->getDirectionOfThrust();
+            state.SBF_direction             = model->getSBF_DirectionOfThrust();
 
             rcsThrustStates.push_back(state);
         }

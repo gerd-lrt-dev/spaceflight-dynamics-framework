@@ -65,16 +65,16 @@ struct RCS_ThrustState
     std::string axis{};
 
     /**
-     * @brief Normalized thrust direction vector of the RCS engine.
+     * @brief Normalized thrust SBF_direction vector of the RCS engine.
      *
-     * Represents the thrust direction in spacecraft body coordinates.
+     * Represents the thrust SBF_direction in spacecraft body coordinates.
      *
-     * The direction is typically constant for fixed thrusters but may become
+     * The SBF_direction is typically constant for fixed thrusters but may become
      * dynamic in future thrust-vectoring implementations.
      *
      * Unit: -
      */
-    Vector3 direction{0.0, 0.0, 0.0};
+    Vector3 SBF_direction{0.0, 0.0, 0.0};
 
     // -------------------------------------------------------------------------
     // Dynamic runtime state

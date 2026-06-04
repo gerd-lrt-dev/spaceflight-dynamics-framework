@@ -25,7 +25,7 @@ basicRCSModel::basicRCSModel(const RCSEngineConfig& rcsConfig, FuelState fState)
     thruststate_.engineID   = rcsConfig_.id;
     thruststate_.engineName = rcsConfig_.name;
     thruststate_.axis       = rcsConfig_.axis;
-    thruststate_.direction  = rcsConfig_.direction;
+    thruststate_.SBF_direction  = rcsConfig_.direction;
 
     // Activate engine
     rcsConfig_.engineActivated = true;
@@ -136,7 +136,7 @@ double basicRCSModel::getCurrentThrust() const
     return thruststate_.currentThrust;
 }
 
-Vector3 basicRCSModel::getDirectionOfThrust() const
+Vector3 basicRCSModel::getSBF_DirectionOfThrust() const
 {
     return rcsConfig_.direction;
 }

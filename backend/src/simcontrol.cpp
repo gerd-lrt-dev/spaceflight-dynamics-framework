@@ -12,7 +12,7 @@
 void simcontrol::buildSimulationEnvironment(double t)
 {
     // Instance classes
-    landerSpacecraft    = std::make_unique<spacecraft>(spacecraftConfig_);
+    landerSpacecraft    = std::make_unique<spacecraft>(spacecraftConfig_, missionContext_);
     inputArbiter_       = std::make_unique<InputArbiter>();
 }
 
@@ -101,7 +101,7 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
 
 void simcontrol::updateFrames(CoordinateTransformer::State SBF_)
 {
-    // TODO: This function is going to transfer all frames
+
 }
 
 //***********************************************************

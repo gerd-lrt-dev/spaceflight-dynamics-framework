@@ -215,7 +215,7 @@ public:
      *
      * @return Normalized thrust direction [-].
      */
-    Vector3 getDirectionOfThrust() const override;
+    Vector3 getSBF_DirectionOfThrust() const override;
 
     /**
      * @brief Returns the current propellant mass flow rate.

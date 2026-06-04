@@ -100,7 +100,7 @@ double basicMainEngineModel::getTankID() const
     return engineConfig_.tankID;
 }
 
-Vector3 basicMainEngineModel::getDirectionOfThrust() const
+Vector3 basicMainEngineModel::getSBF_DirectionOfThrust() const
 {
     return engineConfig_.direction;
 }

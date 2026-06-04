@@ -119,9 +119,9 @@ private:
 
     /**
      * @brief Set RCS Thrust
-     * @param Vector3 translation with thrust in cartasian coordinates within the principle ENU (East North Up)
+     * @param Vector3 translation with thrust in cartasian coordinates within the principle SBF (Spacecraft Body Frame)
      */
-    void setTargetRCSThrust(const Vector3 &ENU_translation);
+    void setTargetRCSThrust(const Vector3 &SBF_translation);
 
     /**
      * @brief Process commands

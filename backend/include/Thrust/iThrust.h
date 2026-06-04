@@ -28,7 +28,7 @@ public:
 
     virtual double      getCurrentThrust() const = 0;
 
-    virtual Vector3     getDirectionOfThrust() const = 0;
+    virtual Vector3     getSBF_DirectionOfThrust() const = 0;
 
     virtual double      getFuelConsumption() const = 0;
 

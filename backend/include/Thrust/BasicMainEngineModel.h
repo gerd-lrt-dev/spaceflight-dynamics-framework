@@ -130,11 +130,11 @@ public:
 
     /**
      * @brief Getter function for thrust direction
-     * @return ///< [-] Vector with direction of thrust
+     * @return ///< [-] Vector with direction of thrust ins Spacecraft Body Frame (SBF)
      *
      * The vector is aligned with the static coordinate system of the spacecraft
      */
-    Vector3 getDirectionOfThrust() const override;
+    Vector3 getSBF_DirectionOfThrust() const override;
 
     /**
      * @brief Getter function for maximum thrust given by engine config

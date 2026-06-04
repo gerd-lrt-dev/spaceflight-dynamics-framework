@@ -48,7 +48,8 @@ private:
     StateVector state_;                         ///< Encapsulates the complete translational and rotational state of the spacecraft and is single source of thruth
     EnvironmentConfig environmentConfig_;       ///< [-] Environment config struct with constant parameters.
     SpacecraftState spacecraftState_;           ///< State of spacecraft
-    customSpacecraft landerMoon;                ///< [] Parameters which defines spacecraft. This are filled by json config data.
+    customSpacecraft spacecraftConfig_;          ///< [] Parameters which defines spacecraft. This are filled by json config data.
+    MissionContext missionConfig_;
     CoordinateTransformer coordTransf_;         ///< Object of coordinate transformation class for transformation calculations
 
     CoordinateTransformer::SpacecraftBodyFrame originState_;       ///< Initial State of spacecraft in MCI. This struct is needed for all coordinate transformation procedures
@@ -254,7 +255,7 @@ public:
      * The constructor assumes that the provided configuration structure has been validated
      * prior to construction (e.g., via JSON loader or configuration class).
      */
-    spacecraft(customSpacecraft lMoon);
+    spacecraft(customSpacecraft lMoon, MissionContext mContext);
 
     /**
      * @brief Destructor

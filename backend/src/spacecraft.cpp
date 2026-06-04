@@ -13,20 +13,15 @@ void spacecraft::setDefaultValues()
 {
     spacecraftIntegrity = 1.0;
     spacecraftState_ = SpacecraftState::Operational;
-    totalMass = landerMoon.emptyMass + landerMoon.fuelM;
-    state_.MCI_Position = landerMoon.MCI_initialPos;
-    state_.MCI_Velocity = landerMoon.MCI_initialVelocity;
+    totalMass = spacecraftConfig_.emptyMass + spacecraftConfig_.fuelM;
+    state_.MCI_Position = spacecraftConfig_.MCI_initialPos;
+    state_.MCI_Velocity = spacecraftConfig_.MCI_initialVelocity;
 
-    originState_.origin.position = landerMoon.MCI_initialPos;
-    originState_.origin.velocity = landerMoon.MCI_initialVelocity;
-    std::cout << "origin orientation: \n"
-              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n"
-              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n"
-              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n"
-              << "w: " << landerMoon.IB_initialRot.getQ0() << "/n" << std::endl;
-    originState_.orientation = landerMoon.IB_initialRot;
+    originState_.origin.position    = spacecraftConfig_.MCI_initialPos;
+    originState_.origin.velocity    = spacecraftConfig_.MCI_initialVelocity;
+    originState_.orientation        = spacecraftConfig_.IB_initialRot;
 
-    thrustOrchestration.initializeEngines(landerMoon.engines_, landerMoon.RCSengines_, landerMoon.tanks_);
+    thrustOrchestration.initializeEngines(spacecraftConfig_.engines_, spacecraftConfig_.RCSengines_, spacecraftConfig_.tanks_);
 
 
     // TODO just testing here optimization
@@ -54,17 +49,7 @@ void spacecraft::updateMovementData(double dt)
     }
 
     // --- Compute acceleration ---
-    std::cout << "SBF Thrust: " << "\n"
-              << "x: " << requestTotalThrust().x << "\n"
-              << "y: " << requestTotalThrust().y << "\n"
-              << "z: " << requestTotalThrust().z << "\n" << std::endl;
-
     Vector3 MCI_total_Thrust = coordTransf_.GenSBFtoMCI(requestTotalThrust(), originState_);
-
-    std::cout << "MCI Thrust: " << "\n"
-              << "x: " << MCI_total_Thrust.x << "\n"
-              << "y: " << MCI_total_Thrust.y << "\n"
-              << "z: " << MCI_total_Thrust.z << "\n" << std::endl;
 
     Vector3 MCI_acceleration = physics_->computeAcc(getPosition(), getVelocity(), getTotalMass(), MCI_total_Thrust);
 
@@ -119,7 +104,7 @@ void spacecraft::applyLandingDamage(double impactVelocity)
 {
     double KE(0), KEref(0), damageInPercent(0);
 
-    KEref   = spacemath::kineticEnergy(totalMass, landerMoon.safeVelocity);
+    KEref   = spacemath::kineticEnergy(totalMass, spacecraftConfig_.safeVelocity);
     KE      = spacemath::kineticEnergy(totalMass, impactVelocity);
 
     damageInPercent = KE / KEref;
@@ -150,7 +135,7 @@ void spacecraft::setAngularVelocity(const Vector3& angVel)
 // -------------------------------------------------------------------------
 // Public
 // -------------------------------------------------------------------------
-spacecraft::spacecraft(customSpacecraft lMoon) : landerMoon(lMoon)
+spacecraft::spacecraft(customSpacecraft lMoon, MissionContext mContext) : spacecraftConfig_(lMoon), missionConfig_(mContext)
     {
         // initialize
         std::shared_ptr<IPhysicsModel> model_       = std::make_shared<BasicMoonGravityModel>(environmentConfig_);
@@ -169,7 +154,7 @@ spacecraft::~spacecraft()
 void spacecraft::updateStep(double dt)
 {
     // Update mass data
-    updateTotalMassOnFuelReduction(landerMoon.emptyMass, getTotalFuelMass());
+    updateTotalMassOnFuelReduction(spacecraftConfig_.emptyMass, getTotalFuelMass());
 
     thrustOrchestration.updateThrust(dt);
 
@@ -222,7 +207,7 @@ void spacecraft::updateSpacecraftIntegrity()
     }
 
     // 2. Structural failure (terminal but stable)
-    if (spacecraftIntegrity < landerMoon.structuralIntegrity)
+    if (spacecraftIntegrity < spacecraftConfig_.structuralIntegrity)
     {
         spacecraftState_ = SpacecraftState::Crashed;
         return;
@@ -301,7 +286,7 @@ std::vector<double> spacecraft::compute_optimization(double h0, double v0, doubl
     // -----------------------------
     // Constraints
     // -----------------------------
-    problem.m_dry = landerMoon.emptyMass;
+    problem.m_dry = spacecraftConfig_.emptyMass;
 
     problem.v_min = -50.0;   // max fall speed
     problem.v_max =  50.0;   // max upward drift
@@ -357,12 +342,12 @@ std::vector<RCS_ThrustState> spacecraft::requestFullRCSEngineData() const
 
 void spacecraft::setInitalPosition(const Vector3& position)
 {
-    landerMoon.MCI_initialPos = position;
+    spacecraftConfig_.MCI_initialPos = position;
 }
 
 void spacecraft::setInitalVelocity(const Vector3& velocity)
 {
-    landerMoon.MCI_initialVelocity = velocity;
+    spacecraftConfig_.MCI_initialVelocity = velocity;
 }
 
 simData spacecraft::getFullSimulationData() const
@@ -380,7 +365,7 @@ simData spacecraft::getFullSimulationData() const
     simData_.ME_ThrustState_.current            = requestMainEngineThrust().dot(requestMainEngineDirection());
     simData_.ME_ThrustState_.target             = requestMainEngineTargetThrust().dot(requestMainEngineDirection());
     simData_.ME_ThrustState_.targetPercentage   = requestMainEngineThrustInPercentage().dot(requestMainEngineDirection());
-    simData_.ME_ThrustState_.direction          = requestMainEngineDirection();
+    simData_.ME_ThrustState_.SBF_direction          = requestMainEngineDirection();
 
     simData_.RCS_ThrustState_ = requestFullRCSEngineData();
 
