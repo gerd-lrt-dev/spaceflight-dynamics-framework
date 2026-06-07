@@ -22,6 +22,7 @@ add_library(moonlander_backend
     src/Coordinates/coordinateTransformer.cpp
     src/Thrust/BasicMainEngineModel.cpp
     src/Thrust/BasicRCSModel.cpp
+    src/spacemath.cpp
     include/Integrators/Dynamics.h
     include/Integrators/iIntegrator.h
     include/Integrators/eulerIntegrator.h
