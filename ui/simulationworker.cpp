@@ -1,6 +1,7 @@
 #include "simulationworker.h"
 
 #include <QString>
+#include <eigen3/Eigen/Dense>
 
 SimulationWorker::SimulationWorker(QObject *parent)
     : QObject(parent)
