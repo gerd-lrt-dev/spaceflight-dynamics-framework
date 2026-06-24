@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector3.h"
+#include "../vector3.h"
 
 #include <iostream>
 #include <string>

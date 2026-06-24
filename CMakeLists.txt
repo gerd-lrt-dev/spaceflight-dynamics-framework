@@ -6,4 +6,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(backend)
 add_subdirectory(ui)
+add_subdirectory(interface)
 

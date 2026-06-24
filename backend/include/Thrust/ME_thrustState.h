@@ -1,7 +1,7 @@
 #ifndef ME_THRUSTSTATE_H
 #define ME_THRUSTSTATE_H
 
-#include "vector3.h"
+#include "../vector3.h"
 
 /**
  * @brief Simulation output data associated with the main engine thrust state.

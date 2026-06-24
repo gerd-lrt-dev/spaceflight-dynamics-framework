@@ -1,7 +1,8 @@
 #pragma once
 
-#include "vector3.h"
-#include "quaternion.h"
+#include "../vector3.h"
+#include "../quaternion.h"
+#include <eigen3/Eigen/Dense>
 
 /**
  * @class CoordinateTransformer
@@ -97,7 +98,7 @@ public:
      * sensors.
      */
     struct SpacecraftBodyFrame{
-        Quaternion orientation;
+        Eigen::Quaterniond orientation;
 
         State origin;
     };
