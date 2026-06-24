@@ -1,7 +1,6 @@
 #include "quaternion.h"
 #include <cmath>
 
-/*
 // ========================================
 // Public constructors
 // ========================================
@@ -143,4 +142,3 @@ Quaternion Quaternion::operator*(const Quaternion &other) const
         false
         );
 }
-*/

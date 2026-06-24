@@ -98,7 +98,7 @@ public:
      * sensors.
      */
     struct SpacecraftBodyFrame{
-        Eigen::Quaterniond orientation;
+        Quaternion orientation;
 
         State origin;
     };

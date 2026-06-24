@@ -19,7 +19,7 @@ CoordinateTransformer::State CoordinateTransformer::MCItoMCMF(
     const double theta =
         MOON_ROTATION_RATE * t;
 
-    Eigen::Quaterniond q(
+    Quaternion q(
         std::cos(theta * 0.5),
         0.0,
         0.0,
