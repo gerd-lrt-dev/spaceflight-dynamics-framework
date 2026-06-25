@@ -19,14 +19,14 @@ CoordinateTransformer::State CoordinateTransformer::MCItoMCMF(
     const double theta =
         MOON_ROTATION_RATE * t;
 
-    Quaternion q(
+    Eigen::Quaterniond q(
         std::cos(theta * 0.5),
         0.0,
         0.0,
         std::sin(theta * 0.5)
         );
 
-    Vector3 omega(
+    Eigen::Vector3d omega(
         0.0,
         0.0,
         MOON_ROTATION_RATE
@@ -34,14 +34,10 @@ CoordinateTransformer::State CoordinateTransformer::MCItoMCMF(
 
     State fixed;
 
-    fixed.position =
-        q.rotate(inertial.position);
+    fixed.position = q * inertial.position;
 
     fixed.velocity =
-        q.rotate(
-            inertial.velocity
-            - omega.cross(inertial.position)
-            );
+        q * (inertial.velocity - omega.cross(inertial.position));
 
     return fixed;
 }
@@ -53,16 +49,16 @@ CoordinateTransformer::State CoordinateTransformer::MCMFtoMCI(
     const double theta =
         MOON_ROTATION_RATE * t;
 
-    Quaternion q(
+    Eigen::Quaterniond q(
         std::cos(theta * 0.5),
         0.0,
         0.0,
         std::sin(theta * 0.5)
         );
 
-    Quaternion qInv = q.inverse();
+    Eigen::Quaterniond qInv = q.inverse();
 
-    Vector3 omega(
+    Eigen::Vector3d omega(
         0.0,
         0.0,
         MOON_ROTATION_RATE
@@ -70,14 +66,9 @@ CoordinateTransformer::State CoordinateTransformer::MCMFtoMCI(
 
     State inertial;
 
-    inertial.position =
-        qInv.rotate(fixed.position);
+    inertial.position = qInv * fixed.position;
 
-    inertial.velocity =
-        qInv.rotate(
-            fixed.velocity
-            + omega.cross(fixed.position)
-            );
+    inertial.velocity = qInv * (fixed.velocity + omega.cross(fixed.position));
 
     return inertial;
 }
@@ -93,15 +84,15 @@ CoordinateTransformer::MCMFtoMSC(
 {
     MoonSurfaceCoordinates msc;
 
-    const Vector3& r = fixed.position;
+    const Eigen::Vector3d& r = fixed.position;
 
     const double radius = r.norm();
 
     msc.latitude =
-        std::asin(r.z / radius);
+        std::asin(r.z() / radius);
 
     msc.longitude =
-        std::atan2(r.y, r.x);
+        std::atan2(r.y(), r.x());
 
     msc.altitude =
         radius - R_MOON;
@@ -129,14 +120,14 @@ CoordinateTransformer::State CoordinateTransformer::MSCtoMCMF(
 
     State fixed;
 
-    fixed.position = Vector3(
+    fixed.position = Eigen::Vector3d(
         r * cosLat * cosLon,
         r * cosLat * sinLon,
         r * sinLat
         );
 
     // Stationary in Moon-fixed frame
-    fixed.velocity = Vector3(
+    fixed.velocity = Eigen::Vector3d(
         0.0,
         0.0,
         0.0
@@ -163,7 +154,7 @@ CoordinateTransformer::computeENUFrame(
         fixed.position.normalized();
 
     // Moon rotation axis
-    Vector3 zAxis(
+    Eigen::Vector3d zAxis(
         0.0,
         0.0,
         1.0
@@ -173,13 +164,13 @@ CoordinateTransformer::computeENUFrame(
     const double alignment =
         std::abs(frame.up.dot(zAxis));
 
-    Vector3 referenceAxis;
+    Eigen::Vector3d referenceAxis;
 
     if (alignment > ALIGNMENT_THRESHOLD)
     {
         // Near poles:
         // use global X axis instead
-        referenceAxis = Vector3(
+        referenceAxis = Eigen::Vector3d(
             1.0,
             0.0,
             0.0
@@ -211,15 +202,15 @@ CoordinateTransformer::State CoordinateTransformer::ENUtoMCMF(
 
     fixed.position =
         frame.origin.position
-        + frame.east  * targetENU.position.x
-        + frame.north * targetENU.position.y
-        + frame.up    * targetENU.position.z;
+        + frame.east  * targetENU.position.x()
+        + frame.north * targetENU.position.y()
+        + frame.up    * targetENU.position.z();
 
     fixed.velocity =
         frame.origin.velocity
-        + frame.east  * targetENU.velocity.x
-        + frame.north * targetENU.velocity.y
-        + frame.up    * targetENU.velocity.z;
+        + frame.east  * targetENU.velocity.x()
+        + frame.north * targetENU.velocity.y()
+        + frame.up    * targetENU.velocity.z();
 
     return fixed;
 }
@@ -231,22 +222,22 @@ CoordinateTransformer::State CoordinateTransformer::MCMFtoENU(
     State enu;
 
     // Relative position
-    Vector3 deltaPosition =
+    Eigen::Vector3d deltaPosition =
         target.position
         - frame.origin.position;
 
-    enu.position = Vector3(
+    enu.position = Eigen::Vector3d(
         deltaPosition.dot(frame.east),
         deltaPosition.dot(frame.north),
         deltaPosition.dot(frame.up)
         );
 
     // Relative velocity
-    Vector3 deltaVelocity =
+    Eigen::Vector3d deltaVelocity =
         target.velocity
         - frame.origin.velocity;
 
-    enu.velocity = Vector3(
+    enu.velocity = Eigen::Vector3d(
         deltaVelocity.dot(frame.east),
         deltaVelocity.dot(frame.north),
         deltaVelocity.dot(frame.up)
@@ -268,15 +259,15 @@ CoordinateTransformer::computeLVLHFrame(
 
     frame.origin = inertial;
 
-    Vector3 r = inertial.position;
-    Vector3 v = inertial.velocity;
+    Eigen::Vector3d r = inertial.position;
+    Eigen::Vector3d v = inertial.velocity;
 
     // Local vertical (nadir)
     frame.down =
         (-r).normalized();
 
     // Orbital angular momentum
-    Vector3 h =
+    Eigen::Vector3d h =
         r.cross(v);
 
     const double hNorm =
@@ -286,12 +277,12 @@ CoordinateTransformer::computeLVLHFrame(
     if (hNorm < ANGULAR_MOMENTUM_EPSILON)
     {
         // Fallback reference direction
-        Vector3 fallback(0.0, 0.0, 1.0);
+        Eigen::Vector3d fallback(0.0, 0.0, 1.0);
 
         // Avoid parallel vectors
         if (std::abs(frame.down.dot(fallback)) > ALIGNMENT_THRESHOLD)
         {
-            fallback = Vector3(
+            fallback = Eigen::Vector3d(
                 1.0,
                 0.0,
                 0.0
@@ -323,16 +314,16 @@ CoordinateTransformer::State CoordinateTransformer::LVLHtoMCI(
     // Position
     inertial.position =
         frame.origin.position
-        + frame.forward * targetLVLH.position.x
-        + frame.right   * targetLVLH.position.y
-        + frame.down    * targetLVLH.position.z;
+        + frame.forward * targetLVLH.position.x()
+        + frame.right   * targetLVLH.position.y()
+        + frame.down    * targetLVLH.position.z();
 
     // Velocity
     inertial.velocity =
         frame.origin.velocity
-        + frame.forward * targetLVLH.velocity.x
-        + frame.right   * targetLVLH.velocity.y
-        + frame.down    * targetLVLH.velocity.z;
+        + frame.forward * targetLVLH.velocity.x()
+        + frame.right   * targetLVLH.velocity.y()
+        + frame.down    * targetLVLH.velocity.z();
 
     return inertial;
 }
@@ -344,22 +335,22 @@ CoordinateTransformer::State CoordinateTransformer::MCItoLVLH(
     State lvlh;
 
     // Relative position
-    Vector3 deltaPosition =
+    Eigen::Vector3d deltaPosition =
         target.position
         - frame.origin.position;
 
-    lvlh.position = Vector3(
+    lvlh.position = Eigen::Vector3d(
         deltaPosition.dot(frame.forward),
         deltaPosition.dot(frame.right),
         deltaPosition.dot(frame.down)
         );
 
     // Relative velocity
-    Vector3 deltaVelocity =
+    Eigen::Vector3d deltaVelocity =
         target.velocity
         - frame.origin.velocity;
 
-    lvlh.velocity = Vector3(
+    lvlh.velocity = Eigen::Vector3d(
         deltaVelocity.dot(frame.forward),
         deltaVelocity.dot(frame.right),
         deltaVelocity.dot(frame.down)
@@ -379,16 +370,16 @@ CoordinateTransformer::State CoordinateTransformer::MCItoSBF(
 {
     State local;
 
-    Quaternion qInv =
+    Eigen::Quaterniond qInv =
         body.orientation.inverse();
 
     local.position =
-        qInv.rotate(
+        qInv * (
             inertial.position
             - body.origin.position);
 
     local.velocity =
-        qInv.rotate(
+        qInv * (
             inertial.velocity
             - body.origin.velocity);
 
@@ -403,30 +394,28 @@ CoordinateTransformer::State CoordinateTransformer::SBFtoMCI(
 
     inertial.position =
         body.origin.position
-        + body.orientation.rotate(
-            bodyState.position);
+        + body.orientation * bodyState.position;
 
     inertial.velocity =
         body.origin.velocity
-        + body.orientation.rotate(
-            bodyState.velocity);
+        + body.orientation * bodyState.velocity;
 
     return inertial;
 }
 
-Vector3 CoordinateTransformer::GenMCItoSBF(
-    const Vector3& MCI_vec,
+Eigen::Vector3d CoordinateTransformer::GenMCItoSBF(
+    const Eigen::Vector3d& MCI_vec,
     const SpacecraftBodyFrame& body) const
 {
-    Quaternion qInv =
+    Eigen::Quaterniond qInv =
         body.orientation.inverse();
 
-    return qInv.rotate(MCI_vec);
+    return qInv * (MCI_vec);
 }
 
-Vector3 CoordinateTransformer::GenSBFtoMCI(
-    const Vector3& SBF_vec,
+Eigen::Vector3d CoordinateTransformer::GenSBFtoMCI(
+    const Eigen::Vector3d& SBF_vec,
     const SpacecraftBodyFrame& body) const
 {
-    return body.orientation.rotate(SBF_vec);
+    return body.orientation * (SBF_vec);
 }

@@ -209,7 +209,7 @@ void simcontrol::setTargetMainEngineThrust(const double& thrustPercent, const do
 
 // Function is going to get obsolet when RCS model is introduced
 
-void simcontrol::setTargetRCSThrust(const Vector3 &ENU_translation)
+void simcontrol::setTargetRCSThrust(const Eigen::Vector3d &ENU_translation)
 {
     landerSpacecraft->setTargetRCSThrust(ENU_translation);
 }

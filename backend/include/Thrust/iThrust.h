@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vector3.h"
 #include <iostream>
+#include <eigen3/Eigen/Dense>
 
 class IThrustModel{
 public:
@@ -28,7 +28,7 @@ public:
 
     virtual double      getCurrentThrust() const = 0;
 
-    virtual Vector3     getSBF_DirectionOfThrust() const = 0;
+    virtual Eigen::Vector3d     getSBF_DirectionOfThrust() const = 0;
 
     virtual double      getFuelConsumption() const = 0;
 

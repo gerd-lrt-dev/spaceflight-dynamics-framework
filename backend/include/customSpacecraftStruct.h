@@ -1,13 +1,12 @@
 #ifndef CUSTOMSPACECRAFTSTRUCT_H
 #define CUSTOMSPACECRAFTSTRUCT_H
 
-#include "vector3.h"
-#include "quaternion.h"
 #include "Thrust/EngineConfig.h"
 #include "Thrust/RCSConfig.h"
 #include "Thrust/FueltankStruct.h"
 
 #include <vector>
+#include <eigen3/Eigen/Dense>
 
 /**
  * @struct customSpacecraft
@@ -51,7 +50,7 @@ struct customSpacecraft
      * @code
      * for(const auto& eng : spacecraft.engines_) {
      *     double thrust = eng.maxThrust;
-     *     Vector3 dir = eng.direction;
+     *     Eigen::Vector3d dir = eng.direction;
      * }
      * @endcode
      */
@@ -71,7 +70,7 @@ struct customSpacecraft
      * @code
      * for(const auto& eng : spacecraft.engines_) {
      *     double thrust = eng.maxThrust;
-     *     Vector3 dir = eng.direction;
+     *     Eigen::Vector3d dir = eng.direction;
      * }
      * @endcode
      */
@@ -102,17 +101,17 @@ struct customSpacecraft
     // State (Body Frame Coordinates)
     // -------------------------------------------------------------------------
 
-    Vector3 MCI_initialPos;
+    Eigen::Vector3d MCI_initialPos;
     ///< [m] Initial spacecraft position expressed in body coordinates.
     ///< Typically initial (0, 0, 0) because physics handles world/Moon coordinates.
 
-    Vector3 MCI_initialVelocity;
+    Eigen::Vector3d MCI_initialVelocity;
     ///< [m/s] Velocity in three spatial directions
 
-    Quaternion IB_initialRot;
+    Eigen::Quaterniond IB_initialRot;
     ///< [rad] Initial orientation (pitch, yaw, roll) in body coordinates.
 
-    Vector3 SBF_initialCenterOfMass;
+    Eigen::Vector3d SBF_initialCenterOfMass;
     ///< [m] Center of mass location in body frame at t=0.
     ///< Should be updated dynamically if fuel mass distribution changes.
 

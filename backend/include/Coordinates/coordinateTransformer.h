@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../vector3.h"
-#include "../quaternion.h"
 #include <eigen3/Eigen/Dense>
 
 /**
@@ -38,8 +36,8 @@ public:
      * in the same coordinate frame.
      */
     struct State {
-        Vector3 position;
-        Vector3 velocity;
+        Eigen::Vector3d position;
+        Eigen::Vector3d velocity;
     };
 
     /**
@@ -64,9 +62,9 @@ public:
      * operations, and surface rendering.
      */
     struct ENUFrame {
-        Vector3 east;
-        Vector3 north;
-        Vector3 up;
+        Eigen::Vector3d east;
+        Eigen::Vector3d north;
+        Eigen::Vector3d up;
 
         State origin;
     };
@@ -81,9 +79,9 @@ public:
      *
      */
     struct LVLHFrame {
-        Vector3 forward;
-        Vector3 right;
-        Vector3 down;
+        Eigen::Vector3d forward;
+        Eigen::Vector3d right;
+        Eigen::Vector3d down;
 
         State origin;
     };
@@ -98,7 +96,7 @@ public:
      * sensors.
      */
     struct SpacecraftBodyFrame{
-        Quaternion orientation;
+        Eigen::Quaterniond orientation;
 
         State origin;
     };
@@ -279,32 +277,32 @@ public:
         const SpacecraftBodyFrame& body) const;
 
     /**
-     * @brief Transforms a Vector3 from MCI_vec coordinates into the spacecraft
+     * @brief Transforms a Eigen::Vector3d from MCI_vec coordinates into the spacecraft
      * body frame.
      *
      * Converts an generic vector into spacecraft-local coordinates using
      * the spacecraft attitude quaternion.
      *
-     * @param MCI_vec term Vector3 expressed in the MCI_vec frame.
+     * @param MCI_vec term Eigen::Vector3d expressed in the MCI_vec frame.
      * @param body Spacecraft body frame definition.
-     * @return Vector3 expressed in the spacecraft body frame.
+     * @return Eigen::Vector3d expressed in the spacecraft body frame.
      */
-    Vector3 GenMCItoSBF(
-        const Vector3& MCI_vec,
+    Eigen::Vector3d GenMCItoSBF(
+        const Eigen::Vector3d& MCI_vec,
         const SpacecraftBodyFrame& body) const;
 
     /**
-     * @brief Transforms a Vector3 from SBF coordinates into the moon centered inertial frame.
+     * @brief Transforms a Eigen::Vector3d from SBF coordinates into the moon centered inertial frame.
      *
      * Converts an generic vector into MCI coordinates using
      * the spacecraft attitude quaternion.
      *
-     * @param SBF term Vector3 expressed in the SBF frame.
+     * @param SBF term Eigen::Vector3d expressed in the SBF frame.
      * @param body Spacecraft body frame definition.
-     * @return Vector3 expressed in the moon centered inertial frame.
+     * @return Eigen::Vector3d expressed in the moon centered inertial frame.
      */
-    Vector3 GenSBFtoMCI(
-        const Vector3& SBF_vec,
+    Eigen::Vector3d GenSBFtoMCI(
+        const Eigen::Vector3d& SBF_vec,
         const SpacecraftBodyFrame& body) const;
 
 private:

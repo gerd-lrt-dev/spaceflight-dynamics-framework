@@ -2,9 +2,7 @@
 #define SPACECRAFT_H
 
 #include "Thrust.h"
-#include "vector3.h"
 #include "environmentConfig.h"
-#include "quaternion.h"
 #include "physics.h"
 #include "simDataStruct.h"
 #include "spacecraftStateStruct.h"
@@ -177,7 +175,7 @@ private:
      * @param gravityAcceleration
      * @return GLoad
      */
-    void updateGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration);
+    void updateGLoad(const Eigen::Vector3d& totalAcceleration, const Eigen::Vector3d& gravityAcceleration);
 
     // -------------------------------------------------------------------------
     // Private intializer functions
@@ -198,25 +196,25 @@ private:
      * @brief Update position to new values
      * @param 3D Vector with cartesian-coordinates [m]
      */
-    void setPosition(const Vector3& pos);
+    void setPosition(const Eigen::Vector3d& pos);
 
     /**
      * @brief Sets velocity of spacecraft
      * @param 3D Vector with velocities in three dimensions [m/s]
      */
-    void setVelocity(const Vector3& vel);
+    void setVelocity(const Eigen::Vector3d& vel);
 
     /**
      * @brief Sets orientation of spacecraft
      * @param Quaternion with q0 Scalar component, q1 First vector component, q2 Second vector component, q3 Third vector component
      */
-    void setOrientation(const Quaternion& q);
+    void setOrientation(const Eigen::Quaterniond& q);
 
     /**
      * @brief Sets angular velocity of spacecraft
      * @param Angular velocity vector of the spacecraft [rad/s].
      */
-    void setAngularVelocity(const Vector3& angVel);
+    void setAngularVelocity(const Eigen::Vector3d& angVel);
 
     /**
      * @brief Sets GLoad
@@ -370,7 +368,7 @@ public:
      * This function initiates the RCS (Reaction Control System) engines and provide thrust for spacecraft. It
      * provides thrust until the setted target thrust is reached.
      */
-    void setTargetRCSThrust(const Vector3 &targetThrustInPercentage);
+    void setTargetRCSThrust(const Eigen::Vector3d &targetThrustInPercentage);
 
     /**
      * @brief Set Console Text for output in cockpit page
@@ -398,7 +396,7 @@ public:
      *
      * @return Current thrust vector [N]
      */
-    Vector3 requestTotalThrust() const;
+    Eigen::Vector3d requestTotalThrust() const;
 
     /**
      * @brief Returns the commanded main engine thrust.
@@ -408,7 +406,7 @@ public:
      *
      * @return Commanded main engine thrust vector [N]
      */
-    Vector3 requestMainEngineTargetThrust() const;
+    Eigen::Vector3d requestMainEngineTargetThrust() const;
 
     /**
      * @brief Returns the actual main engine thrust.
@@ -418,7 +416,7 @@ public:
      *
      * @return Actual main engine thrust vector [N]
      */
-    Vector3 requestMainEngineThrust() const;
+    Eigen::Vector3d requestMainEngineThrust() const;
 
     /**
      * @brief Returns the commanded main engine thrust as percentage.
@@ -428,13 +426,13 @@ public:
      *
      * @return Commanded thrust as percentage of maximum thrust [%]
      */
-    Vector3 requestMainEngineThrustInPercentage() const;
+    Eigen::Vector3d requestMainEngineThrustInPercentage() const;
 
     /**
      * @brief Return thrust direction of engine due to config paramter
-     * @return Thrust direction as Vector3
+     * @return Thrust direction as Eigen::Vector3d
      */
-    Vector3 requestMainEngineDirection() const;
+    Eigen::Vector3d requestMainEngineDirection() const;
 
     /**
      * @brief Returns the current main engine fuel consumption rate.
@@ -479,7 +477,7 @@ public:
      *
      * @return Commanded RCS thrust vector [N]
      */
-    Vector3 requestRCSTargetThrust() const;
+    Eigen::Vector3d requestRCSTargetThrust() const;
 
     /**
      * @brief Returns the actual RCS thrust vector.
@@ -489,7 +487,7 @@ public:
      *
      * @return Actual RCS thrust vector [N]
      */
-        Vector3 requestRCSThrust() const;
+    Eigen::Vector3d requestRCSThrust() const;
 
     /**
      * @brief Returns the commanded RCS thrust as percentage.
@@ -499,7 +497,7 @@ public:
      *
      * @return Commanded RCS thrust as percentage [%]
      */
-    Vector3 requestRCSThrustInPercentage() const;
+    Eigen::Vector3d requestRCSThrustInPercentage() const;
 
     /**
      * @brief Returns the current RCS fuel consumption rate.
@@ -520,14 +518,14 @@ public:
      * Sets position only in spacecraftdata struct.
      * This function has no rights to wirte into statevector!
      */
-    void setInitalPosition(const Vector3& position);
+    void setInitalPosition(const Eigen::Vector3d& position);
 
     /**
      * @brief Set inital velocity
      * Sets velocity only in spacecraftdata struct.
      * This function has no rights to wirte into statevector!
      */
-    void setInitalVelocity(const Vector3& velocity);
+    void setInitalVelocity(const Eigen::Vector3d& velocity);
 
 
     // -------------------------------------------------------------------------
@@ -552,25 +550,25 @@ public:
      * @brief Return current position of spacecraft
      * @return Current position in cartesian-coordinates [m]
      */
-    Vector3 getPosition() const;
+    Eigen::Vector3d getPosition() const;
 
     /**
      * @brief Return current velocity of spacecraft
     //  * @return Current velocity [m/s]
      */
-    Vector3 getVelocity() const;
+    Eigen::Vector3d getVelocity() const;
 
     /**
      * @brief Return orientation of spacecraft
      * @return Quaternion with q0 Scalar component, q1 First vector component, q2 Second vector component, q3 Third vector component
      */
-    Quaternion getOrientation() const;
+    Eigen::Quaterniond getOrientation() const;
 
     /**
      * @brief Return angular velocity of spacecraft
      * @return Angular velocity vector of the spacecraft [rad/s].
      */
-    Vector3 getAngularVelocity() const;
+    Eigen::Vector3d getAngularVelocity() const;
 
     /**
      * @brief Return current total mass

@@ -11,6 +11,7 @@
 #include <optional>
 #include <memory>
 #include <nlopt.h>
+#include <eigen3/Eigen/Dense>
 
 /**
  * @class simcontrol
@@ -121,7 +122,7 @@ private:
      * @brief Set RCS Thrust
      * @param Vector3 translation with thrust in cartasian coordinates within the principle SBF (Spacecraft Body Frame)
      */
-    void setTargetRCSThrust(const Vector3 &SBF_translation);
+    void setTargetRCSThrust(const Eigen::Vector3d &SBF_translation);
 
     /**
      * @brief Process commands

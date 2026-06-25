@@ -9,7 +9,8 @@ Eigen::Vector3d toEigenVector3d(const Vector3& v)
 
 Eigen::Quaterniond toEigenQuaterniond(const Quaternion& q)
 {
-    return Eigen::Quaterniond{q.w, q.x, q.y, q.z};
+    return Eigen::Quaterniond{0.0, 0.0, 0.0, 0.0};
+    //return Eigen::Quaterniond{q.w, q.x, q.y, q.z};
 }
 
 QString toQString(const std::string& value)

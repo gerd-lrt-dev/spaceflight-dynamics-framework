@@ -59,15 +59,15 @@ void spacecraft::updateMovementData(double dt)
     }
 
     // --- Compute acceleration ---
-    Vector3 MCI_total_Thrust = coordTransf_.GenSBFtoMCI(requestTotalThrust(), originState_);
+    Eigen::Vector3d MCI_total_Thrust = coordTransf_.GenSBFtoMCI(requestTotalThrust(), originState_);
 
-    Vector3 MCI_acceleration = physics_->computeAcc(getPosition(), getVelocity(), getTotalMass(), MCI_total_Thrust);
+    Eigen::Vector3d MCI_acceleration = physics_->computeAcc(getPosition(), getVelocity(), getTotalMass(), MCI_total_Thrust);
 
     // --- Compute velocity ---
-    Vector3 MCI_velocity = physics_->computeVel(getVelocity(), MCI_acceleration, dt);
+    Eigen::Vector3d MCI_velocity = physics_->computeVel(getVelocity(), MCI_acceleration, dt);
 
     // --- Compute position ---
-    Vector3 MCI_position = physics_->computePos(getPosition(), MCI_velocity, MCI_acceleration, dt);
+    Eigen::Vector3d MCI_position = physics_->computePos(getPosition(), MCI_velocity, MCI_acceleration, dt);
 
     // --- Update Frames ---
     updateFrames(time);
@@ -88,7 +88,7 @@ void spacecraft::updateMovementData(double dt)
 
 void spacecraft::updateMovementDataToZero(double dt)
 {
-    Vector3 zeroVector = {0.0, 0.0, 0.0};
+    Eigen::Vector3d zeroVector = {0.0, 0.0, 0.0};
     // --- Commit to state vector ---
     setVelocity(zeroVector);
     updateGLoad(zeroVector, environmentConfig_.moonGravityVec);
@@ -126,7 +126,7 @@ void spacecraft::updateFrames(double t)
     simFrameContext_.SBF_Frame.origin.velocity  = state_.MCI_Velocity;
 }
 
-void spacecraft::updateGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration)
+void spacecraft::updateGLoad(const Eigen::Vector3d& totalAcceleration, const Eigen::Vector3d& gravityAcceleration)
 {
     bool isLanded = false;
 
@@ -157,22 +157,22 @@ void spacecraft::applyLandingDamage(double impactVelocity)
     spacecraftIntegrity += -damageInPercent;
 }
 
-void spacecraft::setPosition(const Vector3& pos)
+void spacecraft::setPosition(const Eigen::Vector3d& pos)
 {
     state_.MCI_Position = pos;
 }
 
-void spacecraft::setVelocity(const Vector3& vel)
+void spacecraft::setVelocity(const Eigen::Vector3d& vel)
 {
     state_.MCI_Velocity = vel;
 }
 
-void spacecraft::setOrientation(const Quaternion& q)
+void spacecraft::setOrientation(const Eigen::Quaterniond& q)
 {
     state_.IB_Orientation = q;
 }
 
-void spacecraft::setAngularVelocity(const Vector3& angVel)
+void spacecraft::setAngularVelocity(const Eigen::Vector3d& angVel)
 {
     state_.SBF_AngularVelocity = angVel;
 }
@@ -274,7 +274,7 @@ void spacecraft::setMainEngineThrust(const double &targetThrustInPercentage)
     (getSpacecraftState() == SpacecraftState::Operational) ? thrustOrchestration.setTargetThrustInPercentage(EngineType::MainEngine, targetThrustInPercentage) : thrustOrchestration.setTargetThrustInPercentage(EngineType::MainEngine, 0.0);
 }
 
-void spacecraft::setTargetRCSThrust(const Vector3 &targetThrustInPercentage)
+void spacecraft::setTargetRCSThrust(const Eigen::Vector3d &targetThrustInPercentage)
 {
     (getSpacecraftState() == SpacecraftState::Operational) ? thrustOrchestration.setTargetThrustInPercentage(EngineType::RCS, 0.0, targetThrustInPercentage) : thrustOrchestration.setTargetThrustInPercentage(EngineType::RCS, 0.0, targetThrustInPercentage);
 }
@@ -348,29 +348,29 @@ std::vector<double> spacecraft::compute_optimization(double h0, double v0, doubl
     return optimizer.optimize(problem, 7000.0);
 }
 
-Vector3 spacecraft::requestTotalThrust() const
+Eigen::Vector3d spacecraft::requestTotalThrust() const
 {
     return thrustOrchestration.getCurrentThrust();
 }
 
-Vector3 spacecraft::requestMainEngineTargetThrust() const
+Eigen::Vector3d spacecraft::requestMainEngineTargetThrust() const
 {
     
     return thrustOrchestration.getTargetThrust(EngineType::MainEngine);
 }
 
-Vector3 spacecraft::requestMainEngineThrust() const
+Eigen::Vector3d spacecraft::requestMainEngineThrust() const
 {
     
     return thrustOrchestration.getCurrentThrust(EngineType::MainEngine);
 }
 
-Vector3 spacecraft::requestMainEngineThrustInPercentage() const
+Eigen::Vector3d spacecraft::requestMainEngineThrustInPercentage() const
 {
     return thrustOrchestration.getCurrentThrustInPercentage(EngineType::MainEngine);
 }
 
-Vector3 spacecraft::requestMainEngineDirection() const
+Eigen::Vector3d spacecraft::requestMainEngineDirection() const
 {
     return thrustOrchestration.getDirectionOfThrust(EngineType::MainEngine);
 }
@@ -385,12 +385,12 @@ std::vector<RCS_ThrustState> spacecraft::requestFullRCSEngineData() const
     return thrustOrchestration.getFullRCSEngineData();
 }
 
-void spacecraft::setInitalPosition(const Vector3& position)
+void spacecraft::setInitalPosition(const Eigen::Vector3d& position)
 {
     spacecraftConfig_.MCI_initialPos = position;
 }
 
-void spacecraft::setInitalVelocity(const Vector3& velocity)
+void spacecraft::setInitalVelocity(const Eigen::Vector3d& velocity)
 {
     spacecraftConfig_.MCI_initialVelocity = velocity;
 }
@@ -435,22 +435,22 @@ const StateVector& spacecraft::getState() const
     return state_;
 }
 
-Vector3 spacecraft::getPosition() const
+Eigen::Vector3d spacecraft::getPosition() const
 {
     return state_.MCI_Position;
 }
 
-Vector3 spacecraft::getVelocity() const
+Eigen::Vector3d spacecraft::getVelocity() const
 {
     return state_.MCI_Velocity;
 }
 
-Quaternion spacecraft::getOrientation() const
+Eigen::Quaterniond spacecraft::getOrientation() const
 {
     return state_.IB_Orientation;
 }
 
-Vector3 spacecraft::getAngularVelocity() const
+Eigen::Vector3d spacecraft::getAngularVelocity() const
 {
     return state_.SBF_AngularVelocity;
 }

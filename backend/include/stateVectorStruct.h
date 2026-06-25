@@ -1,9 +1,9 @@
 #ifndef STATEVECTORSTRUCT_H
 #define STATEVECTORSTRUCT_H
 
-#include "vector3.h"
-#include "quaternion.h"
 #include "Coordinates/coordinateTransformer.h"
+
+#include <eigen3/Eigen/Dense>
 
 /**
  * @struct StateVector
@@ -22,14 +22,14 @@ struct StateVector
      *
      * Expressed in the chosen inertial frame (e.g., Moon-centered inertial frame).
      */
-    Vector3 MCI_Position = {0.0, 0.0, 0.0};
+    Eigen::Vector3d MCI_Position = {0.0, 0.0, 0.0};
 
     /**
      * @brief Inertial velocity vector of the spacecraft [m/s].
      *
      * Expressed in the chosen inertial frame.
      */
-    Vector3 MCI_Velocity = {0.0, 0.0, 0.0};
+    Eigen::Vector3d MCI_Velocity = {0.0, 0.0, 0.0};
 
     /**
      * @brief Orientation quaternion of the spacecraft.
@@ -37,14 +37,14 @@ struct StateVector
      * Represents the rotation from the body-fixed frame (SBF) to the inertial frame (MCI).
      * Default constructor creates the identity quaternion (no rotation).
      */
-    Quaternion IB_Orientation;
+    Eigen::Quaterniond IB_Orientation;
 
     /**
      * @brief Angular velocity vector of the spacecraft [rad/s].
      *
      * Expressed in the body-fixed frame.
      */
-    Vector3 SBF_AngularVelocity = {0.0, 0.0, 0.0};
+    Eigen::Vector3d SBF_AngularVelocity = {0.0, 0.0, 0.0};
 
     /**
      * @brief Total mass of the spacecraft [kg].
