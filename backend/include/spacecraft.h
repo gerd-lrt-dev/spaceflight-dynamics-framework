@@ -15,6 +15,7 @@
 #include "Coordinates/coordinateTransformer.h"
 
 #include <memory>
+#include <eigen3/Eigen/Dense>
 
 /**
  * @class spacecraft

@@ -1,7 +1,7 @@
 #ifndef ENVIRONMENTCONFIG_H
 #define ENVIRONMENTCONFIG_H
 
-#include "vector3.h"
+#include <eigen3/Eigen/Dense>
 
 /**
  * @struct EnvironmentConfig
@@ -41,7 +41,7 @@ struct EnvironmentConfig {
     const double muMoon = moonGravity * radiusMoon * radiusMoon; ///< [m³/s²], Moon gravitational factor
 
     // Vector constants
-    const Vector3 moonGravityVec  = {0, 0, -1.635};  ///< [m/s²], Moon gravity
+    const Eigen::Vector3d moonGravityVec  = {0, 0, -1.635};  ///< [m/s²], Moon gravity
 
     // Simulation parameters
     int maxTimeStep         = 16;      ///< [ms], maximum simulation step (~60 Hz)

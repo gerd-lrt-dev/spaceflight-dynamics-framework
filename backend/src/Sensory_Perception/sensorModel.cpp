@@ -1,11 +1,11 @@
 #include "Sensory_Perception/sensorModel.h"
 
-double SensorModel::computeGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration, bool isLanded) const
+double SensorModel::computeGLoad(const Eigen::Vector3d& totalAcceleration, const Eigen::Vector3d& gravityAcceleration, bool isLanded) const
 {
     // Counterforce upon ground contact
-    Vector3 groundReaction = - gravityAcceleration;
+    Eigen::Vector3d groundReaction = - gravityAcceleration;
 
-    Vector3 properAcceleration = {0.0, 0.0, 0.0};
+    Eigen::Vector3d properAcceleration = {0.0, 0.0, 0.0};
 
     // Berechne Proper Acceleration
     if (isLanded)

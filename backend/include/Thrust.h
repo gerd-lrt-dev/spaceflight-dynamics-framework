@@ -4,8 +4,8 @@
 #include <memory>
 #include <numeric>
 #include <vector>
+#include <eigen3/Eigen/Dense>
 
-#include "vector3.h"
 #include "Thrust/iThrust.h"
 #include "Thrust/BasicMainEngineModel.h"
 #include "Thrust/BasicRCSModel.h"
@@ -187,7 +187,7 @@ public:
      * @param tThrust Target thrust [N]
      * @param engineNr Index of the engine to command
      */
-    void setTargetThrustInNewton(EngineType engine, const double &tMainEngineThrust = 0.0, const Vector3 &tRCSThrust = {0.0, 0.0, 0.0});
+    void setTargetThrustInNewton(EngineType engine, const double &tMainEngineThrust = 0.0, const Eigen::Vector3d &tRCSThrust = {0.0, 0.0, 0.0});
 
     /**
      * @brief Sets a new target thrust for a specific engine in normalized form.
@@ -202,7 +202,7 @@ public:
      * @param tThrustInPercentage Normalized thrust command [0..1]
      * @param engineNr Index of the engine to command
      */
-    void setTargetThrustInPercentage(EngineType engine, const double &tMainEngineThrust = 0.0, const Vector3 &tRCSThrust = {0.0, 0.0, 0.0});
+    void setTargetThrustInPercentage(EngineType engine, const double &tMainEngineThrust = 0.0, const Eigen::Vector3d &tRCSThrust = {0.0, 0.0, 0.0});
 
     /**
      * @brief Sets target thrust to zero for all engines.
@@ -228,7 +228,7 @@ public:
      *
      * @return Commanded thrust vector [N]
      */
-    Vector3 getTargetThrust(EngineType engine = EngineType::All) const;
+    Eigen::Vector3d getTargetThrust(EngineType engine = EngineType::All) const;
 
     /**
      * @brief Returns the current thrust vector.
@@ -245,7 +245,7 @@ public:
      *
      * @return Resulting thrust vector [N]
      */
-    Vector3 getCurrentThrust(EngineType engine = EngineType::All) const;
+    Eigen::Vector3d getCurrentThrust(EngineType engine = EngineType::All) const;
 
     /**
      * @brief Returns the current thrust in normalized form.
@@ -262,7 +262,7 @@ public:
      *
      * @return Normalized thrust vector [%]
      */
-    Vector3 getCurrentThrustInPercentage(EngineType engine = EngineType::All) const;
+    Eigen::Vector3d getCurrentThrustInPercentage(EngineType engine = EngineType::All) const;
 
     /**
      * @brief Returns the questioned direction of thrust as a normalized factor
@@ -270,7 +270,7 @@ public:
      * @param engineID ID of requested engine typically 0 is related to mainengine
      * @return Normalized Direction of thrust
      */
-    Vector3 getDirectionOfThrust(EngineType engine = EngineType::MainEngine, int engineID = 0) const;
+    Eigen::Vector3d getDirectionOfThrust(EngineType engine = EngineType::MainEngine, int engineID = 0) const;
 
     /**
      * @brief Returns the complete runtime state of all configured RCS engines.

@@ -14,6 +14,7 @@
 #include <QDebug>
 #include <QMutexLocker>
 #include <QVector>
+#include <eigen3/Eigen/Dense>
 
 #include "simcontrol.h"
 #include "flightcommandstruct.h"
@@ -97,13 +98,13 @@ signals:
      * @param consoleOutput Formatted debug / telemetry output string
      */
     void stateUpdated(double time,
-                      Vector3 pos,
-                      Vector3 vel,
+                      Eigen::Vector3d pos,
+                      Eigen::Vector3d vel,
                       double GLoad,
                       SpacecraftState spacecraftState_,
-                      Vector3 thrust,
-                      Vector3 targetThrust,
-                      Vector3 thrustInPercentage,
+                      Eigen::Vector3d thrust,
+                      Eigen::Vector3d targetThrust,
+                      Eigen::Vector3d thrustInPercentage,
                       QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
                       QVector<FuelTank> fuelTanks,
                       double fuelMass,

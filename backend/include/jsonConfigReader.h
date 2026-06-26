@@ -4,9 +4,9 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
+#include <eigen3/Eigen/Dense>
 
 #include "spacecraft.h"
-#include "vector3.h"
 #include "Thrust/RCSConfig.h"
 #include "Coordinates/missionContext.h"
 

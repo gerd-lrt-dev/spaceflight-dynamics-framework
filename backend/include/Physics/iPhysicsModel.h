@@ -1,5 +1,5 @@
 #pragma once
-#include "vector3.h"
+#include <eigen3/Eigen/Dense>
 
 /**
  * @class IPhysicsModel
@@ -35,5 +35,5 @@ public:
      * @param thrustDir Normalized thrust direction vector.
      * @return Resulting acceleration vector.
      */
-    virtual Vector3 computeAcceleration(const Vector3& pos, const Vector3& vel, double mass, const Vector3& thrust) const = 0;
+    virtual Eigen::Vector3d computeAcceleration(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, double mass, const Eigen::Vector3d& thrust) const = 0;
 };

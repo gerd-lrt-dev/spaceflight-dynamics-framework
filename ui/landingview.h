@@ -40,7 +40,7 @@
 #include <QPointF>
 
 #include <spacecraftStateStruct.h>
-#include <vector3.h>
+#include <eigen3/Eigen/Dense>
 
 /**
  * @class LandingView
@@ -89,7 +89,7 @@ public:
      * - y → North [m]
      * - z → Up (altitude) [m]
      */
-    void setPositionENU(const Vector3& pos);
+    void setPositionENU(const Eigen::Vector3d& pos);
 
     /**
      * @brief Updates spacecraft velocity in ENU frame.
@@ -99,7 +99,7 @@ public:
      * - y → North velocity [m/s]
      * - z → Vertical velocity [m/s]
      */
-    void setVelocityENU(const Vector3& vel);
+    void setVelocityENU(const Eigen::Vector3d& vel);
 
     /**
      * @brief Updates yaw angle for top view visualization.
@@ -118,7 +118,7 @@ public:
      * - y → North [m]
      * - z → typically 0 (ground)
      */
-    void setTargetENU(const Vector3& target);
+    void setTargetENU(const Eigen::Vector3d& target);
 
     /**
      * @brief Updates engine thrust level.
@@ -156,9 +156,9 @@ private:
     // Internal State
     // =====================================================
 
-    Vector3 positionENU {0.0, 0.0, 0.0}; ///< Current position (ENU)
-    Vector3 velocityENU {0.0, 0.0, 0.0}; ///< Current velocity (ENU)
-    Vector3 targetENU   {0.0, 0.0, 0.0}; ///< Target position (ENU)
+    Eigen::Vector3d positionENU {0.0, 0.0, 0.0}; ///< Current position (ENU)
+    Eigen::Vector3d velocityENU {0.0, 0.0, 0.0}; ///< Current velocity (ENU)
+    Eigen::Vector3d targetENU   {0.0, 0.0, 0.0}; ///< Target position (ENU)
 
     double thrustPercent = 0.0; ///< Main Engine thrust [%]
     bool RCSActive = false;     ///< Switch that represents if RCS engines are active [0,1]

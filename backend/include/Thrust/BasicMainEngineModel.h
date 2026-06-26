@@ -6,6 +6,7 @@
 #include "Thrust/ME_thrustState.h"
 
 #include <iostream>
+#include <eigen3/Eigen/Dense>
 
 class basicMainEngineModel : public IThrustModel{
 
@@ -134,7 +135,7 @@ public:
      *
      * The vector is aligned with the static coordinate system of the spacecraft
      */
-    Vector3 getSBF_DirectionOfThrust() const override;
+    Eigen::Vector3d getSBF_DirectionOfThrust() const override;
 
     /**
      * @brief Getter function for maximum thrust given by engine config

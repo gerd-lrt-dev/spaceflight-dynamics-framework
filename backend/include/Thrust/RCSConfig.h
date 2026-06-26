@@ -1,9 +1,8 @@
 #pragma once
 
-#include "vector3.h"
-
 #include <iostream>
 #include <string>
+#include <eigen3/Eigen/Dense>
 
 /**
  * @brief Configuration parameters for a single RCS thruster.
@@ -131,7 +130,7 @@ struct RCSEngineConfig
      *
      * Unit: -
      */
-    Vector3 direction{};
+    Eigen::Vector3d direction{};
 
     /**
      * @brief Thruster mounting position relative to the spacecraft body frame.
@@ -141,7 +140,7 @@ struct RCSEngineConfig
      *
      * Unit: m
      */
-    Vector3 position{};
+    Eigen::Vector3d position{};
 
     /**
      * @brief Creates a validated RCSEngineConfig instance.
@@ -163,8 +162,8 @@ struct RCSEngineConfig
                                   double tauOn,
                                   double tauOff,
                                   double minimumPulseWidth,
-                                  Vector3 direction,
-                                  Vector3 position)
+                                  Eigen::Vector3d direction,
+                                  Eigen::Vector3d position)
     {
         if (Isp < 40.0 || Isp > 450.0)
         {

@@ -23,7 +23,7 @@
 #include <QMap>
 #include <QVector>
 
-#include <vector3.h>
+#include <eigen3/Eigen/Dense>
 #include <spacecraftStateStruct.h>
 
 
@@ -82,25 +82,25 @@ public:
      * @brief Updates the current position display.
      * @param position in all dimensions in meters.
      */
-    void updatePosition(Vector3 position);
+    void updatePosition(Eigen::Vector3d position);
 
     /**
      * @brief Updates the rotational displays.
      * @param Vector with Latitude, Longitude and Roation in degree.
      */
-    void updateRotation(Vector3 rotation);
+    void updateRotation(Eigen::Vector3d rotation);
 
     /**
      * @brief Updates the velocity displays.
      * @param Vector with velocity in meters per second.
      */
-    void updateVelocity(Vector3 velocity);
+    void updateVelocity(Eigen::Vector3d velocity);
 
     /**
      * @brief Updates the angular velocity displays.
      * @param Vector with Pitch, Roll and Yaw in degrees per second.
      */
-    void updateAngularVelocity(Vector3 angularVelocity);
+    void updateAngularVelocity(Eigen::Vector3d angularVelocity);
 
     /**
      * @brief Updates the current spacecraft acceleration.
@@ -112,13 +112,13 @@ public:
      * @brief Updates the current engine thrust.
      * @param thrust Current thrust value (percentage or normalized).
      */
-    void updateThrust(Vector3 thrust);
+    void updateThrust(Eigen::Vector3d thrust);
 
     /**
      * @brief Updates the target thrust setpoint.
      * @param target Target thrust value.
      */
-    void updateTargetThrust(Vector3 target);
+    void updateTargetThrust(Eigen::Vector3d target);
 
     /**
      * @brief Updates the dynamic RCS thruster telemetry panel.
@@ -227,13 +227,13 @@ public slots:
      * @param fuelFlow Current fuel flow in kilograms per second.
      */
     void onStateUpdated(double time,
-                        const Vector3& pos,
-                        const Vector3& vel,
+                        const Eigen::Vector3d& pos,
+                        const Eigen::Vector3d& vel,
                         const double& GLoad,
                         SpacecraftState spacecraftState_,
-                        Vector3 thrust,
-                        Vector3 targetThrust,
-                        Vector3 thrustInPercentage,
+                        Eigen::Vector3d thrust,
+                        Eigen::Vector3d targetThrust,
+                        Eigen::Vector3d thrustInPercentage,
                         QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
                         QVector<FuelTank> tanks,
                         double fuelMass,

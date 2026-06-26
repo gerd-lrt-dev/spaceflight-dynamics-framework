@@ -1,7 +1,7 @@
 #ifndef ME_THRUSTSTATE_H
 #define ME_THRUSTSTATE_H
 
-#include "../vector3.h"
+#include <eigen3/Eigen/Dense>
 
 /**
  * @brief Simulation output data associated with the main engine thrust state.
@@ -54,7 +54,7 @@ struct ME_ThrustState
      *
      * Unit: [-]
      */
-    Vector3 SBF_direction{0.0, 0.0, 0.0};
+    Eigen::Vector3d SBF_direction{0.0, 0.0, 0.0};
 };
 
 #endif // ME_THRUSTSTATE_H

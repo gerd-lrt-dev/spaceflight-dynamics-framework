@@ -82,7 +82,7 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
     if(currentSpacecraftstate == SpacecraftState::Operational)
     {
         // Autopilot is used for main engine of spacecraft with index number 0!
-        double autoThrust = autopilot_->setAutoThrustInNewton(controller_.get(), spacecraftConfig_.engines_[0].maxThrust, landerSpacecraft->getVelocity().z, landerSpacecraft->getPosition().z - config_.radiusMoon, dt, spacecraftConfig_.emptyMass + spacecraftConfig_.fuelM, config_.moonGravity);
+        double autoThrust = autopilot_->setAutoThrustInNewton(controller_.get(), spacecraftConfig_.engines_[0].maxThrust, landerSpacecraft->getVelocity().z(), landerSpacecraft->getPosition().z() - config_.radiusMoon, dt, spacecraftConfig_.emptyMass + spacecraftConfig_.fuelM, config_.moonGravity);
         double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, spacecraftConfig_.engines_[0].maxThrust);
         ControlCommand autoCmd;
         autoCmd.mainEngine = autoThrustNormalized;

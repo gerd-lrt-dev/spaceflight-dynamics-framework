@@ -5,13 +5,13 @@
 #include "Thrust/RCSConfig.h"
 #include "Thrust/FuelStateStruct.h"
 #include "Thrust/RCS_ThrustState.h"
-#include "vector3.h"
 #include "environmentConfig.h"
 
 #include <algorithm>
 #include <deque>
 #include <iostream>
 #include <string>
+#include <eigen3/Eigen/Dense>
 
 /**
  * @brief Numerical integration method used for the internal RCS actuator state.
@@ -215,7 +215,7 @@ public:
      *
      * @return Normalized thrust direction [-].
      */
-    Vector3 getSBF_DirectionOfThrust() const override;
+    Eigen::Vector3d getSBF_DirectionOfThrust() const override;
 
     /**
      * @brief Returns the current propellant mass flow rate.

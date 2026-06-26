@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector3.h"
+#include <eigen3/Eigen/Dense>
 
 /**
  * @class ISensor
@@ -35,5 +35,5 @@ public:
      * @param gravityAcceleration Gravitational acceleration vector.
      * @return Scalar g-load value in multiples of Earth gravity.
      */
-    virtual double computeGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration, bool isLanded) const = 0;
+    virtual double computeGLoad(const Eigen::Vector3d& totalAcceleration, const Eigen::Vector3d& gravityAcceleration, bool isLanded) const = 0;
 };

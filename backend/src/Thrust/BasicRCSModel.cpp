@@ -136,7 +136,7 @@ double basicRCSModel::getCurrentThrust() const
     return thruststate_.currentThrust;
 }
 
-Vector3 basicRCSModel::getSBF_DirectionOfThrust() const
+Eigen::Vector3d basicRCSModel::getSBF_DirectionOfThrust() const
 {
     return rcsConfig_.direction;
 }

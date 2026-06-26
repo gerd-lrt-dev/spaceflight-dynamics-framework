@@ -3,6 +3,8 @@
 #include "Sensory_Perception/iSensor.h"
 #include "environmentConfig.h"
 
+#include <eigen3/Eigen/Dense>
+
 /**
  * @class SensorModel
  * @brief Abstract base class for spacecraft sensor model implementations.
@@ -42,7 +44,7 @@ public:
      * @param gravityAcceleration Gravitational acceleration vector.
      * @return Scalar g-load value in multiples of Earth gravity.
      */
-    double computeGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration, bool isLanded) const override;
+    double computeGLoad(const Eigen::Vector3d& totalAcceleration, const Eigen::Vector3d& gravityAcceleration, bool isLanded) const override;
 
 private:
     /**

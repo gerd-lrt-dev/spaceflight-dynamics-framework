@@ -207,9 +207,9 @@ void spacecraft::updateStep(double dt)
     time += dt;
 
     // Apply landing damage
-    if (state_.MCI_Position.z <= environmentConfig_.radiusMoon)
+    if (state_.MCI_Position.z() <= environmentConfig_.radiusMoon)
     {
-        applyLandingDamage(state_.MCI_Velocity.z);
+        applyLandingDamage(state_.MCI_Velocity.z());
     }
 
     updateSpacecraftIntegrity();
@@ -259,7 +259,7 @@ void spacecraft::updateSpacecraftIntegrity()
     }
 
     // 3. Successful touchdown
-    if (getPosition().z <= environmentConfig_.radiusMoon)
+    if (getPosition().z() <= environmentConfig_.radiusMoon)
     {
         spacecraftState_ = SpacecraftState::Landed;
         return;
@@ -402,7 +402,7 @@ simData spacecraft::getFullSimulationData() const
     simData_.statevector_ = getState();
 
     // Reduce height by radius of moon
-    simData_.statevector_.MCI_Position.z -= environmentConfig_.radiusMoon;
+    simData_.statevector_.MCI_Position.z() -= environmentConfig_.radiusMoon;
 
     // Fill struct with data for emitting signal to UI
     simData_.spacecraftState_ = spacecraftState_;

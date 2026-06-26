@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../vector3.h"
+#include <eigen3/Eigen/Dense>
 
 #include <iostream>
 #include <string>
@@ -74,7 +74,7 @@ struct RCS_ThrustState
      *
      * Unit: -
      */
-    Vector3 SBF_direction{0.0, 0.0, 0.0};
+    Eigen::Vector3d SBF_direction{0.0, 0.0, 0.0};
 
     // -------------------------------------------------------------------------
     // Dynamic runtime state

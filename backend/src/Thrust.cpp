@@ -17,7 +17,7 @@ Thrust::~Thrust()
 // -------------------------------------------------------------------------
 // Public setter functions
 // -------------------------------------------------------------------------
-void Thrust::setTargetThrustInNewton(EngineType engine, const double &tMainEngineThrust, const Vector3 &tRCSThrust)
+void Thrust::setTargetThrustInNewton(EngineType engine, const double &tMainEngineThrust, const Eigen::Vector3d &tRCSThrust)
 {
     if (engine == EngineType::All)
     {
@@ -50,7 +50,7 @@ void Thrust::setTargetThrustInNewton(EngineType engine, const double &tMainEngin
         }
 }
 
-void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainEngineThrust, const Vector3 &tRCSThrust)
+void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainEngineThrust, const Eigen::Vector3d &tRCSThrust)
 {
     if (engine == EngineType::All)
     {
@@ -114,9 +114,9 @@ void Thrust::initializeEngines(std::vector<EngineConfig>& engineConfigs, std::ve
                 << "[Thrust]-initializeEngines- Configured Main Engine | "
                 << cfg_.name
                 << " | Direction: ("
-                << cfg_.direction.x << ", "
-                << cfg_.direction.y << ", "
-                << cfg_.direction.z << ")"
+                << cfg_.direction.x() << ", "
+                << cfg_.direction.y() << ", "
+                << cfg_.direction.z() << ")"
                 << std::endl;
 
             addModel(std::make_unique<basicMainEngineModel>(cfg_, state));
@@ -145,9 +145,9 @@ void Thrust::initializeEngines(std::vector<EngineConfig>& engineConfigs, std::ve
                 << rcscfg_.name
                 << " | Axis: " << rcscfg_.axis
                 << " | Direction: ("
-                << rcscfg_.direction.x << ", "
-                << rcscfg_.direction.y << ", "
-                << rcscfg_.direction.z << ")"
+                << rcscfg_.direction.x() << ", "
+                << rcscfg_.direction.y() << ", "
+                << rcscfg_.direction.z() << ")"
                 << std::endl;
 
             addModel(std::make_unique<basicRCSModel>(rcscfg_, RCSFuelState));
@@ -204,10 +204,10 @@ void Thrust::updateThrust(double dt)
 
 // --- Getter functions ---------------------------------------------
 
-Vector3 Thrust::getTargetThrust(EngineType engine) const
+Eigen::Vector3d Thrust::getTargetThrust(EngineType engine) const
 {
-    Vector3     total{0.0, 0.0, 0.0};
-    Vector3     dir{0.0, 0.0, 0.0};
+    Eigen::Vector3d     total{0.0, 0.0, 0.0};
+    Eigen::Vector3d     dir{0.0, 0.0, 0.0};
     double      thrust(0.0);
 
     if (engine == EngineType::All)
@@ -248,10 +248,10 @@ Vector3 Thrust::getTargetThrust(EngineType engine) const
     return total;
 }
 
-Vector3 Thrust::getCurrentThrust(EngineType engine) const
+Eigen::Vector3d Thrust::getCurrentThrust(EngineType engine) const
 {
-    Vector3     total{0.0, 0.0, 0.0};
-    Vector3     dir{0.0, 0.0, 0.0};
+    Eigen::Vector3d     total{0.0, 0.0, 0.0};
+    Eigen::Vector3d     dir{0.0, 0.0, 0.0};
     double      thrust(0.0);
 
     if (engine == EngineType::All)
@@ -293,10 +293,10 @@ Vector3 Thrust::getCurrentThrust(EngineType engine) const
     return total;
 }
 
-Vector3 Thrust::getCurrentThrustInPercentage(EngineType engine) const
+Eigen::Vector3d Thrust::getCurrentThrustInPercentage(EngineType engine) const
 {
-    Vector3     total{0.0, 0.0, 0.0};
-    Vector3     dir{0.0, 0.0, 0.0};
+    Eigen::Vector3d     total{0.0, 0.0, 0.0};
+    Eigen::Vector3d     dir{0.0, 0.0, 0.0};
     double      thrustInPercentage(0.0);
 
     if (engine == EngineType::All)
@@ -339,9 +339,9 @@ Vector3 Thrust::getCurrentThrustInPercentage(EngineType engine) const
     return total;
 }
 
-Vector3 Thrust::getDirectionOfThrust(EngineType engine, int engineID) const
+Eigen::Vector3d Thrust::getDirectionOfThrust(EngineType engine, int engineID) const
 {
-    Vector3 dir{0.0, 0.0, 0.0};
+    Eigen::Vector3d dir{0.0, 0.0, 0.0};
 
     if (engine == EngineType::MainEngine && engineID == 0)
     {

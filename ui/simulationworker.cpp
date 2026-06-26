@@ -144,13 +144,13 @@ void SimulationWorker::collectControlCommands(const FlightCommand &cmd, const do
 {
     //TODO: Do not call back end structures. Change that with Issue 19
     FEControlCommands_.mainEngine       = cmd.mainEngine;
-    FEControlCommands_.translation.x    = cmd.translation.x;
-    FEControlCommands_.translation.y    = cmd.translation.y;
-    FEControlCommands_.translation.z    = cmd.translation.z;
+    FEControlCommands_.translation.x()    = cmd.translation.x();
+    FEControlCommands_.translation.y()    = cmd.translation.y();
+    FEControlCommands_.translation.z()    = cmd.translation.z();
 
-    FEControlCommands_.rotation.x       = cmd.rotation.x;
-    FEControlCommands_.rotation.y       = cmd.rotation.y;
-    FEControlCommands_.rotation.z       = cmd.rotation.z;
+    FEControlCommands_.rotation.x()       = cmd.rotation.x();
+    FEControlCommands_.rotation.y()       = cmd.rotation.y();
+    FEControlCommands_.rotation.z()       = cmd.rotation.z();
 }
 
 void SimulationWorker::collectAutopilotCommand(bool autopilotActive)

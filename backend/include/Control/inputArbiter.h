@@ -1,6 +1,6 @@
 #pragma once
-#include "spacecraftStateStruct.h"
-#include "vector3.h"
+
+#include <eigen3/Eigen/Dense>
 
 struct ControlCommand{
     double thrustInPercentage = 0.0;
@@ -28,7 +28,7 @@ struct ControlCommand{
      * @note Units: radians or normalized input depending on implementation.
      *       Must be interpreted consistently by the simulation core.
      */
-    Vector3 rotation;
+    Eigen::Vector3d rotation;
 
     /**
      * @brief Translational command (RCS linear control).
@@ -43,7 +43,7 @@ struct ControlCommand{
      * @note Typically mapped to RCS thruster groups.
      *       Units are usually normalized input [-1.0, 1.0].
      */
-    Vector3 translation;
+    Eigen::Vector3d translation;
 
     /**
      * @brief Stabilization request flag.

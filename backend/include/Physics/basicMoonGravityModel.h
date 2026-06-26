@@ -3,6 +3,8 @@
 #include "Physics/iPhysicsModel.h"
 #include "environmentConfig.h"
 
+#include <eigen3/Eigen/Dense>
+
 /**
  * @class BasicMoonGravityModel
  * @brief Simple physical model providing lunar gravity and thrust acceleration.
@@ -40,7 +42,7 @@ public:
      * @param thrustDir  Normalized thrust direction vector.
      * @return Total acceleration vector in world space.
      */
-    Vector3 computeAcceleration(const Vector3& pos, const Vector3& vel, double mass, const Vector3& thrust) const override;
+    Eigen::Vector3d computeAcceleration(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, double mass, const Eigen::Vector3d& thrust) const override;
 
 private:
 
@@ -66,5 +68,5 @@ private:
      * @param pos Position vector relative to moon center.
      * @return Gravitational acceleration vector.
      */
-    Vector3 calcAccelerationAlignedToCenterOfMoon(const Vector3& pos) const;
+    Eigen::Vector3d calcAccelerationAlignedToCenterOfMoon(const Eigen::Vector3d& pos) const;
 };

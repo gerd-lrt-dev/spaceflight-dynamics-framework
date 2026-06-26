@@ -685,34 +685,34 @@ void cockpitPage::updateTime(double t)
     }
     lcdTime->display(QString::number(t, 'f', 2));
 }
-void cockpitPage::updatePosition(Vector3 pos)
+void cockpitPage::updatePosition(Eigen::Vector3d pos)
 {
-    MCI_lcdPosX->display(QString::number(pos.x, 'f', 1));
-    MCI_lcdPosY->display(QString::number(pos.y, 'f', 1));
-    MCI_lcdPosZ->display(QString::number(pos.z, 'f', 1));
+    MCI_lcdPosX->display(QString::number(pos.x(), 'f', 1));
+    MCI_lcdPosY->display(QString::number(pos.y(), 'f', 1));
+    MCI_lcdPosZ->display(QString::number(pos.z(), 'f', 1));
 }
 
-void cockpitPage::updateRotation(Vector3 rot)
+void cockpitPage::updateRotation(Eigen::Vector3d rot)
 {
     // TODO: Build own data type for rotational parameters
-    LNF_lcdLat->display(QString::number(rot.x, 'f', 1));
-    LNF_lcdLon->display(QString::number(rot.y, 'f', 1));
-    LNF_lcdRot->display(QString::number(rot.z, 'f', 1));
+    LNF_lcdLat->display(QString::number(rot.x(), 'f', 1));
+    LNF_lcdLon->display(QString::number(rot.y(), 'f', 1));
+    LNF_lcdRot->display(QString::number(rot.z(), 'f', 1));
 }
 
-void cockpitPage::updateVelocity(Vector3 v)
+void cockpitPage::updateVelocity(Eigen::Vector3d v)
 {
-    LNF_lcdVelX->display(QString::number(v.x, 'f', 1));
-    LNF_lcdVelY->display(QString::number(v.y, 'f', 1));
-    LNF_lcdVelZ->display(QString::number(v.z, 'f', 1));
+    LNF_lcdVelX->display(QString::number(v.x(), 'f', 1));
+    LNF_lcdVelY->display(QString::number(v.y(), 'f', 1));
+    LNF_lcdVelZ->display(QString::number(v.z(), 'f', 1));
 }
 
-void cockpitPage::updateAngularVelocity(Vector3 angV)
+void cockpitPage::updateAngularVelocity(Eigen::Vector3d angV)
 {
     // TODO: Build own data type for rotational parameters
-    LNF_lcdRoll->display(QString::number(angV.x, 'f', 1));
-    LNF_lcdPitch->display(QString::number(angV.y, 'f', 1));
-    LNF_lcdYaw->display(QString::number(angV.z, 'f', 1));
+    LNF_lcdRoll->display(QString::number(angV.x(), 'f', 1));
+    LNF_lcdPitch->display(QString::number(angV.y(), 'f', 1));
+    LNF_lcdYaw->display(QString::number(angV.z(), 'f', 1));
 }
 
 void cockpitPage::updateFuelTanks(const QVector<FuelTank>& tanks)
@@ -777,17 +777,17 @@ void cockpitPage::updateAcceleration(double a)
     lcdGLoad->display(QString::number(a, 'f', 2));
 }
 
-void cockpitPage::updateThrust(Vector3 t)
+void cockpitPage::updateThrust(Eigen::Vector3d t)
 {
-    LNF_lcdThrust_BX->display(QString::number(t.x, 'f', 1));
-    LNF_lcdThrust_BY->display(QString::number(t.y, 'f', 1));
-    LNF_lcdThrust_BZ->display(QString::number(t.z, 'f', 1));
+    LNF_lcdThrust_BX->display(QString::number(t.x(), 'f', 1));
+    LNF_lcdThrust_BY->display(QString::number(t.y(), 'f', 1));
+    LNF_lcdThrust_BZ->display(QString::number(t.z(), 'f', 1));
 }
-void cockpitPage::updateTargetThrust(Vector3 t)
+void cockpitPage::updateTargetThrust(Eigen::Vector3d t)
 {
-    LNF_lcdTargetThrust_BX->display(QString::number(t.x, 'f', 1));
-    LNF_lcdTargetThrust_BY->display(QString::number(t.y, 'f', 1));
-    LNF_lcdTargetThrust_BZ->display(QString::number(t.z, 'f', 1));
+    LNF_lcdTargetThrust_BX->display(QString::number(t.x(), 'f', 1));
+    LNF_lcdTargetThrust_BY->display(QString::number(t.y(), 'f', 1));
+    LNF_lcdTargetThrust_BZ->display(QString::number(t.z(), 'f', 1));
 }
 
 void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates)
@@ -939,13 +939,13 @@ void cockpitPage::sendFlightCmd()
 // Slots
 // ------------------------------------------------
 void cockpitPage::onStateUpdated(double time,
-                                 const Vector3& pos,
-                                 const Vector3& vel,
+                                 const Eigen::Vector3d& pos,
+                                 const Eigen::Vector3d& vel,
                                  const double& GLoad,
                                  SpacecraftState spacecraftState_,
-                                 Vector3 thrust,
-                                 Vector3 targetThrust,
-                                 Vector3 thrustInPercentage,
+                                 Eigen::Vector3d thrust,
+                                 Eigen::Vector3d targetThrust,
+                                 Eigen::Vector3d thrustInPercentage,
                                  QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
                                  QVector<FuelTank> tanks,
                                  double fuelMass,
@@ -958,8 +958,8 @@ void cockpitPage::onStateUpdated(double time,
     updateVelocity(vel);
     updateAngularVelocity({0.0, 0.0, 0.0});
     updateAcceleration(qRound(GLoad * 100.0) / 100.0);
-    updateThrust({qRound(thrust.x * 10.0) / 10.0, qRound(thrust.y * 10.0) / 10.0, qRound(-thrust.z * 10.0) / 10.0}); // TODO: Elimnate minus when coordinate transformation class is ready
-    updateTargetThrust({qRound(targetThrust.x * 10.0) / 10.0, qRound(targetThrust.y * 10.0) / 10.0, qRound(-targetThrust.z * 10.0) / 10.0}); // TODO: Elimnate minus when coordinate transformation class is ready
+    updateThrust({qRound(thrust.x() * 10.0) / 10.0, qRound(thrust.y() * 10.0) / 10.0, qRound(thrust.z() * 10.0) / 10.0});
+    updateTargetThrust({qRound(targetThrust.x() * 10.0) / 10.0, qRound(targetThrust.y() * 10.0) / 10.0, qRound(targetThrust.z() * 10.0) / 10.0});
 
     updateFuelTanks(tanks);
     updateFuelMass(qRound(fuelMass * 10.0) / 10.0);
@@ -971,7 +971,7 @@ void cockpitPage::onStateUpdated(double time,
     landingView->setVelocityENU(vel);
     landingView->setYawDeg(0.0);          // DUMMY later from Quaternion/Euler
     landingView->setTargetENU({0,0,0});   // DUMMY
-    landingView->setThrust(-thrustInPercentage.z);
+    landingView->setThrust(-thrustInPercentage.z());
     landingView->setHullIntact(spacecraftState_);
 
     (autopilotActive) ? consoleOutput(consoleOutput_) : consoleOutput("No controlling active");

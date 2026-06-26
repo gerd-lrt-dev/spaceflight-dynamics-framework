@@ -2,12 +2,12 @@
 
 namespace
 {
-Eigen::Vector3d toEigenVector3d(const Vector3& v)
+Eigen::Vector3d toEigenVector3d(const Eigen::Vector3d& v)
 {
-    return Eigen::Vector3d{v.x, v.y, v.z};
+    return Eigen::Vector3d{v.x(), v.y(), v.z()};
 }
 
-Eigen::Quaterniond toEigenQuaterniond(const Quaternion& q)
+Eigen::Quaterniond toEigenQuaterniond(const Eigen::Quaterniond& q)
 {
     return Eigen::Quaterniond{0.0, 0.0, 0.0, 0.0};
     //return Eigen::Quaterniond{q.w, q.x, q.y, q.z};

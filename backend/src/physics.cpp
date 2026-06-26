@@ -1,5 +1,6 @@
 #include "physics.h"
 #include <cmath>
+#include <eigen3/Eigen/Dense>
 
 // constructor - destructor ---------------------------------------
 
@@ -8,22 +9,22 @@ physics::~physics()
 }
 
 // public  ---------------------------------------------------------
-Vector3 physics::computeAcc(const Vector3& pos, const Vector3& vel, double mass, const Vector3& thrust) const
+Eigen::Vector3d physics::computeAcc(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, double mass, const Eigen::Vector3d& thrust) const
 {
     return model_->computeAcceleration(pos, vel, mass, thrust);
 }
 
-Vector3 physics::computeVel(const Vector3& vel, const Vector3& acc, double dt) const
+Eigen::Vector3d physics::computeVel(const Eigen::Vector3d& vel, const Eigen::Vector3d& acc, double dt) const
 {
     return integrator_->integrateVel(vel, acc, dt);
 }
 
-Vector3 physics::computePos(const Vector3& pos, const Vector3& vel, const Vector3& acc, double dt) const
+Eigen::Vector3d physics::computePos(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, const Eigen::Vector3d& acc, double dt) const
 {
     return integrator_->integratePos(pos, vel, acc, dt);
 }
 
-double physics::computeGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration, bool isLanded)
+double physics::computeGLoad(const Eigen::Vector3d& totalAcceleration, const Eigen::Vector3d& gravityAcceleration, bool isLanded)
 {
     return sensor_->computeGLoad(totalAcceleration, gravityAcceleration, isLanded);
 }

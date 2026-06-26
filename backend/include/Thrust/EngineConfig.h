@@ -1,8 +1,9 @@
 #ifndef ENGINECONFIG_H
 #define ENGINECONFIG_H
-#include "vector3.h"
+
 #include <iostream>
 #include <string>
+#include <eigen3/Eigen/Dense>
 
 /**
  * @brief Configuration parameters for a single spacecraft engine.
@@ -86,13 +87,13 @@ struct EngineConfig
      * RCS thrusters: 10–500 N
      */
 
-    Vector3 direction;
+    Eigen::Vector3d direction;
     /**<
      * @brief Normalized thrust direction in spacecraft body frame [-]
      * Should never be zero; normalized automatically.
      */
 
-    Vector3 position;
+    Eigen::Vector3d position;
     /**<
      * @brief Engine position relative to spacecraft body frame [m]
      * For point-mass lander this can be nominal; used in multi-engine
@@ -125,8 +126,8 @@ struct EngineConfig
                                double timeConstant,
                                double responseRate,
                                double maxThrust,
-                               Vector3 direction,
-                               Vector3 position)
+                               Eigen::Vector3d direction,
+                               Eigen::Vector3d position)
     {
         if(Isp < 40.0 || Isp > 900.0) {
             std::cerr << "[EngineConfig] Warning: Isp out of range (" << Isp << "), resetting to default 300 [s].\n";

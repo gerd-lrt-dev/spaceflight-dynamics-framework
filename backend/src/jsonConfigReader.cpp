@@ -1,21 +1,89 @@
 #include "jsonConfigReader.h"
 #include "stateVectorStruct.h"
 
-void from_json(const nlohmann::json& j, Vector3& v) 
+namespace nlohmann
+{
+template<>
+struct adl_serializer<Eigen::Quaterniond>
+{
+    static void from_json(const json& j, Eigen::Quaterniond& q)
+    {
+        if (j.is_array())
+        {
+            if (j.size() != 4)
+            {
+                throw std::runtime_error("Quaternion array must contain exactly 4 elements.");
+            }
+
+            q = Eigen::Quaterniond(
+                j[0].get<double>(),
+                j[1].get<double>(),
+                j[2].get<double>(),
+                j[3].get<double>()
+                );
+        }
+        else
+        {
+            q = Eigen::Quaterniond(
+                j.at("w").get<double>(),
+                j.at("x").get<double>(),
+                j.at("y").get<double>(),
+                j.at("z").get<double>()
+                );
+        }
+
+        q.normalize();
+    }
+};
+}
+
+namespace nlohmann
+{
+template<>
+struct adl_serializer<Eigen::Vector3d>
+{
+    static void from_json(const json& j, Eigen::Vector3d& v)
+    {
+        if (j.is_array())
+        {
+            if (j.size() != 3)
+            {
+                throw std::runtime_error("Vector3d array must contain exactly 3 elements.");
+            }
+
+            v = Eigen::Vector3d(
+                j[0].get<double>(),
+                j[1].get<double>(),
+                j[2].get<double>()
+                );
+        }
+        else
+        {
+            v = Eigen::Vector3d(
+                j.at("x").get<double>(),
+                j.at("y").get<double>(),
+                j.at("z").get<double>()
+                );
+        }
+    }
+};
+}
+
+void from_json(const nlohmann::json& j, Eigen::Vector3d& v)
 {
     if (j.is_array() && j.size() == 3) {
-        v.x = j[0].get<double>();
-        v.y = j[1].get<double>();
-        v.z = j[2].get<double>();
+        v.x() = j[0].get<double>();
+        v.y() = j[1].get<double>();
+        v.z() = j[2].get<double>();
     } 
     else {
-        v.x = j.at("x").get<double>();
-        v.y = j.at("y").get<double>();
-        v.z = j.at("z").get<double>();
+        v.x() = j.at("x").get<double>();
+        v.y() = j.at("y").get<double>();
+        v.z() = j.at("z").get<double>();
     }
 }
 
-void from_json(const nlohmann::json& j, Quaternion& q)
+void from_json(const nlohmann::json& j, Eigen::Quaterniond& q)
 {
     if (j.is_array())
     {
@@ -24,7 +92,7 @@ void from_json(const nlohmann::json& j, Quaternion& q)
             throw std::runtime_error("Quaternion array must contain exactly 4 elements.");
         }
 
-        q = Quaternion(
+        q = Eigen::Quaterniond(
             j[0].get<double>(),
             j[1].get<double>(),
             j[2].get<double>(),
@@ -33,17 +101,18 @@ void from_json(const nlohmann::json& j, Quaternion& q)
     }
     else
     {
-        q = Quaternion(
+        q = Eigen::Quaterniond(
             j.at("w").get<double>(),
             j.at("x").get<double>(),
             j.at("y").get<double>(),
             j.at("z").get<double>()
             );
     }
+    q.normalize();
 }
 
-void to_json(nlohmann::json& j, const Vector3& v) {
-    j = nlohmann::json{{"x", v.x}, {"y", v.y}, {"z", v.z}};
+void to_json(nlohmann::json& j, const Eigen::Vector3d& v) {
+    j = nlohmann::json{{"x", v.x()}, {"y", v.y()}, {"z", v.z()}};
 }
 
 // Loads json Config file and return nlohmann object
@@ -75,10 +144,10 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
 
     const auto& initialstate = j.at("initialState");
 
-    lander.MCI_initialPos           = initialstate.at("MCI_InitialPosition").get<Vector3>();
-    lander.IB_initialRot            = initialstate.at("IB_InitialOrientation").get<Quaternion>();
-    lander.MCI_initialVelocity      = initialstate.at("MCI_InitialVelocity").get<Vector3>();
-    lander.SBF_initialCenterOfMass  = initialstate.at("SBF_InitialCenterOfMass").get<Vector3>();
+    lander.MCI_initialPos           = initialstate.at("MCI_InitialPosition").get<Eigen::Vector3d>();
+    lander.IB_initialRot            = initialstate.at("IB_InitialOrientation").get<Eigen::Quaterniond>();
+    lander.MCI_initialVelocity      = initialstate.at("MCI_InitialVelocity").get<Eigen::Vector3d>();
+    lander.SBF_initialCenterOfMass  = initialstate.at("SBF_InitialCenterOfMass").get<Eigen::Vector3d>();
 
 
 
@@ -99,8 +168,8 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
             engine.timeConstant = e.at("timeConstant").get<double>();
             engine.responseRate = e.at("responseRate").get<double>();
             engine.maxThrust    = e.at("maxThrust").get<double>();
-            engine.direction    = e.at("direction").get<Vector3>();
-            engine.position     = e.at("position").get<Vector3>();
+            engine.direction    = e.at("direction").get<Eigen::Vector3d>();
+            engine.position     = e.at("position").get<Eigen::Vector3d>();
 
             engine.id           = e.at("id").get<int>();
             engine.name         = e.at("name").get<std::string>();
@@ -134,8 +203,8 @@ customSpacecraft jsonConfigReader::parseLander(const nlohmann::json& j)
             RCS.tauOff              = e.at("tauOff").get<double>();
             RCS.minimumPulseWidth   = e.at("minimumPulseWidth").get<double>();
 
-            RCS.direction           = e.at("direction").get<Vector3>();
-            RCS.position            = e.at("position").get<Vector3>();
+            RCS.direction           = e.at("direction").get<Eigen::Vector3d>();
+            RCS.position            = e.at("position").get<Eigen::Vector3d>();
 
             lander.RCSengines_.push_back(RCS);
         }

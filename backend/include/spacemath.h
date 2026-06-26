@@ -1,7 +1,7 @@
 #ifndef SPACEMATH_H
 #define SPACEMATH_H
 
-#include "vector3.h"
+#include <eigen3/Eigen/Dense>
 
 
 /**
@@ -57,7 +57,7 @@ public:
      * @return                  ///< [m/s²] Acceleration of Spacecraft due to thrust, mass and thrust 
      * 
      */
-    static Vector3 accelerationComplex(double currentThrust, double totalMass, Vector3 directionOfThrust, Vector3 gravityConstant);
+    static Eigen::Vector3d accelerationComplex(double currentThrust, double totalMass, Eigen::Vector3d directionOfThrust, Eigen::Vector3d gravityConstant);
 
     /**
      * @brief Calcualtes acceleration in relation with thrust direction
@@ -65,7 +65,7 @@ public:
      * @param thrustDirection   ///< [-] Vector with direction of thrust. Static coordinate system is spacecraft.
      * @return                  ///< [m/s²] Return acceleration vector
      */
-    static Vector3 calcAccelerationVector(double currentThrust, Vector3 thrustDirection);
+    static Eigen::Vector3d calcAccelerationVector(double currentThrust, Eigen::Vector3d thrustDirection);
 
     /**
      * @brief Calculates Mass flow based on thrust

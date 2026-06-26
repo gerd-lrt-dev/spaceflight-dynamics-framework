@@ -2,6 +2,8 @@
 
 #include "Integrators/iIntegrator.h"
 
+#include <eigen3/Eigen/Dense>
+
 /**
  * @class EulerIntegrator
  * @brief Concrete integrator implementing the explicit Euler method.
@@ -26,7 +28,7 @@ public:
      * @param dt  Time step in seconds.
      * @return Updated velocity vector after dt.
      */
-    virtual Vector3 integrateVel(const Vector3& vel, const Vector3& acc, double dt) const override;
+    virtual Eigen::Vector3d integrateVel(const Eigen::Vector3d& vel, const Eigen::Vector3d& acc, double dt) const override;
 
     /**
      * @brief Integrates position over a timestep using Euler integration.
@@ -42,5 +44,5 @@ public:
      * @param dt  Time step in seconds.
      * @return Updated position vector after dt.
      */
-    virtual Vector3 integratePos(const Vector3& pos, const Vector3& vel, const Vector3& acc, double dt) const override;
+    virtual Eigen::Vector3d integratePos(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, const Eigen::Vector3d& acc, double dt) const override;
 };

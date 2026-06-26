@@ -2,9 +2,9 @@
 #define PHYSICS_H
 
 #include <memory>
+#include <eigen3/Eigen/Dense>
 
 #include "environmentConfig.h"
-#include "vector3.h"
 #include "spacemath.h"
 #include "Physics/iPhysicsModel.h"
 #include "Integrators/iIntegrator.h"
@@ -64,7 +64,7 @@ public:
      * @param pos       Current position vector.
      * @return Resulting acceleration vector.
      */
-    Vector3 computeAcc(const Vector3& pos, const Vector3& vel, double mass, const Vector3& thrust) const;
+    Eigen::Vector3d computeAcc(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, double mass, const Eigen::Vector3d& thrust) const;
 
     /**
      * @brief Integrates velocity using the configured integrator.
@@ -76,7 +76,7 @@ public:
      * @param dt  Time step in seconds.
      * @return Updated velocity vector.
      */
-    Vector3 computeVel(const Vector3& vel, const Vector3& acc, double dt) const;
+    Eigen::Vector3d computeVel(const Eigen::Vector3d& vel, const Eigen::Vector3d& acc, double dt) const;
 
     /**
      * @brief Integrates position using the configured integrator.
@@ -89,7 +89,7 @@ public:
      * @param dt  Time step in seconds.
      * @return Updated position vector.
      */
-    Vector3 computePos(const Vector3& pos, const Vector3& vel, const Vector3& acc, double dt) const;
+    Eigen::Vector3d computePos(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, const Eigen::Vector3d& acc, double dt) const;
 
     /**
      * @brief Computes the proper G-load experienced by the spacecraft.
@@ -125,9 +125,9 @@ public:
      *       but proper acceleration equals the ground reaction force,
      *       resulting in a non-zero G-load (e.g., ~0.166 g on the Moon).
      *
-     * @see Vector3
+     * @see Eigen::Vector3d
      */
-    double computeGLoad(const Vector3& totalAcceleration, const Vector3& gravityAcceleration, bool isLanded);
+    double computeGLoad(const Eigen::Vector3d& totalAcceleration, const Eigen::Vector3d& gravityAcceleration, bool isLanded);
 };
 
 #endif

@@ -3,22 +3,22 @@
 //******************************************************
 //************* PUBLIC *********************************
 //******************************************************
-Vector3 BasicMoonGravityModel::computeAcceleration(const Vector3& pos, const Vector3& vel, double mass, const Vector3& thrust) const
+Eigen::Vector3d BasicMoonGravityModel::computeAcceleration(const Eigen::Vector3d& pos, const Eigen::Vector3d& vel, double mass, const Eigen::Vector3d& thrust) const
 {
-    Vector3 gravity = calcAccelerationAlignedToCenterOfMoon(pos);
-    Vector3 thrustAcc = thrust/mass;
+    Eigen::Vector3d gravity = calcAccelerationAlignedToCenterOfMoon(pos);
+    Eigen::Vector3d thrustAcc = thrust/mass;
     return gravity + thrustAcc;
 }
 
 //******************************************************
 //************* PRIVATE ********************************
 //******************************************************
-Vector3 BasicMoonGravityModel::calcAccelerationAlignedToCenterOfMoon(const Vector3& pos) const
+Eigen::Vector3d BasicMoonGravityModel::calcAccelerationAlignedToCenterOfMoon(const Eigen::Vector3d& pos) const
 {
-    //Vector3 dir = pos.normalized();
+    //Eigen::Vector3d dir = pos.normalized();
     //double r = pos.norm();
 
-    Vector3 r       = pos;
+    Eigen::Vector3d r       = pos;
     double rNorm    = r.norm();
     double r3       = rNorm * rNorm * rNorm;
 

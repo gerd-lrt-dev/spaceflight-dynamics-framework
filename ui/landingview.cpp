@@ -19,11 +19,11 @@ LandingView::LandingView(QWidget *parent)
     animationTimer.start(33);
 }
 
-void LandingView::setPositionENU(const Vector3& pos)
+void LandingView::setPositionENU(const Eigen::Vector3d& pos)
 {
     positionENU = pos;
 
-    QPointF enPoint(pos.x, pos.y);
+    QPointF enPoint(pos.x(), pos.y());
     if (trajectoryEN.isEmpty() || QLineF(trajectoryEN.last(), enPoint).length() > 0.5) {
         trajectoryEN.push_back(enPoint);
         if (trajectoryEN.size() > 200) {
@@ -34,7 +34,7 @@ void LandingView::setPositionENU(const Vector3& pos)
     update();
 }
 
-void LandingView::setVelocityENU(const Vector3& vel)
+void LandingView::setVelocityENU(const Eigen::Vector3d& vel)
 {
     velocityENU = vel;
     update();
@@ -46,7 +46,7 @@ void LandingView::setYawDeg(double yaw)
     update();
 }
 
-void LandingView::setTargetENU(const Vector3& target)
+void LandingView::setTargetENU(const Eigen::Vector3d& target)
 {
     targetENU = target;
     update();
@@ -221,11 +221,11 @@ void LandingView::drawSideView(QPainter& p, const QRect& r)
     p.setPen(QPen(QColor("#6D4C41"), 3));
     p.drawLine(plot.left(), groundY, plot.right(), groundY);
 
-    const double maxEastAbs = qMax(50.0, qAbs(positionENU.x) + 10.0);
-    const double maxUp = qMax(50.0, positionENU.z + 20.0);
+    const double maxEastAbs = qMax(50.0, qAbs(positionENU.x()) + 10.0);
+    const double maxUp = qMax(50.0, positionENU.z() + 20.0);
 
-    QPointF landerPos = mapSideView(r, positionENU.x, positionENU.z, maxEastAbs, maxUp);
-    QPointF targetPos = mapSideView(r, targetENU.x, 0.0, maxEastAbs, maxUp);
+    QPointF landerPos = mapSideView(r, positionENU.x(), positionENU.z(), maxEastAbs, maxUp);
+    QPointF targetPos = mapSideView(r, targetENU.x(), 0.0, maxEastAbs, maxUp);
 
     p.setPen(QPen(QColor("#66BB6A"), 2));
     p.setBrush(QColor("#66BB6A"));
@@ -237,7 +237,7 @@ void LandingView::drawSideView(QPainter& p, const QRect& r)
     drawLanderSide(p, landerPos);
 
     // Velocity vector in side view: East + Up
-    const QPointF velVec(positionENU.x + velocityENU.x * 2.0, positionENU.z + velocityENU.z * 2.0);
+    const QPointF velVec(positionENU.x() + velocityENU.x() * 2.0, positionENU.z() + velocityENU.z() * 2.0);
     QPointF velEnd = mapSideView(r, velVec.x(), velVec.y(), maxEastAbs, maxUp);
     drawVector(p, landerPos, velEnd - landerPos, QColor("#FFD54F"));
 
@@ -278,11 +278,11 @@ void LandingView::drawTopView(QPainter& p, const QRect& r)
     p.drawLine(plot.center().x(), plot.top(), plot.center().x(), plot.bottom());
     p.drawLine(plot.left(), plot.center().y(), plot.right(), plot.center().y());
 
-    const double maxEastAbs = qMax(50.0, qMax(qAbs(positionENU.x), qAbs(targetENU.x)) + 10.0);
-    const double maxNorthAbs = qMax(50.0, qMax(qAbs(positionENU.y), qAbs(targetENU.y)) + 10.0);
+    const double maxEastAbs = qMax(50.0, qMax(qAbs(positionENU.x()), qAbs(targetENU.x())) + 10.0);
+    const double maxNorthAbs = qMax(50.0, qMax(qAbs(positionENU.y()), qAbs(targetENU.y())) + 10.0);
 
-    QPointF landerPos = mapTopView(r, positionENU.x, positionENU.y, maxEastAbs, maxNorthAbs);
-    QPointF targetPos = mapTopView(r, targetENU.x, targetENU.y, maxEastAbs, maxNorthAbs);
+    QPointF landerPos = mapTopView(r, positionENU.x(), positionENU.y(), maxEastAbs, maxNorthAbs);
+    QPointF targetPos = mapTopView(r, targetENU.x(), targetENU.y(), maxEastAbs, maxNorthAbs);
 
     // trail
     if (trajectoryEN.size() > 1) {
@@ -302,8 +302,8 @@ void LandingView::drawTopView(QPainter& p, const QRect& r)
 
     // lateral velocity vector (E,N)
     QPointF velEnd = mapTopView(r,
-                                positionENU.x + velocityENU.x * 2.0,
-                                positionENU.y + velocityENU.y * 2.0,
+                                positionENU.x() + velocityENU.x() * 2.0,
+                                positionENU.y() + velocityENU.y() * 2.0,
                                 maxEastAbs,
                                 maxNorthAbs);
     drawVector(p, landerPos, velEnd - landerPos, QColor("#FFD54F"));
@@ -316,15 +316,15 @@ void LandingView::drawStatusBox(QPainter& p, const QRect& r)
     QRect textRect = r.adjusted(12, 28, -12, -12);
     p.setPen(QColor("#D6E1F0"));
 
-    const double lateralSpeed = qSqrt(velocityENU.x * velocityENU.x + velocityENU.y * velocityENU.y);
+    const double lateralSpeed = qSqrt(velocityENU.x() * velocityENU.x() + velocityENU.y() * velocityENU.y());
 
     QStringList lines;
-    lines << QString("E  : %1 m").arg(positionENU.x, 0, 'f', 1)
-          << QString("N  : %1 m").arg(positionENU.y, 0, 'f', 1)
-          << QString("U  : %1 m").arg(positionENU.z, 0, 'f', 1)
-          << QString("VE : %1 m/s").arg(velocityENU.x, 0, 'f', 1)
-          << QString("VN : %1 m/s").arg(velocityENU.y, 0, 'f', 1)
-          << QString("VU : %1 m/s").arg(velocityENU.z, 0, 'f', 1)
+    lines << QString("E  : %1 m").arg(positionENU.x(), 0, 'f', 1)
+          << QString("N  : %1 m").arg(positionENU.y(), 0, 'f', 1)
+          << QString("U  : %1 m").arg(positionENU.z(), 0, 'f', 1)
+          << QString("VE : %1 m/s").arg(velocityENU.x(), 0, 'f', 1)
+          << QString("VN : %1 m/s").arg(velocityENU.y(), 0, 'f', 1)
+          << QString("VU : %1 m/s").arg(velocityENU.z(), 0, 'f', 1)
           << QString("Vlat: %1 m/s").arg(lateralSpeed, 0, 'f', 1)
           << QString("Yaw : %1 deg").arg(yawDeg, 0, 'f', 1)
           << QString("Main Throttle [%]: %1 %").arg(thrustPercent, 0, 'f', 0)

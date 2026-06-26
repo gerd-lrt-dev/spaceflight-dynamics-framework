@@ -10,16 +10,16 @@ double spacemath::accelerationBasedOnThrust(double thrust, double mass)
     return thrust / mass;
 }
 
-Vector3 spacemath::accelerationComplex(double currentThrust, double totalMass, Vector3 directionOfThrust, Vector3 gravityConstant)
+Eigen::Vector3d spacemath::accelerationComplex(double currentThrust, double totalMass, Eigen::Vector3d directionOfThrust, Eigen::Vector3d gravityConstant)
 {
     // F^_thrust = F_scalar * d^_thrust
-    Vector3 F_thrust =  directionOfThrust * currentThrust;
+    Eigen::Vector3d F_thrust =  directionOfThrust * currentThrust;
 
     // F = m * a <-> a = F / m 
     return F_thrust / totalMass + gravityConstant;
 }
 
-Vector3 spacemath::calcAccelerationVector(double currentThrust, Vector3 thrustDirection)
+Eigen::Vector3d spacemath::calcAccelerationVector(double currentThrust, Eigen::Vector3d thrustDirection)
 {
     return thrustDirection * currentThrust;
 }
