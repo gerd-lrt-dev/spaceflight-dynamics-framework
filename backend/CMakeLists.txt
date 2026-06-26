@@ -27,14 +27,12 @@ add_library(moonlander_backend
     include/environmentConfig.h
     include/jsonConfigReader.h
     include/physics.h
-    #include/quaternion.h
     include/simDataStruct.h
     include/simcontrol.h
     include/spacecraft.h
     include/spacecraftStateStruct.h
     include/spacemath.h
     include/stateVectorStruct.h
-    #include/vector3.h
 
     # =========================================================================
     # Automation
