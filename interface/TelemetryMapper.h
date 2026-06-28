@@ -3,6 +3,7 @@
 
 #include "TelemetryDTO.h"
 #include "include/simDataStruct.h"
+#include <Eigen/Dense>
 
 
 class telemetryMapper{

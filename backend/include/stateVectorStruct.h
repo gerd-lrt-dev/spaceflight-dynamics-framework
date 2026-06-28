@@ -3,7 +3,7 @@
 
 #include "Coordinates/coordinateTransformer.h"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 /**
  * @struct StateVector

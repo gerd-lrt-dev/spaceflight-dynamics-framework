@@ -1,7 +1,7 @@
 #ifndef ME_THRUSTSTATE_H
 #define ME_THRUSTSTATE_H
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 /**
  * @brief Simulation output data associated with the main engine thrust state.

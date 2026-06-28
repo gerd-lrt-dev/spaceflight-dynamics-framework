@@ -17,6 +17,7 @@ target_link_libraries(interface
     PUBLIC
         MoonLanderBackend
         ui
+        Eigen3::Eigen
     PRIVATE
         Qt6::Core
 )

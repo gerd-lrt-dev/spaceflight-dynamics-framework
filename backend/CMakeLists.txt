@@ -138,4 +138,5 @@ target_include_directories(moonlander_backend
 target_link_libraries(moonlander_backend
     PUBLIC
         NLopt::nlopt
+        Eigen3::Eigen
 )

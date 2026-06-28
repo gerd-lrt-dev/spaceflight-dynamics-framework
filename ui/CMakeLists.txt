@@ -21,6 +21,8 @@ add_executable(Moonlander_UI
 
 
 target_link_libraries(Moonlander_UI
+    PUBLIC
+        Eigen3::Eigen
     PRIVATE
         Qt6::Widgets
         moonlander_backend
