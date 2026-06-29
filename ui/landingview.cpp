@@ -64,11 +64,11 @@ void LandingView::setRCSActive(bool active)
     RCSActive = active;
 }
 
-void LandingView::setHullIntact(SpacecraftState spacecraftState_)
+void LandingView::setHullIntact(const QString& spacecraftState)
 {
     hullIntact =
-        spacecraftState_ == SpacecraftState::Operational ||
-        spacecraftState_ == SpacecraftState::Landed;
+        spacecraftState == "Operational" ||
+        spacecraftState == "Landed";
 
     update();
 }

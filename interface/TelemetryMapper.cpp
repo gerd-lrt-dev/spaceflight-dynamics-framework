@@ -1,34 +1,52 @@
 #include "TelemetryMapper.h"
+#include "simcontrol.h"
+
+TelemetryMapper::TelemetryMapper() : backend_(std::make_unique<simcontrol>(0.0))
+{
+
+};
+
+TelemetryMapper::~TelemetryMapper() = default;
 
 namespace
 {
-QString toQString(const std::string& value)
-{
-    return QString::fromStdString(value);
-}
-
-QString spacecraftStateToQString(SpacecraftState state)
-{
-    switch (state)
+    QString toQString(const std::string& value)
     {
-    case SpacecraftState::Operational:
-        return "Operational";
-    case SpacecraftState::Landed:
-        return "Landed";
-    case SpacecraftState::Crashed:
-        return "Crashed";
-    case SpacecraftState::Destroyed:
-        return "Destroyed";
-    default:
-        return "Unknown";
+        return QString::fromStdString(value);
+    }
+
+    std::string toStdString(const QString& value)
+    {
+        return value.toStdString();
+    }
+
+    QString spacecraftStateToQString(SpacecraftState state)
+    {
+        switch (state)
+        {
+        case SpacecraftState::Operational:
+            return "Operational";
+        case SpacecraftState::Landed:
+            return "Landed";
+        case SpacecraftState::Crashed:
+            return "Crashed";
+        case SpacecraftState::Destroyed:
+            return "Destroyed";
+        default:
+            return "Unknown";
+        }
     }
 }
+
+void TelemetryMapper::initialize(const std::string& jsonConfig)
+{
+    backend_->initialize(jsonConfig);
 }
 
 Telemetry TelemetryMapper::getQTTelemetryData() const
 {
     // Backend data
-    simData backendData = backend.getSimulationData();
+    simData backendData = backend_->getSimulationData();
 
     // Frontend data
     Telemetry FE;
@@ -165,5 +183,38 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
 
 void TelemetryMapper::runStepSimulation(const double dt) const
 {
-    simcontrol backend(dt);
+    backend_->runSimulation(dt);
+}
+
+void TelemetryMapper::setReset()
+{
+    backend_->setResetBoolean();
+}
+
+void TelemetryMapper::transferUserCommandtoBackend(const Telemetry::ControlCommand& userCmd)
+{
+    ControlCommand backendCmd;
+
+    backendCmd.thrustInPercentage =
+        userCmd.thrustInPercentage;
+
+    backendCmd.autopilotActive =
+        userCmd.autopilotActive;
+
+    backendCmd.mainEngine =
+        userCmd.mainEngine;
+
+    backendCmd.rotation =
+        userCmd.rotation;
+
+    backendCmd.translation =
+        userCmd.translation;
+
+    backendCmd.stabilize =
+        userCmd.stabilize;
+
+    backendCmd.killRotation =
+        userCmd.killRotation;
+
+    backend_->receiveCommandFromFrontEnd(backendCmd);
 }

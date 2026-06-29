@@ -39,7 +39,6 @@
 #include <QVector>
 #include <QPointF>
 
-#include <spacecraftStateStruct.h>
 #include <eigen3/Eigen/Dense>
 
 /**
@@ -135,13 +134,16 @@ public:
     void setRCSActive(bool active);
 
     /**
-     * @brief Updates hull integrity state.
+     * @brief Updates the spacecraft integrity state.
      *
-     * @param spacecraftState_ Current spacecraft state enum.
+     * Determines whether the spacecraft should be rendered as structurally
+     * intact based on the current spacecraft status.
      *
-     * @note Determines visual color of the lander.
+     * @param spacecraftState Human-readable spacecraft state.
+     *
+     * @note Determines the visual appearance of the spacecraft.
      */
-    void setHullIntact(SpacecraftState spacecraftState_);
+    void setHullIntact(const QString& spacecraftState);
 
 protected:
     /**

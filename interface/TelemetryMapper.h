@@ -2,7 +2,6 @@
 #define TELEMETRYMAPPER_H
 
 #include "TelemetryDTO.h"
-#include "include/simcontrol.h"
 
 #include <Eigen/Dense>
 
@@ -10,6 +9,8 @@
  * @file TelemetryMapper.h
  * @brief Translation layer between backend simulation data and frontend telemetry DTOs.
  */
+
+class simcontrol;
 
 /**
  * @class telemetryMapper
@@ -34,6 +35,29 @@ class TelemetryMapper
 {
 public:
     /**
+     * @brief Constructs the telemetry mapper.
+     *
+     * Creates the backend simulation controller and prepares the
+     * telemetry translation layer.
+     */
+    TelemetryMapper();
+
+    /**
+     * @brief Destroys the telemetry mapper.
+     */
+    ~TelemetryMapper();
+
+    /**
+     * @brief Initializes the backend simulation.
+     *
+     * Parses the supplied JSON configuration and initializes the
+     * simulation backend before the first simulation step.
+     *
+     * @param jsonConfig JSON spacecraft and mission configuration.
+     */
+    void initialize(const std::string& jsonConfig);
+
+    /**
      * @brief Generates a frontend telemetry snapshot.
      *
      * Converts the previously supplied backend simulation state into a
@@ -54,8 +78,24 @@ public:
      */
     void runStepSimulation(const double dt) const;
 
+    /**
+     * @brief Sets reset Boolean in backend to true
+    */
+    void setReset();
+
+    /**
+     * @brief Forwards a user control command to the simulation backend.
+     *
+     * Passes a frontend-generated control command through the telemetry interface
+     * to the backend simulation. The backend remains responsible for command
+     * arbitration and for separating user input from autopilot commands.
+     *
+     * @param userCmd Control command provided by the frontend.
+     */
+    void transferUserCommandtoBackend(const Telemetry::ControlCommand& userCmd);
+
 private:
-    simcontrol backend;
+    std::unique_ptr<simcontrol> backend_;
 };
 
 #endif // TELEMETRYMAPPER_H

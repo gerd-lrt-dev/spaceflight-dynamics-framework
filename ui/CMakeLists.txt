@@ -25,5 +25,5 @@ target_link_libraries(Moonlander_UI
         Eigen3::Eigen
     PRIVATE
         Qt6::Widgets
-        moonlander_backend
+        interface
 )

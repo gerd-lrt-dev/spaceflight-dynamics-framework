@@ -18,6 +18,7 @@
 
 #include "flightcommandstruct.h"
 #include "datastructs.h"
+#include "TelemetryMapper.h"
 
 /**
  * @class SimulationWorker
@@ -100,16 +101,15 @@ signals:
                       Eigen::Vector3d pos,
                       Eigen::Vector3d vel,
                       double GLoad,
-                      SpacecraftState spacecraftState_,
+                      QString spacecraftState,
                       Eigen::Vector3d thrust,
                       Eigen::Vector3d targetThrust,
                       Eigen::Vector3d thrustInPercentage,
-                      QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
-                      QVector<FuelTank> fuelTanks,
+                      QVector<Telemetry::PropulsionSystems::RCSThrust> RCSTelemetryVec_,
+                      QVector<Telemetry::PropulsionSystems::Tank> fuelTanks,
                       double fuelMass,
                       double fuelFlow,
-                      QString consoleOutput
-                      );
+                      QString consoleOutput);
 
     /**
      * @brief simulationError
@@ -127,9 +127,9 @@ private:
      // ==========================
      // Internal State
      // ==========================
-    simData spacecraftData;
-    ControlCommand FEControlCommands_;
-    std::unique_ptr<simcontrol> controller;
+    TelemetryMapper telemetryMapper_;
+    Telemetry telemetry_;
+    FlightCommand collectedCmdData;
 
     std::string jsonConfig;     ///< String with spacecraft config data
     QTimer *simulationTimer;    ///< Drives simulation ticks

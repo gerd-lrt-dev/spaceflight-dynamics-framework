@@ -81,4 +81,9 @@ struct FlightCommand
      * Often implemented as an aggressive attitude hold or zero angular velocity controller.
      */
     bool killRotation = false;
+
+    /**
+     * @brief autopilotActive
+     */
+    bool autopilotActive = false;
 };

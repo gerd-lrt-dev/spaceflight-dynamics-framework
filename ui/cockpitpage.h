@@ -22,17 +22,13 @@
 #include <QVBoxLayout>
 #include <QMap>
 #include <QVector>
-
 #include <eigen3/Eigen/Dense>
-#include <spacecraftStateStruct.h>
-
 
 #include "landingview.h"
 #include "uibuilder.h"
 #include "inputmapper.h"
 #include "datastructs.h"
-
-#include "Thrust/FueltankStruct.h" // TODO: Refactor! This is a backend struct!
+#include "TelemetryDTO.h"
 
 /**
  * @class cockpitPage
@@ -128,7 +124,7 @@ public:
      *
      * @param rcsStates Current runtime state of all configured RCS thrusters.
      */
-    void updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates);
+    void updateRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates);
 
     /**
      * @brief Updates the current number of active RCS thrusters.
@@ -151,14 +147,14 @@ public:
     void updateFuelFlow(double flow);
 
     /**
-     * @brief Updates the hull integrity indicator.
+     * @brief Updates the displayed spacecraft status.
      *
-     * Displays visual feedback whether the spacecraft hull
-     * is still intact or has been damaged.
+     * Displays the current spacecraft state and updates the corresponding
+     * visual status indicator.
      *
-     * @param spacecraftState_ Current spacecraft state enum.
+     * @param spacecraftState Human-readable spacecraft state.
      */
-    void updateHullStatus(SpacecraftState spacecraftState_);
+    void updateHullStatus(const QString& spacecraftState);
 
     /**
      * @brief Updates the autopilot status indicator.
@@ -230,12 +226,12 @@ public slots:
                         const Eigen::Vector3d& pos,
                         const Eigen::Vector3d& vel,
                         const double& GLoad,
-                        SpacecraftState spacecraftState_,
-                        Eigen::Vector3d thrust,
-                        Eigen::Vector3d targetThrust,
-                        Eigen::Vector3d thrustInPercentage,
-                        QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
-                        QVector<FuelTank> tanks,
+                        const QString spacecraftState_,
+                        const Eigen::Vector3d thrust,
+                        const Eigen::Vector3d targetThrust,
+                        const Eigen::Vector3d thrustInPercentage,
+                        QVector<Telemetry::PropulsionSystems::RCSThrust> RCSTelemetryVec_,
+                        QVector<Telemetry::PropulsionSystems::Tank> tanks,
                         double fuelMass,
                         double fuelFlow,
                         QString consoleOutput);
@@ -320,9 +316,9 @@ private:
      *
      * @param rcsStates Current list of RCS thruster states.
      */
-    void rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rcsStates);
+    void rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates);
 
-    QVector<RCSCockpitTelemetry> filterActiveRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates) const;
+    QVector<Telemetry::PropulsionSystems::RCSThrust> filterActiveRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates) const;
     /**
      * @brief Builds fuel elements.
      * @return Fuel Box as QGroupBox.
@@ -348,7 +344,7 @@ private:
      *
      * @param tanks Current list of tanks.
      */
-    void rebuildFuelTankPanel(const QVector<FuelTank>& tanks);
+    void rebuildFuelTankPanel(const QVector<Telemetry::PropulsionSystems::Tank>& tanks);
 
     /**
      * @brief Updates dynamic fuel tank values.
@@ -357,7 +353,7 @@ private:
      *
      * @param tanks Current list of tanks.
      */
-    void updateFuelTanks(const QVector<FuelTank>& tanks);
+    void updateFuelTanks(const QVector<Telemetry::PropulsionSystems::Tank>& tanks);
 
     /**
      * @brief Builds status elements.

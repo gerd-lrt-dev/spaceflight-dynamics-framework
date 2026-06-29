@@ -17,8 +17,7 @@ SimulationWorker::SimulationWorker(QObject *parent)
 void SimulationWorker::start()
 {
     try {
-        controller = std::make_unique<simcontrol>(0);
-        controller->initialize(jsonConfig);
+        telemetryMapper_.initialize(jsonConfig);
     }
     catch (const std::exception& e)
     {
@@ -48,17 +47,17 @@ void SimulationWorker::stop()
                       {0.0, 0.0, 0.0},
                       {0.0, 0.0, 0.0},
                       0.0,
-                      SpacecraftState::Operational,
+                      "Operational",
                       {0.0, 0.0, 0.0},
                       {0.0, 0.0, 0.0},
                       {0.0, 0.0, 0.0},
-                      QVector<RCSCockpitTelemetry>{},
-                      QVector<FuelTank>{},
+                      QVector<Telemetry::PropulsionSystems::RCSThrust>{},
+                      QVector<Telemetry::PropulsionSystems::Tank>{},
                       0.0,
                       0.0,
                       "");
 
-    controller->setResetBoolean();
+    telemetryMapper_.setReset();
 }
 
 void SimulationWorker::receiveJsonConfig(const QString &json)
@@ -95,74 +94,46 @@ void SimulationWorker::stepSimulation()
     dt = 0.05; // TODO: should specified in json as well
     currentTime += dt;
 
-    // Calling interface
-    spacecraftData = controller->runSimulation(dt);
+    // Update backend via interface
+    telemetryMapper_.runStepSimulation(dt);
+
+    // Get backend data via interface
+    telemetry_ = telemetryMapper_.getQTTelemetryData();
 
     // Withdraw user input due to thrust
     sendControlCommands();
 
-    // Change data type for console output
-    QString consoleOutput = QString::fromStdString(spacecraftData.output);
-
-    // Change vector type for fuel tanks information
-    QVector<FuelTank> fuelTanksQVec(spacecraftData.tanks.begin(), spacecraftData.tanks.end());
-
-    QVector<RCSCockpitTelemetry> RCSTelemetryVec;
-
-    // TODO: This wrapper is going to be transfered with Issue 19 into own Translater class
-    for (const auto  &RCS_State_: spacecraftData.RCS_ThrustState_)
-    {
-        RCSCockpitTelemetry RCSTelemetry_;
-        RCSTelemetry_.engineID = RCS_State_.engineID;
-        RCSTelemetry_.name = QString::fromStdString(RCS_State_.engineName);
-        RCSTelemetry_.axis = QString::fromStdString(RCS_State_.axis);
-        RCSTelemetry_.currentThrust = RCS_State_.currentThrust;
-        RCSTelemetry_.targetThrust = RCS_State_.targetThrust;
-        RCSTelemetry_.actuatorState = RCS_State_.targetThrustPercentage;
-
-        RCSTelemetryVec.push_back(RCSTelemetry_);
-    }
-
     // signals
     emit stateUpdated(currentTime,
-                      spacecraftData.statevector_.MCI_Position,
-                      spacecraftData.statevector_.MCI_Velocity,
-                      spacecraftData.GLoad,
-                      spacecraftData.spacecraftState_,
-                      spacecraftData.ME_ThrustState_.SBF_direction * spacecraftData.ME_ThrustState_.current,
-                      spacecraftData.ME_ThrustState_.SBF_direction * spacecraftData.ME_ThrustState_.target,
-                      spacecraftData.ME_ThrustState_.SBF_direction * spacecraftData.ME_ThrustState_.targetPercentage,
-                      RCSTelemetryVec,
-                      fuelTanksQVec,
-                      spacecraftData.fuelMass,
-                      spacecraftData.fuelFlow,
-                      consoleOutput
+                      telemetry_.navigation.MCI_position, //spacecraftData.statevector_.MCI_Position,
+                      telemetry_.navigation.MCI_velocity, //spacecraftData.statevector_.MCI_Velocity,
+                      telemetry_.sensor.GLoad, //spacecraftData.GLoad,
+                      telemetry_.hullIntegrity.spacecraftState, //spacecraftData.spacecraftState_,
+                      telemetry_.propulsionSystems.mainEngine.SBF_direction * telemetry_.propulsionSystems.mainEngine.T_current, //spacecraftData.ME_ThrustState_.SBF_direction * spacecraftData.ME_ThrustState_.current,
+                      telemetry_.propulsionSystems.mainEngine.SBF_direction * telemetry_.propulsionSystems.mainEngine.T_target, //spacecraftData.ME_ThrustState_.SBF_direction * spacecraftData.ME_ThrustState_.target,
+                      telemetry_.propulsionSystems.mainEngine.SBF_direction * telemetry_.propulsionSystems.mainEngine.T_targetPercentage, //spacecraftData.ME_ThrustState_.SBF_direction * spacecraftData.ME_ThrustState_.targetPercentage,
+                      telemetry_.propulsionSystems.RCSEngines, //RCSTelemetryVec,
+                      telemetry_.propulsionSystems.fuelTanks, //fuelTanksQVec,
+                      0.0, //spacecraftData.fuelMass,
+                      0.0, //spacecraftData.fuelFlow,
+                      telemetry_.console.output //consoleOutput
                       );
 }
 
 void SimulationWorker::collectControlCommands(const FlightCommand &cmd, const double &thrustInPercentage, const double &thrustInNewton)
 {
-    //TODO: Do not call back end structures. Change that with Issue 19
-    FEControlCommands_.mainEngine       = cmd.mainEngine;
-    FEControlCommands_.translation.x()    = cmd.translation.x();
-    FEControlCommands_.translation.y()    = cmd.translation.y();
-    FEControlCommands_.translation.z()    = cmd.translation.z();
-
-    FEControlCommands_.rotation.x()       = cmd.rotation.x();
-    FEControlCommands_.rotation.y()       = cmd.rotation.y();
-    FEControlCommands_.rotation.z()       = cmd.rotation.z();
+    collectedCmdData = cmd;
 }
 
 void SimulationWorker::collectAutopilotCommand(bool autopilotActive)
 {
-    FEControlCommands_.autopilotActive      = autopilotActive;
+    collectedCmdData.autopilotActive      = autopilotActive;
 }
+
 
 void SimulationWorker::sendControlCommands()
 {
-    // Call Back End function
-    // TODO: Change that with Issue 19
-    controller->receiveCommandFromFrontEnd(FEControlCommands_);
+    telemetryMapper_.transferUserCommandtoBackend(collectedCmdData); //->receiveCommandFromFrontEnd(FEControlCommands_);
 }
 
 

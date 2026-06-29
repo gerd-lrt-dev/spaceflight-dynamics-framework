@@ -152,7 +152,7 @@ void simcontrol::runSimulation(const double dt)
         // --- Update Frames ---
 
         // --- Retrieve full simulation data ---
-        simdata_ = landerSpacecraft->getFullSimulationData();   ///< SimData struct can be requested from frontend
+        simdata_ = landerSpacecraft->getFullSimulationData();
 
         // --- Log results (adapt later to new state vector) ---
         /*
@@ -191,6 +191,7 @@ simData simcontrol::getSimulationData() const
 
 void simcontrol::receiveCommandFromFrontEnd(const ControlCommand& userCmd)
 {
+    std::cout << userCmd.thrustInPercentage << std::endl;
     inputArbiter_->receiveUserControlCommand(userCmd);
 }
 

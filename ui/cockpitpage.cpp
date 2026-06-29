@@ -1,5 +1,4 @@
 #include "cockpitpage.h"
-#include "Thrust/FueltankStruct.h"
 
 #include <QGridLayout>
 #include <QPushButton>
@@ -292,7 +291,7 @@ QGroupBox *cockpitPage::setupEngineBox()
     return engineBox;
 }
 
-void cockpitPage::rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rcsStates)
+void cockpitPage::rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
 {
     if (!rcsThrusterLayout)
         return;
@@ -311,14 +310,14 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rc
     lcdRCSTargetThrust.clear();
     barRCSActuatorStates.clear();
 
-    for (const RCSCockpitTelemetry& state : rcsStates)
+    for (const Telemetry::PropulsionSystems::RCSThrust& state : rcsStates)
     {
         QGroupBox *thrusterBox = new QGroupBox();
         QVBoxLayout *thrusterLayout = new QVBoxLayout(thrusterBox);
         thrusterLayout->setContentsMargins(8, 8, 8, 8);
         thrusterLayout->setSpacing(4);
 
-        QLabel *lblName = new QLabel(state.name);
+        QLabel *lblName = new QLabel(state.engineName);
         lblName->setStyleSheet("color: #D6E1F0; font-weight: bold;");
 
         QLabel *lblAxis = new QLabel(QString("Axis: %1").arg(state.axis));
@@ -332,12 +331,12 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rc
         configureLCD(lcdCurrent, 8);
         configureLCD(lcdTarget, 8);
 
-        lcdCurrent->display(QString::number(state.currentThrust, 'f', 1));
-        lcdTarget->display(QString::number(state.targetThrust, 'f', 1));
+        lcdCurrent->display(QString::number(state.T_current, 'f', 1));
+        lcdTarget->display(QString::number(state.T_target, 'f', 1));
 
         QProgressBar *barState = new QProgressBar();
         barState->setRange(0, 100);
-        barState->setValue(static_cast<int>(qBound(0.0, state.actuatorState * 100.0, 100.0)));
+        barState->setValue(static_cast<int>(qBound(0.0, state.thrustState * 100.0, 100.0)));
         barState->setTextVisible(true);
         barState->setFormat("%p%");
 
@@ -391,15 +390,15 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<RCSCockpitTelemetry>& rc
     rcsThrusterLayout->addStretch();
 }
 
-QVector<RCSCockpitTelemetry> cockpitPage::filterActiveRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates) const
+QVector<Telemetry::PropulsionSystems::RCSThrust> cockpitPage::filterActiveRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates) const
 {
-    QVector<RCSCockpitTelemetry> active;
+    QVector<Telemetry::PropulsionSystems::RCSThrust> active;
 
     for (const auto& state : rcsStates)
     {
-        if (std::abs(state.currentThrust) > 0.01 ||
-            std::abs(state.targetThrust) > 0.01 ||
-            state.actuatorState > 0.01)
+        if (std::abs(state.T_current) > 0.01 ||
+            std::abs(state.T_target) > 0.01 ||
+            state.thrustState > 0.01)
         {
             active.push_back(state);
         }
@@ -456,7 +455,7 @@ QGroupBox *cockpitPage::setupFuelBox()
     return fuelBox;
 }
 
-void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
+void cockpitPage::rebuildFuelTankPanel(const QVector<Telemetry::PropulsionSystems::Tank>& tanks)
 {
     if (!fuelTankLayout)
         return;
@@ -474,7 +473,7 @@ void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
     lblTankNames.clear();
     lblTankRoles.clear();
 
-    for (const FuelTank& tank : tanks)
+    for (const Telemetry::PropulsionSystems::Tank& tank : tanks)
     {
         QGroupBox *tankBox = new QGroupBox();
         QVBoxLayout *tankBoxLayout = new QVBoxLayout(tankBox);
@@ -482,10 +481,10 @@ void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
         tankBoxLayout->setSpacing(4);
 
         // Header
-        QLabel *lblName = new QLabel(QString::fromStdString(tank.name));
+        QLabel *lblName = new QLabel(tank.name);
         lblName->setStyleSheet("color: #D6E1F0; font-weight: bold;");
 
-        QLabel *lblRole = new QLabel(QString("Role: %1").arg(QString::fromStdString(tank.role)));
+        QLabel *lblRole = new QLabel(QString("Role: %1").arg(tank.role));
         lblRole->setStyleSheet("color: #AFC7DF; font-size: 10px;");
 
         tankBoxLayout->addWidget(lblName);
@@ -500,7 +499,7 @@ void cockpitPage::rebuildFuelTankPanel(const QVector<FuelTank>& tanks)
 
         QProgressBar *barFill = new QProgressBar();
         barFill->setRange(0, 100);
-        barFill->setValue(static_cast<int>(tank.fillRatio() * 100.0));
+        barFill->setValue(static_cast<int>(tank.fillLevel * 100.0));
         barFill->setTextVisible(true);
         barFill->setFormat("%p%");
 
@@ -715,7 +714,7 @@ void cockpitPage::updateAngularVelocity(Eigen::Vector3d angV)
     LNF_lcdYaw->display(QString::number(angV.z(), 'f', 1));
 }
 
-void cockpitPage::updateFuelTanks(const QVector<FuelTank>& tanks)
+void cockpitPage::updateFuelTanks(const QVector<Telemetry::PropulsionSystems::Tank>& tanks)
 {
     if (tanks.size() != lcdTankMasses.size())
     {
@@ -726,18 +725,18 @@ void cockpitPage::updateFuelTanks(const QVector<FuelTank>& tanks)
 
     for (int i = 0; i < count; ++i)
     {
-        const FuelTank& tank = tanks[i];
+        const Telemetry::PropulsionSystems::Tank& tank = tanks[i];
 
         lcdTankMasses[i]->display(QString::number(tank.mass, 'f', 1));
 
-        int fillPercent = static_cast<int>(qBound(0.0, tank.fillRatio() * 100.0, 100.0));
+        int fillPercent = static_cast<int>(qBound(0.0, tank.fillLevel * 100.0, 100.0));
         barTankFillLevels[i]->setValue(fillPercent);
 
-        lblTankNames[i]->setText(QString::fromStdString(tank.name));
-        lblTankRoles[i]->setText(QString("Role: %1").arg(QString::fromStdString(tank.role)));
+        lblTankNames[i]->setText(tank.name);
+        lblTankRoles[i]->setText(QString("Role: %1").arg(tank.role));
 
         // Optional: leere Tanks rot markieren
-        if (tank.empty())
+        if (tank.capacity <= 0.0)
         {
             barTankFillLevels[i]->setStyleSheet(
                 "QProgressBar {"
@@ -790,9 +789,9 @@ void cockpitPage::updateTargetThrust(Eigen::Vector3d t)
     LNF_lcdTargetThrust_BZ->display(QString::number(t.z(), 'f', 1));
 }
 
-void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStates)
+void cockpitPage::updateRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
 {
-    const QVector<RCSCockpitTelemetry> activeStates =
+    const QVector<Telemetry::PropulsionSystems::RCSThrust> activeStates =
         filterActiveRCSThrusters(rcsStates);
 
     updateRCSActivity(activeStates.size(), rcsStates.size());
@@ -812,16 +811,16 @@ void cockpitPage::updateRCSThrusters(const QVector<RCSCockpitTelemetry>& rcsStat
 
     for (int i = 0; i < count; ++i)
     {
-        const RCSCockpitTelemetry& state = activeStates[i];
+        const Telemetry::PropulsionSystems::RCSThrust& state = activeStates[i];
 
-        lblRCSEngineNames[i]->setText(state.name);
+        lblRCSEngineNames[i]->setText(state.engineName);
         lblRCSAxes[i]->setText(QString("Axis: %1").arg(state.axis));
 
-        lcdRCSCurrentThrust[i]->display(QString::number(state.currentThrust, 'f', 1));
-        lcdRCSTargetThrust[i]->display(QString::number(state.targetThrust, 'f', 1));
+        lcdRCSCurrentThrust[i]->display(QString::number(state.T_current, 'f', 1));
+        lcdRCSTargetThrust[i]->display(QString::number(state.T_target, 'f', 1));
 
         const int actuatorPercent =
-            static_cast<int>(qBound(0.0, state.actuatorState * 100.0, 100.0));
+            static_cast<int>(qBound(0.0, state.thrustState * 100.0, 100.0));
 
         barRCSActuatorStates[i]->setValue(actuatorPercent);
     }
@@ -880,27 +879,29 @@ void cockpitPage::updateFuelFlow(double f)
     lcdFuelFlow->display(QString::number(f, 'f', 2));
 }
 
-void cockpitPage::updateHullStatus(SpacecraftState spacecraftState_)
+void cockpitPage::updateHullStatus(const QString& spacecraftState)
 {
-    if (spacecraftState_ == SpacecraftState::Operational)
+    lblHullStatus->setText(spacecraftState);
+
+    if (spacecraftState == "Operational")
     {
-        lblHullStatus->setText("Operational");
         lblHullStatus->setStyleSheet("color: lime; font-weight: bold;");
     }
-    else if (spacecraftState_ == SpacecraftState::Landed)
+    else if (spacecraftState == "Landed")
     {
-        lblHullStatus->setText("Landed");
         lblHullStatus->setStyleSheet("color: green; font-weight: bold;");
     }
-    else if (spacecraftState_ == SpacecraftState::Crashed)
+    else if (spacecraftState == "Crashed")
     {
-        lblHullStatus->setText("Crashed");
         lblHullStatus->setStyleSheet("color: red; font-weight: bold;");
     }
-    else if (spacecraftState_ == SpacecraftState::Destroyed)
+    else if (spacecraftState == "Destroyed")
     {
-        lblHullStatus->setText("Destroyed");
         lblHullStatus->setStyleSheet("color: red; font-weight: bold;");
+    }
+    else
+    {
+        lblHullStatus->setStyleSheet("color: white; font-weight: bold;");
     }
 }
 
@@ -942,12 +943,12 @@ void cockpitPage::onStateUpdated(double time,
                                  const Eigen::Vector3d& pos,
                                  const Eigen::Vector3d& vel,
                                  const double& GLoad,
-                                 SpacecraftState spacecraftState_,
-                                 Eigen::Vector3d thrust,
-                                 Eigen::Vector3d targetThrust,
-                                 Eigen::Vector3d thrustInPercentage,
-                                 QVector<RCSCockpitTelemetry> RCSTelemetryVec_,
-                                 QVector<FuelTank> tanks,
+                                 const QString spacecraftState_,
+                                 const Eigen::Vector3d thrust,
+                                 const Eigen::Vector3d targetThrust,
+                                 const Eigen::Vector3d thrustInPercentage,
+                                 QVector<Telemetry::PropulsionSystems::RCSThrust> RCSTelemetryVec_,
+                                 QVector<Telemetry::PropulsionSystems::Tank> tanks,
                                  double fuelMass,
                                  double fuelFlow,
                                  QString consoleOutput_)
