@@ -133,6 +133,8 @@ add_library(moonlander_backend
 target_include_directories(moonlander_backend
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE
+        interface
 )
 
 target_link_libraries(moonlander_backend

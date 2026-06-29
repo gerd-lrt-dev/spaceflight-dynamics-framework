@@ -2,17 +2,6 @@
 
 namespace
 {
-Eigen::Vector3d toEigenVector3d(const Eigen::Vector3d& v)
-{
-    return Eigen::Vector3d{v.x(), v.y(), v.z()};
-}
-
-Eigen::Quaterniond toEigenQuaterniond(const Eigen::Quaterniond& q)
-{
-    return Eigen::Quaterniond{0.0, 0.0, 0.0, 0.0};
-    //return Eigen::Quaterniond{q.w, q.x, q.y, q.z};
-}
-
 QString toQString(const std::string& value)
 {
     return QString::fromStdString(value);
@@ -36,12 +25,12 @@ QString spacecraftStateToQString(SpacecraftState state)
 }
 }
 
-void telemetryMapper::setBackendData(simData simdata_)
+void TelemetryMapper::setBackendData(simData simdata_)
 {
     backendData = simdata_;
 }
 
-Telemetry telemetryMapper::getQTTelemetryData()
+Telemetry TelemetryMapper::getQTTelemetryData()
 {
     Telemetry FE;
 
@@ -50,16 +39,16 @@ Telemetry telemetryMapper::getQTTelemetryData()
     // -------------------------------------------------------------------------
 
     FE.navigation.MCI_position =
-        toEigenVector3d(backendData.statevector_.MCI_Position);
+        backendData.statevector_.MCI_Position;
 
     FE.navigation.MCI_velocity =
-        toEigenVector3d(backendData.statevector_.MCI_Velocity);
+        backendData.statevector_.MCI_Velocity;
 
     FE.navigation.IB_Orientation =
-        toEigenQuaterniond(backendData.statevector_.IB_Orientation);
+        backendData.statevector_.IB_Orientation;
 
     FE.navigation.SBF_AngularVelocity =
-        toEigenVector3d(backendData.statevector_.SBF_AngularVelocity);
+        backendData.statevector_.SBF_AngularVelocity;
 
     // -------------------------------------------------------------------------
     // Hull integrity
@@ -92,7 +81,7 @@ Telemetry telemetryMapper::getQTTelemetryData()
         backendData.ME_ThrustState_.targetPercentage;
 
     FE.propulsionSystems.mainEngine.SBF_direction =
-        toEigenVector3d(backendData.ME_ThrustState_.SBF_direction);
+        backendData.ME_ThrustState_.SBF_direction;
 
     // -------------------------------------------------------------------------
     // Propulsion: RCS engines
@@ -117,7 +106,7 @@ Telemetry telemetryMapper::getQTTelemetryData()
             toQString(backendRCS.axis);
 
         frontendRCS.SBF_direction =
-            toEigenVector3d(backendRCS.SBF_direction);
+            backendRCS.SBF_direction;
 
         frontendRCS.T_current =
             backendRCS.currentThrust;

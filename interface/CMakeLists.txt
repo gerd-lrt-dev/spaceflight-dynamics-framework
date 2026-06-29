@@ -15,7 +15,7 @@ target_include_directories(interface
 
 target_link_libraries(interface
     PUBLIC
-        MoonLanderBackend
+        moonlander_backend
         ui
         Eigen3::Eigen
     PRIVATE
