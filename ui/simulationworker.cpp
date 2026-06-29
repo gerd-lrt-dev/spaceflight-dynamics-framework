@@ -95,7 +95,7 @@ void SimulationWorker::stepSimulation()
     dt = 0.05; // TODO: should specified in json as well
     currentTime += dt;
 
-    // Calling backend simulator --> Will be refactored with Issue 19 Frontend should no know data structs from backend!
+    // Calling interface
     spacecraftData = controller->runSimulation(dt);
 
     // Withdraw user input due to thrust

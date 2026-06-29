@@ -16,7 +16,6 @@
 #include <QVector>
 #include <eigen3/Eigen/Dense>
 
-#include "simcontrol.h"
 #include "flightcommandstruct.h"
 #include "datastructs.h"
 

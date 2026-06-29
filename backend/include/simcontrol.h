@@ -50,6 +50,7 @@ private:
     ControlCommand cmd_;                            ///< Command structure for autopilot
     MissionContext missionContext_;                 ///< Stores mission-specific navigation reference data.
     SimulationFrameContext simulationFrameContext_; ///< Stores the current spacecraft state expressed in multiple reference frames
+    simData simdata_;                               ///< Full Simulation Data per time timestep
 
     bool resetRequested;                            ///< Represents user desire to reset simulation
 
@@ -178,13 +179,26 @@ public:
     void instanceLoggingAction();
 
     /**
-     * @brief Computes simulation due to timesteps given from simulation worker
+     * @brief Advances the simulation by one discrete timestep.
      *
-     * This function owns the states of simulation. It knows all physical, environmental and spacecraft conditions.
-     * All states are calculated by given timesteps from worker.
-     * @param dt                                    ///< [s] discrete timestep
+     * Executes one complete simulation step using the supplied timestep.
+     * This function updates the internal simulation state, including vehicle,
+     * environment and control systems. The resulting simulation snapshot can
+     * subsequently be retrieved via getSimulationData().
+     *
+     * @param dt Discrete simulation timestep [s].
      */
-    simData runSimulation(const double dt);
+    void runSimulation(double dt);
+
+    /**
+     * @brief Returns the latest simulation snapshot.
+     *
+     * Provides read-only access to the current simulation state generated during
+     * the most recent simulation step.
+     *
+     * @return Current backend simulation data.
+     */
+    simData getSimulationData() const;
 
     /**
      * @brief Receives a control command from the frontend.

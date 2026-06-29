@@ -25,13 +25,12 @@ QString spacecraftStateToQString(SpacecraftState state)
 }
 }
 
-void TelemetryMapper::setBackendData(simData simdata_)
+Telemetry TelemetryMapper::getQTTelemetryData() const
 {
-    backendData = simdata_;
-}
+    // Backend data
+    simData backendData = backend.getSimulationData();
 
-Telemetry TelemetryMapper::getQTTelemetryData()
-{
+    // Frontend data
     Telemetry FE;
 
     // -------------------------------------------------------------------------
@@ -162,4 +161,9 @@ Telemetry TelemetryMapper::getQTTelemetryData()
         backendData.GLoad;
 
     return FE;
+}
+
+void TelemetryMapper::runStepSimulation(const double dt) const
+{
+    simcontrol backend(dt);
 }

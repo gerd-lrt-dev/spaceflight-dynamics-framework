@@ -134,10 +134,9 @@ void simcontrol::instanceLoggingAction()
     Logger::instance().init("/tmp/simulation.log");
 }
 
-simData simcontrol::runSimulation(const double dt)
+void simcontrol::runSimulation(const double dt)
 {
     Logger& logger = Logger::instance();
-    simData simdata_;
 
     try
     {
@@ -183,7 +182,10 @@ simData simcontrol::runSimulation(const double dt)
         logger.log("Unknown exception in runSimulation.");
         throw;
     }
+}
 
+simData simcontrol::getSimulationData() const
+{
     return simdata_;
 }
 

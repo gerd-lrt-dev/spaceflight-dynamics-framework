@@ -2,7 +2,7 @@
 #define TELEMETRYMAPPER_H
 
 #include "TelemetryDTO.h"
-#include "include/simDataStruct.h"
+#include "include/simcontrol.h"
 
 #include <Eigen/Dense>
 
@@ -33,14 +33,6 @@
 class TelemetryMapper
 {
 public:
-
-    /**
-     * @brief Stores the backend simulation snapshot to be translated.
-     *
-     * @param simdata_ Current backend simulation state.
-     */
-    void setBackendData(simData simdata_);
-
     /**
      * @brief Generates a frontend telemetry snapshot.
      *
@@ -49,12 +41,21 @@ public:
      *
      * @return Frontend telemetry snapshot.
      */
-    Telemetry getQTTelemetryData();
+    Telemetry getQTTelemetryData() const;
+
+    /**
+     * @brief Executes one complete simulation step.
+     *
+     * Advances the simulation by one discrete timestep and updates the internal
+     * simulation state. The resulting simulation snapshot can subsequently be
+     * retrieved via getSimulationData().
+     *
+     * @param dt Discrete simulation timestep [s].
+     */
+    void runStepSimulation(const double dt) const;
 
 private:
-
-    /// Latest backend simulation snapshot.
-    simData backendData;
+    simcontrol backend;
 };
 
 #endif // TELEMETRYMAPPER_H
