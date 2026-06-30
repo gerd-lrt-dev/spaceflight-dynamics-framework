@@ -1,507 +1,182 @@
-# Spaceflight Dynamics Framework (SDF) 🚀
+# Spaceflight Dynamics Framework (SDF)
 
-Open-Source Aerospace Simulation Framework
+```{=html}
+<p align="center">
+```
+`<img src="docs/images/logo.png" width="220">`{=html}
+```{=html}
+</p>
+```
+```{=html}
+<h1 align="center">
+```
+Spaceflight Dynamics Framework (SDF)
+```{=html}
+</h1>
+```
+```{=html}
+<p align="center">
+```
+`<b>`{=html}An open-source C++ framework for spacecraft simulation,
+guidance, navigation and control.`</b>`{=html}
+```{=html}
+</p>
+```
+```{=html}
+<p align="center">
+```
+Modern • Modular • Extensible • Research-Oriented
+```{=html}
+</p>
+```
 
-The **Spaceflight Dynamics Framework (SDF)** is a modular C++ aerospace simulation framework designed for spacecraft dynamics, propulsion modeling, guidance and control systems, telemetry workflows, and autonomous flight research.
+------------------------------------------------------------------------
 
-The framework is developed with a strong focus on:
+## 🚀 What is SDF?
 
-- aerospace engineering applications
-- spacecraft dynamics simulation
-- guidance, navigation and control (GNC)
-- propulsion system modeling
-- telemetry and data analysis
-- modular software architecture
-- open-source collaboration
+The **Spaceflight Dynamics Framework (SDF)** is an open-source C++
+framework for developing modular aerospace simulation software.
 
-The project aims to provide a flexible research and development platform that can evolve from educational simulations toward advanced aerospace engineering and scientific applications.
+Rather than focusing on a single simulation, SDF provides reusable
+building blocks for spacecraft dynamics, guidance, navigation, control,
+propulsion, telemetry and visualization.
 
----
+Its mission is to provide a platform where aerospace enthusiasts,
+students, researchers and developers can learn, experiment and develop
+modern aerospace software while following clean software engineering
+principles.
 
-# 🌙 Moonlander Demonstration Application
+SDF is **not just a simulation**. It is intended to become an extensible
+platform for education, experimentation and scientific research in
+spacecraft dynamics and aerospace software engineering.
 
-**Moonlander** is the first demonstration application built on top of the Spaceflight Dynamics Framework.
+------------------------------------------------------------------------
 
-It serves as:
+## 🌙 Demonstration Application
 
-- a technology demonstrator
-- a controller development environment
-- a propulsion modeling testbed
-- a framework validation platform
+The repository currently contains a demonstration application showcasing
+the capabilities of the framework through an autonomous lunar landing
+scenario.
 
-The Moonlander scenario currently focuses on autonomous lunar landing and spacecraft descent control.
+Future applications can reuse the same framework architecture while
+targeting completely different spacecraft missions and simulation
+scenarios.
 
-🌐 **Project Website**
+```{=html}
+<p align="center">
+```
+`<img src="docs/images/cockpit.jpg" width="900">`{=html}
+```{=html}
+</p>
+```
+
+------------------------------------------------------------------------
+
+## ✨ Framework Highlights
+
+-   Modular simulation backend
+-   Dedicated interface layer
+-   Frontend / backend decoupling
+-   Telemetry Mapper
+-   Telemetry DTOs
+-   Eigen-based mathematics
+-   JSON spacecraft configuration
+-   Adaptive descent controller
+-   Multi-engine propulsion system
+-   Individual RCS thruster simulation
+-   Qt cockpit application
+
+------------------------------------------------------------------------
+
+## 🏗 Architecture
+
+```{=html}
+<p align="center">
+```
+`<img src="docs/images/architecture.png" width="900">`{=html}
+```{=html}
+</p>
+```
+Further documentation:
+
+https://www.aerospace-simulation.dev/simulation/architecture/
+
+------------------------------------------------------------------------
+
+## 🔬 Scientific Vision
+
+SDF is intended to become an experimental environment for aerospace
+research.
+
+Research topics include:
+
+-   optimal control
+-   GNC
+-   adaptive controllers
+-   numerical integration
+-   simulation stability
+-   spacecraft dynamics
+-   optimization
+-   telemetry analysis
+-   controller benchmarking
+
+------------------------------------------------------------------------
+
+## 🚧 Roadmap
+
+```{=html}
+<p align="center">
+```
+`<img src="docs/images/Release_Strategy.png" width="850">`{=html}
+```{=html}
+</p>
+```
+
+------------------------------------------------------------------------
+
+## ⚙️ Quick Start
+
+See the installation guides in the docs folder.
+
+``` bash
+git clone https://github.com/gerd-lrt-dev/spaceflight-dynamics-framework.git
+cd spaceflight-dynamics-framework
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+------------------------------------------------------------------------
+
+## 📚 Documentation
 
 https://www.aerospace-simulation.dev
 
----
+------------------------------------------------------------------------
 
-# 🚀 Demo
+## 🤝 Contributing
 
-For a detailed demonstration, visit:
+Whether you're an experienced aerospace engineer, software developer,
+researcher or student --- contributions are welcome.
 
-https://www.aerospace-simulation.dev/simulation/demo/
+Contributions include:
 
-The current cockpit interface provides real-time visualization of:
+-   simulation models
+-   controller development
+-   numerical methods
+-   validation
+-   testing
+-   documentation
+-   software development
 
-- spacecraft state
-- navigation data
-- propulsion system state
-- fuel system state
-- controller output
-- spacecraft integrity
-- active RCS thruster telemetry
+See:
 
-The landing view provides a lightweight 2.5D situational representation of the descent.
+-   CONTRIBUTING.md
+-   Installation Guidelines
 
-Features include:
+------------------------------------------------------------------------
 
-- East-North-Up (ENU) reference frame visualization
-- trajectory tracking
-- velocity vectors
-- target-relative motion
-- active RCS indication
-- propulsion telemetry integration
+## 📜 License
 
-![Moonlander Cockpit](docs/cockpit.jpg)
-
----
-
-# ✨ Features
-
-## Core Framework Features
-
-- Modular simulation architecture
-- Physics model abstraction
-- Integrator abstraction layer
-- Sensor abstraction layer
-- Controller abstraction layer
-- Multi-engine propulsion architecture
-- JSON-based spacecraft configuration
-- Runtime spacecraft selection
-- Threaded simulation backend
-- Real-time telemetry interface
-- Experimental optimization support via NLopt
-
----
-
-## Propulsion Features
-
-- Main engine modeling
-- Individual RCS thruster modeling
-- Multi-engine thrust aggregation
-- Fuel tank assignment
-- Multi-tank architecture
-- Command-delay simulation
-- First-order actuator dynamics
-- RCS thrust allocation
-- Engine-level telemetry
-
----
-
-## Visualization Features
-
-- Qt-based cockpit interface
-- Dynamic telemetry display
-- Active RCS thruster visualization
-- Dynamic fuel tank visualization
-- Navigation monitoring
-- Controller observability
-- Spacecraft state monitoring
-- 2.5D landing visualization
-
----
-
-## Research-Oriented Features
-
-- Controller evaluation environment
-- Telemetry-driven analysis
-- Modular subsystem replacement
-- Future ROS2 integration path
-- Scientific model documentation
-- Reproducible simulation workflows
-
----
-
-# ⚙️ Quick Start
-
-Detailed installation guides can be found in the repository documentation.
-
-## Requirements
-
-- C++20
-- Qt6
-- NLopt
-- GCC / Clang / MSVC
-
----
-
-## Install NLopt (Ubuntu)
-
-```bash
-sudo apt install libnlopt-dev
-```
-
----
-
-## Clone Repository
-
-```bash
-git clone https://github.com/gerd-lrt-dev/moonlander.git
-cd moonlander
-```
-
----
-
-## Build
-
-```bash
-mkdir build
-cd build
-
-cmake ..
-make
-```
-
----
-
-## Run
-
-```bash
-./moonlander
-```
-
----
-
-# 🛰 Reaction Control System (RCS)
-
-The framework includes a modular Reaction Control System implementation.
-
-Current capabilities:
-
-- translational RCS control
-- individual thruster simulation
-- command-delay modeling
-- first-order actuator response
-- engine-level telemetry
-- dynamic cockpit visualization
-
-The propulsion architecture separates:
-
-- command generation
-- thrust allocation
-- actuator dynamics
-- thrust generation
-- force aggregation
-
-This enables future extension toward:
-
-- rotational RCS control
-- attitude control systems
-- full 6-DOF spacecraft dynamics
-
-Mathematical documentation:
-
-- https://www.aerospace-simulation.dev/mathematics/RCSBasicModel/
-- https://www.aerospace-simulation.dev/mathematics/thrust/
-- https://www.aerospace-simulation.dev/mathematics/adaptiveDescentController/
-
----
-
-# 🧠 Architecture Overview
-
-Architecture documentation:
-
-https://www.aerospace-simulation.dev/simulation/architecture/
-
-The framework is organized into several independent domains:
-
-## Physics
-
-Responsible for:
-
-- gravity models
-- environmental effects
-- force generation
-
----
-
-## Integrators
-
-Responsible for:
-
-- state propagation
-- numerical integration
-
----
-
-## Propulsion
-
-Responsible for:
-
-- engine simulation
-- fuel systems
-- thrust generation
-- RCS allocation
-
----
-
-## Controllers
-
-Responsible for:
-
-- autopilots
-- control laws
-- guidance algorithms
-
----
-
-## Sensors
-
-Responsible for:
-
-- telemetry generation
-- derived measurements
-
----
-
-## Frontend
-
-Responsible for:
-
-- visualization
-- telemetry display
-- operator interaction
-
-The frontend is currently Qt-based and is being prepared for future ROS-based decoupling.
-
----
-
-# 🔬 Scientific Use Case
-
-The framework is intended to support:
-
-- spacecraft dynamics research
-- autonomous landing research
-- controller development
-- propulsion system studies
-- telemetry analysis
-- software architecture experimentation
-
-The framework emphasizes:
-
-- reproducibility
-- modularity
-- observability
-- scientific transparency
-
-Future data export capabilities will support:
-
-- XML telemetry export
-- controller comparison
-- offline analysis workflows
-
----
-
-# 🤖 Adaptive Descent Controller
-
-The current Moonlander demonstration includes an energy-based Adaptive Descent Controller.
-
-Controller capabilities:
-
-- brake-ratio based descent planning
-- gravity compensation
-- adaptive gain scheduling
-- thrust saturation handling
-- phase-based landing logic
-
-Documentation:
-
-- https://www.aerospace-simulation.dev/mathematics/adaptiveDescentController/
-
----
-
-# 🛰 Spacecraft Configuration
-
-Spacecraft are defined using JSON configuration files.
-
-Configurable elements include:
-
-- mass properties
-- inertia parameters
-- propulsion systems
-- fuel tanks
-- structural limits
-- initial conditions
-- controller limits
-
-This allows new spacecraft configurations to be introduced without modifying framework source code.
-
----
-
-# 🚀 Release Strategy
-
-The project follows a staged release strategy that separates accessibility-oriented framework releases from research-oriented simulation capabilities.
-
-The goal is to support both:
-
-- contributor onboarding
-- framework stability
-- long-term aerospace research development
-
----
-
-## v0.1 — SDF Light
-
-### Objective
-
-Provide the first lightweight public release of the Spaceflight Dynamics Framework.
-
-### Focus Areas
-
-- simplified installation
-- reduced dependency complexity
-- contributor onboarding
-- architecture visibility
-- baseline simulation functionality
-
-### Purpose
-
-The Light Release serves as:
-
-- an entry point for contributors
-- a platform demonstration
-- a stable framework foundation
-
----
-
-## v0.2 — SDF Research
-
-### Objective
-
-Extend the framework toward research-oriented spacecraft simulation.
-
-### Focus Areas
-
-- advanced propulsion modeling
-- telemetry export
-- controller evaluation workflows
-- optimization support
-- scientific reproducibility
-
-### Purpose
-
-The Research Release serves as:
-
-- an aerospace research platform
-- a controller development environment
-- a basis for future 6-DOF spacecraft dynamics
-
----
-
-# 🗺 Roadmap
-
-## Near-Term
-
-- rotational RCS thruster model
-- telemetry export (XML)
-- frontend/backend abstraction layer
-- improved spacecraft configuration workflows
-
----
-
-## Mid-Term
-
-- ROS2 integration
-- automatic position controller
-- controller testing environment
-- advanced telemetry tooling
-
----
-
-## Long-Term
-
-- full 6-DOF spacecraft dynamics
-- simulation replay system
-- terrain modeling
-- environmental effects
-- orbital mechanics support
-- multi-spacecraft simulation
-
----
-
-# 🤝 Contributing
-
-Interested in contributing?
-
-Visit:
-
-https://www.aerospace-simulation.dev/recruiting
-
-Areas where support is welcome:
-
-- aerospace simulation
-- C++ development
-- controller development
-- ROS integration
-- web development
-- Qt frontend development
-- mathematical modeling
-- software architecture
-
-Typical workflow:
-
-1. Fork repository
-2. Create feature branch
-3. Implement changes
-4. Submit pull request
-
-Please read:
-
-- CONTRIBUTING.md
-- Installation Guidelines
-
-before submitting contributions.
-
----
-
-# 📚 Documentation
-
-Complete project documentation is available on the project website.
-
-### Architecture
-
-https://www.aerospace-simulation.dev/simulation/architecture/
-
-### Mathematics
-
-Physics & Motion:
-https://www.aerospace-simulation.dev/mathematics/physics/
-
-Main Engine Model:
-https://www.aerospace-simulation.dev/mathematics/thrust/
-
-RCS Basic Model:
-https://www.aerospace-simulation.dev/mathematics/RCSBasicModel/
-
-Adaptive Descent Controller:
-https://www.aerospace-simulation.dev/mathematics/adaptiveDescentController/
-
-Impact & Structural Integrity:
-https://www.aerospace-simulation.dev/mathematics/impact/
-
-Coordinate Frames & Transformation
-https://www.aerospace-simulation.dev/mathematics/coordinateTransformation/
-
-### Team
-
-https://www.aerospace-simulation.dev/team/
-
----
-
-# 📜 License
-
-This project is released as open-source software.
-
-License information is provided within the repository.
+See LICENSE.
