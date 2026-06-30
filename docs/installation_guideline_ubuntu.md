@@ -10,8 +10,10 @@ The current demonstration application included in the framework is **Moonlander*
 
 Open a terminal and run:
 
-    sudo apt update
-    sudo apt upgrade -y
+```bash
+sudo apt update
+sudo apt upgrade -y
+```
 
 ---
 
@@ -19,11 +21,13 @@ Open a terminal and run:
 
 Install essential build tools and utilities:
 
-    sudo apt install -y \
-    build-essential \
-    git \
-    cmake \
-    ninja-build
+```bash
+sudo apt install -y \
+build-essential \
+git \
+cmake \
+ninja-build
+```
 
 ---
 
@@ -31,13 +35,11 @@ Install essential build tools and utilities:
 
 The recommended installation method is the official Qt Online Installer.
 
----
-
 ## Download Qt Installer
 
-1. Visit:
+1. Visit
 
-       https://www.qt.io/download
+    https://www.qt.io/download
 
 2. Download the Qt Online Installer for Linux x64.
 
@@ -49,43 +51,53 @@ The recommended installation method is the official Qt Online Installer.
 
 Navigate to your Downloads folder:
 
-    cd ~/Downloads
+```bash
+cd ~/Downloads
+```
 
 Make the installer executable:
 
-    chmod +x qt-unified-linux-x64-*.run
+```bash
+chmod +x qt-unified-linux-x64-*.run
+```
 
 Run the installer:
 
-    ./qt-unified-linux-x64-*.run
+```bash
+./qt-unified-linux-x64-*.run
+```
 
 ---
 
 ## Common Installer Error (XCB)
 
-If Qt Installer fails with:
+If the Qt Installer reports:
 
-    The required xcb cursor platform library was not found
+```
+The required xcb cursor platform library was not found
+```
 
 Install the missing dependencies:
 
-    sudo apt update
+```bash
+sudo apt update
 
-    sudo apt install -y \
-    libxcb-cursor0 \
-    libxcb-xinerama0 \
-    libxkbcommon-x11-0 \
-    libxcb-render0 \
-    libxcb-shape0 \
-    libxcb-xfixes0 \
-    libxcb-randr0 \
-    libxcb-image0 \
-    libxcb-keysyms1 \
-    libxcb-icccm4 \
-    libxcb-sync1 \
-    libxcb-xkb1 \
-    libx11-xcb1 \
-    libgl1-mesa-dev
+sudo apt install -y \
+libxcb-cursor0 \
+libxcb-xinerama0 \
+libxkbcommon-x11-0 \
+libxcb-render0 \
+libxcb-shape0 \
+libxcb-xfixes0 \
+libxcb-randr0 \
+libxcb-image0 \
+libxcb-keysyms1 \
+libxcb-icccm4 \
+libxcb-sync1 \
+libxcb-xkb1 \
+libx11-xcb1 \
+libgl1-mesa-dev
+```
 
 Then rerun the installer.
 
@@ -93,11 +105,11 @@ Then rerun the installer.
 
 ## Recommended Qt Components
 
-Within the installer select:
+Install:
 
 ### Qt
 
-- Latest Qt 6 Version (recommended)
+- Latest Qt 6 Version
 - Desktop GCC 64-bit
 
 ### Development Tools
@@ -111,15 +123,28 @@ Within the installer select:
 
 # 4. Install Framework Dependencies
 
+## Eigen3
+
+The framework uses the **Eigen** library for all mathematical operations,
+including vectors, matrices and quaternions.
+
+Install:
+
+```bash
+sudo apt install -y libeigen3-dev
+```
+
 ---
 
 ## NLopt
 
-The optimization subsystem currently uses NLopt.
+The optimization subsystem uses **NLopt**.
 
 Install:
 
-    sudo apt install -y libnlopt-dev
+```bash
+sudo apt install -y libnlopt-dev
+```
 
 ---
 
@@ -127,37 +152,39 @@ Install:
 
 Install:
 
-    sudo apt install -y nlohmann-json3-dev
+```bash
+sudo apt install -y nlohmann-json3-dev
+```
 
 ---
 
 # 5. Clone Repository
 
----
-
 ## Fork Repository
 
 Before contributing:
 
-1. Visit the project repository:
+1. Visit
 
-       https://github.com/gerd-lrt-dev/spaceflight-dynamics-framework
+    https://github.com/gerd-lrt-dev/spaceflight-dynamics-framework
 
 2. Click **Fork**
 
-3. Create your own fork
+3. Create your own fork.
 
 ---
 
 ## Clone Your Fork
 
-    mkdir -p ~/Code
+```bash
+mkdir -p ~/Code
 
-    cd ~/Code
+cd ~/Code
 
-    git clone https://github.com/<your-username>/spaceflight-dynamics-framework.git
+git clone https://github.com/<your-username>/spaceflight-dynamics-framework.git
 
-    cd spaceflight-dynamics-framework
+cd spaceflight-dynamics-framework
+```
 
 ---
 
@@ -165,19 +192,19 @@ Before contributing:
 
 Launch Qt Creator:
 
-    ~/Qt/Tools/QtCreator/bin/qtcreator
+```bash
+~/Qt/Tools/QtCreator/bin/qtcreator
+```
 
 ---
 
 ## Open Project
 
-Select:
-
-    File → Open File or Project
-
 Open:
 
-    spaceflight-dynamics-framework/CMakeLists.txt
+```
+spaceflight-dynamics-framework/CMakeLists.txt
+```
 
 ---
 
@@ -185,49 +212,61 @@ Open:
 
 Choose:
 
-    Desktop Qt 6 (GCC 64-bit)
+```
+Desktop Qt 6 (GCC 64-bit)
+```
 
 Verify:
 
 - GCC compiler detected
-- Qt version detected
+- Qt installation detected
 - CMake detected
 
 ---
 
 ## Configure Project
 
-Press:
+Click
 
-    Configure Project
+```
+Configure Project
+```
 
-Qt Creator should automatically generate the build directory.
+Qt Creator will automatically generate the build directory.
 
 ---
 
 ## Build
 
-    Build → Build Project
+```
+Build → Build Project
+```
 
-or:
+or
 
-    Ctrl + B
+```
+Ctrl + B
+```
 
 ---
 
 ## Run
 
-    Run → Run
+```
+Run → Run
+```
 
-or:
+or
 
-    Ctrl + R
+```
+Ctrl + R
+```
 
 ---
 
 # 7. Verify Installation
 
-A successful installation should allow you to:
+A successful installation should allow you to
 
 - load spacecraft configurations
 - start simulation runs
@@ -239,19 +278,22 @@ A successful installation should allow you to:
 
 # Development Notes
 
-The framework currently consists of:
+The framework currently consists of
 
 - simulation backend
+- interface layer
+- telemetry mapper
+- telemetry data transfer objects (DTO)
 - propulsion subsystem
 - controller subsystem
 - sensor subsystem
-- telemetry layer
 - Qt-based cockpit frontend
 
-Future releases will introduce:
+The interface layer provides a strict separation between frontend and backend. All communication between both layers is performed through the `TelemetryMapper` using frontend-oriented data transfer objects.
+
+Future releases will introduce
 
 - ROS2 integration
-- frontend/backend decoupling
 - telemetry export workflows
 - advanced spacecraft dynamics
 
@@ -259,55 +301,73 @@ Future releases will introduce:
 
 # Troubleshooting
 
----
-
 ## Compiler Missing
 
-    sudo apt install -y build-essential
+```bash
+sudo apt install -y build-essential
+```
 
 ---
 
 ## Git Missing
 
-    sudo apt install -y git
+```bash
+sudo apt install -y git
+```
+
+---
+
+## Eigen Not Found
+
+```bash
+sudo apt install -y libeigen3-dev
+```
 
 ---
 
 ## NLopt Not Found
 
-    sudo apt install -y libnlopt-dev
+```bash
+sudo apt install -y libnlopt-dev
+```
 
 ---
 
 ## JSON Library Not Found
 
-    sudo apt install -y nlohmann-json3-dev
+```bash
+sudo apt install -y nlohmann-json3-dev
+```
 
 ---
 
 ## CMake Configuration Fails
 
-Delete the build directory and reconfigure:
+Delete the build directory:
 
-    rm -rf build
+```bash
+rm -rf build
+```
 
-Then reopen the project in Qt Creator and configure again.
+Then reopen the project in Qt Creator and configure it again.
 
 ---
 
 ## Qt Version Not Detected
 
-Verify installation:
+Verify the installation:
 
-    ~/Qt/Tools/QtCreator/bin/qtcreator
+```bash
+~/Qt/Tools/QtCreator/bin/qtcreator
+```
 
-and ensure a Qt 6 Desktop Kit is installed.
+Ensure that a **Qt 6 Desktop Kit** is installed.
 
 ---
 
 # Recommended Platform
 
-The framework is primarily developed and tested on:
+The framework is primarily developed and tested on
 
 - Ubuntu 24.04 LTS (recommended)
 - Ubuntu 22.04 LTS (supported)
@@ -316,15 +376,15 @@ The framework is primarily developed and tested on:
 
 # Additional Documentation
 
-Project Website:
+Project Website
 
 https://www.aerospace-simulation.dev
 
-Architecture Documentation:
+Architecture Documentation
 
 https://www.aerospace-simulation.dev/simulation/architecture/
 
-Mathematical Models:
+Mathematical Models
 
 Physics & Motion
 
@@ -348,4 +408,4 @@ https://www.aerospace-simulation.dev/mathematics/impact/
 
 ---
 
-✅ After completing these steps, the Spaceflight Dynamics Framework should build and run successfully on Ubuntu.
+✅ After completing these steps, the **Spaceflight Dynamics Framework** should build and run successfully on Ubuntu using the current CMake-based build system.
