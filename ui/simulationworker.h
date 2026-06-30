@@ -14,9 +14,9 @@
 #include <QDebug>
 #include <QMutexLocker>
 #include <QVector>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
-#include "flightcommandstruct.h"
+#include "FlightCommandDTO.h"
 #include "datastructs.h"
 #include "TelemetryMapper.h"
 
@@ -59,7 +59,7 @@ public slots:
      * @brief Sets the desired thrust lvl
      * @param FlightCommand Struct with translational and rotational commands
      */
-    void setFlightCommand(FlightCommand cmd);
+    void setFlightCommand(FlightCommandDTO cmd);
 
     /**
      * @brief Receives QString with json config data
@@ -129,7 +129,7 @@ private:
      // ==========================
     TelemetryMapper telemetryMapper_;
     Telemetry telemetry_;
-    FlightCommand collectedCmdData;
+    FlightCommandDTO collectedCmdData;
 
     std::string jsonConfig;     ///< String with spacecraft config data
     QTimer *simulationTimer;    ///< Drives simulation ticks
@@ -154,7 +154,7 @@ private:
      * @param thrustInPercentage Commanded thrust as a percentage of maximum thrust.
      * @param thrustInNewton     Commanded thrust in Newtons.
      */
-    void collectControlCommands(const FlightCommand &cmd, const double &thrustInPercentage = 0.0, const double &thrustInNewton = 0.0);
+    void collectControlCommands(const FlightCommandDTO &cmd, const double &thrustInPercentage = 0.0, const double &thrustInNewton = 0.0);
 
     /**
      * @brief Collects an autopilot command from the automation system.

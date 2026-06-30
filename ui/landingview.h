@@ -39,7 +39,7 @@
 #include <QVector>
 #include <QPointF>
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 /**
  * @class LandingView

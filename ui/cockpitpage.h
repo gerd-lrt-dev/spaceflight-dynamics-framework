@@ -22,7 +22,7 @@
 #include <QVBoxLayout>
 #include <QMap>
 #include <QVector>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include "landingview.h"
 #include "uibuilder.h"
@@ -197,7 +197,7 @@ signals:
      * @brief Emitted when the user provide flight command input
      * @param FlightCommand struct
      */
-    void flightCmdRequested(FlightCommand cmd);
+    void flightCmdRequested(FlightCommandDTO cmd);
 
     /**
      * @brief Emitted when the autopilot toggle button is pressed.
@@ -265,7 +265,7 @@ private:
     double lastTimeDisplay;     ///< Intermediate storage of time to calm the display down
     UIBuilder uibuilder;        ///< UI Building helper class
     inputmapper *m_inputMapper; ///< Keyboard and controller input class
-    FlightCommand collectedCmd; ///< Collected flight command. This command will be send to worker thread
+    FlightCommandDTO collectedCmd; ///< Collected flight command. This command will be send to worker thread
 
     // =====================================================
     // Internal Setup Functions

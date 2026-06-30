@@ -117,7 +117,7 @@ void inputmapper::updateLabel(int value)
 
 void inputmapper::updateFlightCommand()
 {
-    FlightCommand cmd{};
+    FlightCommandDTO cmd{};
 
     if (ENU_RCS_PosX == true && ENU_RCS_NegX == false)
     {

@@ -662,7 +662,7 @@ void cockpitPage::setupConnections()
 
     connect(autopilotBlinkTimer, &QTimer::timeout, this, &cockpitPage::onAutopilotBlinkTimeout);
 
-    connect(m_inputMapper, &inputmapper::RCS_cmdRequested, this, [this](FlightCommand cmd)
+    connect(m_inputMapper, &inputmapper::RCS_cmdRequested, this, [this](FlightCommandDTO cmd)
             {
                 collectedCmd.translation = cmd.translation;
                 collectedCmd.rotation    = cmd.rotation;

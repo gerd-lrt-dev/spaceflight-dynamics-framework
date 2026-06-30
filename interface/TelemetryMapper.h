@@ -2,6 +2,7 @@
 #define TELEMETRYMAPPER_H
 
 #include "TelemetryDTO.h"
+#include "FlightCommandDTO.h"
 
 #include <Eigen/Dense>
 
@@ -92,7 +93,7 @@ public:
      *
      * @param userCmd Control command provided by the frontend.
      */
-    void transferUserCommandtoBackend(const Telemetry::ControlCommand& userCmd);
+    void transferUserCommandtoBackend(const FlightCommandDTO& userCmd);
 
 private:
     std::unique_ptr<simcontrol> backend_;

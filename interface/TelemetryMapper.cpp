@@ -191,12 +191,12 @@ void TelemetryMapper::setReset()
     backend_->setResetBoolean();
 }
 
-void TelemetryMapper::transferUserCommandtoBackend(const Telemetry::ControlCommand& userCmd)
+void TelemetryMapper::transferUserCommandtoBackend(const FlightCommandDTO& userCmd)
 {
     ControlCommand backendCmd;
 
     backendCmd.thrustInPercentage =
-        userCmd.thrustInPercentage;
+        userCmd.mainEngine;
 
     backendCmd.autopilotActive =
         userCmd.autopilotActive;

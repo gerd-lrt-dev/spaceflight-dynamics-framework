@@ -1,7 +1,7 @@
 #include "simulationworker.h"
 
 #include <QString>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 SimulationWorker::SimulationWorker(QObject *parent)
     : QObject(parent)
@@ -68,7 +68,7 @@ void SimulationWorker::receiveJsonConfig(const QString &json)
              << jsonConfig.size();
 }
 
-void SimulationWorker::setFlightCommand(FlightCommand cmd)
+void SimulationWorker::setFlightCommand(FlightCommandDTO cmd)
 {
     QMutexLocker locker(&mutex);
 
@@ -120,7 +120,7 @@ void SimulationWorker::stepSimulation()
                       );
 }
 
-void SimulationWorker::collectControlCommands(const FlightCommand &cmd, const double &thrustInPercentage, const double &thrustInNewton)
+void SimulationWorker::collectControlCommands(const FlightCommandDTO &cmd, const double &thrustInPercentage, const double &thrustInNewton)
 {
     collectedCmdData = cmd;
 }

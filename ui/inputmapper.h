@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QSlider>
 
-#include "flightcommandstruct.h"
+#include "FlightCommandDTO.h"
 
 class QKeyEvent;
 
@@ -123,7 +123,7 @@ signals:
      *
      * @param cmdSignal Flight command containing translational RCS input.
      */
-    void RCS_cmdRequested(const FlightCommand& cmdSignal);
+    void RCS_cmdRequested(const FlightCommandDTO& cmdSignal);
 
 private:
     /**
