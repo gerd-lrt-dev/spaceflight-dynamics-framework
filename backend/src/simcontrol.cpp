@@ -191,7 +191,6 @@ simData simcontrol::getSimulationData() const
 
 void simcontrol::receiveCommandFromFrontEnd(const ControlCommand& userCmd)
 {
-    std::cout << userCmd.thrustInPercentage << std::endl;
     inputArbiter_->receiveUserControlCommand(userCmd);
 }
 
