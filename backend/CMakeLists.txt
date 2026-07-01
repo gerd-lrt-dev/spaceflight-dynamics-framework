@@ -98,9 +98,12 @@ add_library(moonlander_backend
     # =========================================================================
 
     src/Physics/basicMoonGravityModel.cpp
+    src/Physics/rigidBodyRotationalModel.cpp
 
     include/Physics/basicMoonGravityModel.h
     include/Physics/iPhysicsModel.h
+    include/Physics/rigidBodyRotationalModel.h
+    include/Physics/iRotationalPhysicsModel.h
 
     # =========================================================================
     # Sensor Models
