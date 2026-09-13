@@ -311,6 +311,20 @@ private:
     QGroupBox *setupEngineBox();
 
     /**
+     * @brief Helper method for axis labeling
+     * @return Axis as QString
+     */
+    QString getAxisLabel(const Eigen::Vector3d& direction) const;
+
+    /**
+     * @brief Helper method to determine normalized thrust state
+     * @param currentThrust
+     * @param maxThrust
+     * @return [-] Normalized thrust state as double
+     */
+    double getNormalizedThrustState(double currentThrust, double maxThrust) const;
+
+    /**
      * @brief Rebuilds the dynamic RCS thruster UI from a list of RCS engine states.
      *
      * Creates one compact row per RCS thruster including engine name, axis,

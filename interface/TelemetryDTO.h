@@ -151,11 +151,9 @@ struct Telemetry
         {
             int engineID{-1};              ///< Unique thruster identifier.
             QString engineName{};          ///< Human-readable thruster name.
-            QString axis{};                ///< Controlled axis or role.
             Eigen::Vector3d SBF_direction{0.0, 0.0, 0.0}; ///< Thrust direction in SBF.
             double T_current{0.0};         ///< Current thrust in newtons.
             double T_target{0.0};          ///< Target thrust in newtons.
-            double thrustState{0.0};       ///< Normalized or discrete thrust state.
             double massflow{0.0};    ///< Current consumption rate
         };
 

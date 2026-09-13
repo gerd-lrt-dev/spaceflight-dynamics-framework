@@ -159,9 +159,6 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
         frontendRCS.engineName =
             toQString(backendRCS.engineName);
 
-        frontendRCS.axis =
-            toQString(backendRCS.axis);
-
         frontendRCS.SBF_direction =
             backendRCS.SBF_direction;
 
@@ -170,9 +167,6 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
 
         frontendRCS.T_target =
             backendRCS.targetThrust;
-
-        frontendRCS.thrustState =
-            backendRCS.thrustState;
 
         frontendRCS.massflow =
             backendRCS.consumptionRate;

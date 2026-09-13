@@ -337,6 +337,52 @@ QGroupBox *cockpitPage::setupEngineBox()
     return engineBox;
 }
 
+QString cockpitPage::getAxisLabel(const Eigen::Vector3d& direction) const
+{
+    constexpr double eps = 1e-9;
+
+    if (direction.norm() < eps)
+        return "Unknown";
+
+    const double absX = std::abs(direction.x());
+    const double absY = std::abs(direction.y());
+    const double absZ = std::abs(direction.z());
+
+    int axis;
+
+    if (absX >= absY && absX >= absZ)
+        axis = 0;
+    else if (absY >= absX && absY >= absZ)
+        axis = 1;
+    else
+        axis = 2;
+
+    switch (axis)
+    {
+    case 0:
+        return direction.x() > 0.0 ? "+X" : "-X";
+
+    case 1:
+        return direction.y() > 0.0 ? "+Y" : "-Y";
+
+    case 2:
+        return direction.z() > 0.0 ? "+Z" : "-Z";
+
+    default:
+        return "Unknown";
+    }
+}
+
+double cockpitPage::getNormalizedThrustState(double currentThrust, double maxThrust) const
+{
+    constexpr double eps = 1e-9;
+
+    if (maxThrust <= eps)
+        return 0.0;
+
+    return std::clamp(currentThrust / maxThrust, 0.0, 1.0);
+}
+
 void cockpitPage::rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
 {
     if (!rcsThrusterLayout)
@@ -366,7 +412,7 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSys
         QLabel *lblName = new QLabel(state.engineName);
         lblName->setStyleSheet("color: #D6E1F0; font-weight: bold;");
 
-        QLabel *lblAxis = new QLabel(QString("Axis: %1").arg(state.axis));
+        QLabel *lblAxis = new QLabel(QString("Axis: %1").arg(getAxisLabel(state.SBF_direction)));
         lblAxis->setStyleSheet("color: #AFC7DF; font-size: 10px;");
 
         QGridLayout *metricsLayout = new QGridLayout();
@@ -382,7 +428,7 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSys
 
         QProgressBar *barState = new QProgressBar();
         barState->setRange(0, 100);
-        barState->setValue(static_cast<int>(qBound(0.0, state.thrustState * 100.0, 100.0)));
+        barState->setValue(static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.T_target) * 100.0, 100.0)));
         barState->setTextVisible(true);
         barState->setFormat("%p%");
 
@@ -444,7 +490,7 @@ QVector<Telemetry::PropulsionSystems::RCSThrust> cockpitPage::filterActiveRCSThr
     {
         if (std::abs(state.T_current) > 0.01 ||
             std::abs(state.T_target) > 0.01 ||
-            state.thrustState > 0.01)
+            (getNormalizedThrustState(state.T_current, state.T_target)) > 0.01)
         {
             active.push_back(state);
         }
@@ -867,13 +913,13 @@ void cockpitPage::updateRCSThrusters(const QVector<Telemetry::PropulsionSystems:
         const Telemetry::PropulsionSystems::RCSThrust& state = activeStates[i];
 
         lblRCSEngineNames[i]->setText(state.engineName);
-        lblRCSAxes[i]->setText(QString("Axis: %1").arg(state.axis));
+        lblRCSAxes[i]->setText(QString("Axis: %1").arg(getAxisLabel(state.SBF_direction)));
 
         lcdRCSCurrentThrust[i]->display(QString::number(state.T_current, 'f', 1));
         lcdRCSTargetThrust[i]->display(QString::number(state.T_target, 'f', 1));
 
         const int actuatorPercent =
-            static_cast<int>(qBound(0.0, state.thrustState * 100.0, 100.0));
+            static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.T_target) * 100.0, 100.0));
 
         barRCSActuatorStates[i]->setValue(actuatorPercent);
     }
