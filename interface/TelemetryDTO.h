@@ -149,12 +149,13 @@ struct Telemetry
          */
         struct RCSThrust
         {
-            int engineID{-1};              ///< Unique thruster identifier.
-            QString engineName{};          ///< Human-readable thruster name.
-            Eigen::Vector3d SBF_direction{0.0, 0.0, 0.0}; ///< Thrust direction in SBF.
-            double T_current{0.0};         ///< Current thrust in newtons.
-            double T_target{0.0};          ///< Target thrust in newtons.
-            double massflow{0.0};    ///< Current consumption rate
+            int engineID{-1};                               ///< Unique thruster identifier.
+            QString engineName{};                           ///< Human-readable thruster name.
+            Eigen::Vector3d SBF_direction{0.0, 0.0, 0.0};   ///< Thrust direction in SBF.
+            double T_current{0.0};                          ///< Current thrust in newtons.
+            double T_target{0.0};                           ///< Target thrust in newtons.
+            double maxThrust{0.0};                          ///< Maximum possible thrust.
+            double massflow{0.0};                           ///< Current consumption rate
         };
 
         /**

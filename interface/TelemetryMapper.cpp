@@ -168,6 +168,9 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
         frontendRCS.T_target =
             backendRCS.targetThrust;
 
+        frontendRCS.maxThrust =
+            backendRCS.maxThrust;
+
         frontendRCS.massflow =
             backendRCS.consumptionRate;
 

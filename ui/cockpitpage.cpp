@@ -428,7 +428,7 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSys
 
         QProgressBar *barState = new QProgressBar();
         barState->setRange(0, 100);
-        barState->setValue(static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.T_target) * 100.0, 100.0)));
+        barState->setValue(static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.maxThrust) * 100.0, 100.0)));
         barState->setTextVisible(true);
         barState->setFormat("%p%");
 
@@ -490,7 +490,7 @@ QVector<Telemetry::PropulsionSystems::RCSThrust> cockpitPage::filterActiveRCSThr
     {
         if (std::abs(state.T_current) > 0.01 ||
             std::abs(state.T_target) > 0.01 ||
-            (getNormalizedThrustState(state.T_current, state.T_target)) > 0.01)
+            (getNormalizedThrustState(state.T_current, state.maxThrust)) > 0.01)
         {
             active.push_back(state);
         }
@@ -919,7 +919,7 @@ void cockpitPage::updateRCSThrusters(const QVector<Telemetry::PropulsionSystems:
         lcdRCSTargetThrust[i]->display(QString::number(state.T_target, 'f', 1));
 
         const int actuatorPercent =
-            static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.T_target) * 100.0, 100.0));
+            static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.maxThrust) * 100.0, 100.0));
 
         barRCSActuatorStates[i]->setValue(actuatorPercent);
     }

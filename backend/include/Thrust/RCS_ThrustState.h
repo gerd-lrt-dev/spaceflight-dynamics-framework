@@ -118,6 +118,13 @@ struct RCS_ThrustState
     double targetThrustPercentage{0.0};
 
     /**
+     * @brief Maximum thrust provided by specific engine
+     *
+     * Unit: N
+     */
+    double maxThrust{0.0};
+
+    /**
      * @brief Internal normalized actuator state.
      *
      * Represents the current dynamic state of the thruster actuator and thrust
