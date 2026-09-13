@@ -89,7 +89,6 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         ControlCommand autoCmd{};
         autoCmd.mainEngine = autoThrustNormalized;
         receiveCommandFromAutopilot(autoCmd);
-        processCommands();
     }
     else if (currentSpacecraftstate == SpacecraftState::Landed)
     {
@@ -97,7 +96,6 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         cmd.mainEngine          = 0.0;
         cmd.autopilotActive     = false;
         receiveCommandFromAutopilot(cmd);
-        processCommands();
     }
 }
 
@@ -146,6 +144,11 @@ void simcontrol::runSimulation(const double dt)
 
         // --- Autopilot Control ---
         runAutopilot(landerSpacecraft->getSpacecraftState(), 0, dt);
+
+        // Select active command and apply it
+        processCommands();
+
+        // Set console text
         landerSpacecraft->setConsoleText(autopilot_->getDescentMode());
 
         // --- Update spacecraft state (translation, velocity, etc.) ---
