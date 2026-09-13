@@ -71,25 +71,24 @@ void SimulationWorker::setAutopilotFlag(bool active)
 
 void SimulationWorker::stepSimulation()
 {
-    double dt = 0.00;   ///< Initialized discrete timestep
-
     // Return if not running
     if(!running)
         return;
 
-    // times
     // TODO: Should be change by timer event
-    dt = 0.05; // TODO: should specified in json as well
+    double dt = 0.05;   ///< Fixed discrete timestep
+
+    // times
     currentTime += dt;
+
+    // Withdraw user input due to thrust
+    sendControlCommands();
 
     // Update backend via interface
     telemetryMapper_.runStepSimulation(dt);
 
     // Get backend data via interface
     telemetry_ = telemetryMapper_.getQTTelemetryData();
-
-    // Withdraw user input due to thrust
-    sendControlCommands();
 
     // signals
     emit stateUpdated(telemetry_);
