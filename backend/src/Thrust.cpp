@@ -369,6 +369,7 @@ std::vector<RCS_ThrustState> Thrust::getFullRCSEngineData() const
             state.targetThrustPercentage    = model->getTargetThrust() / model->getMaxThrust();
             state.maxThrust                 = model->getMaxThrust();
             state.SBF_direction             = model->getSBF_DirectionOfThrust();
+            state.consumptionRate           = model->getFuelConsumption();
 
             rcsThrustStates.push_back(state);
         }
