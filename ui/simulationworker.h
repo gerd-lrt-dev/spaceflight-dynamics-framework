@@ -64,6 +64,12 @@ public slots:
     void stop();
 
     /**
+     * @brief Exports the complete buffered telemetry history to an XML file.
+     * @param filePath Destination path selected by the user.
+     */
+    void exportTelemetryToXml(const QString &filePath);
+
+    /**
      * @brief Sets the desired thrust lvl
      * @param FlightCommand Struct with translational and rotational commands
      */
@@ -90,6 +96,18 @@ signals:
      * @brief Requests frontend confirmation before buffered export data is discarded.
      */
     void historyOverwriteConfirmationRequested();
+
+    /**
+     * @brief Emitted after telemetry was exported successfully.
+     * @param filePath Destination path of the written XML file.
+     */
+    void telemetryExportSucceeded(QString filePath);
+
+    /**
+     * @brief Emitted when telemetry export fails.
+     * @param errorMessage Human-readable export error description.
+     */
+    void telemetryExportFailed(QString errorMessage);
 
     /**
      * @brief Emitted after each completed simulation step.
