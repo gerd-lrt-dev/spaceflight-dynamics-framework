@@ -196,14 +196,38 @@ void MainWindow::setupConnections()
             &SimulationWorker::start);
 
     connect(cockpit,
+            &cockpitPage::startRequested,
+            this,
+            [this]()
+            {
+                topBar->setExportEnabled(false);
+            });
+
+    connect(cockpit,
             &cockpitPage::pauseRequested,
             simulationWorker,
             &SimulationWorker::pause);
 
     connect(cockpit,
+            &cockpitPage::pauseRequested,
+            this,
+            [this]()
+            {
+                topBar->setExportEnabled(true);
+            });
+
+    connect(cockpit,
             &cockpitPage::stopConfirmed,
             simulationWorker,
             &SimulationWorker::stop);
+
+    connect(cockpit,
+            &cockpitPage::stopConfirmed,
+            this,
+            [this]()
+            {
+                topBar->setExportEnabled(true);
+            });
 
     // =====================================================
     // MainWindow → SimulationWorker
