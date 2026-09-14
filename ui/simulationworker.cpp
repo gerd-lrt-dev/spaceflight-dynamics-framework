@@ -18,6 +18,8 @@ void SimulationWorker::start()
 {
     if (!initialized)
     {
+        telemetryHistory_.clear();
+
         try
         {
             telemetryMapper_.initialize(jsonConfig);
