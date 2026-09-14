@@ -1,4 +1,5 @@
 #include "simulationworker.h"
+#include "telemetryxmlexporter.h"
 
 #include <QString>
 #include <Eigen/Dense>
@@ -73,6 +74,20 @@ void SimulationWorker::stop()
     telemetryMapper_.setReset();
 
     initialized = false;
+}
+
+void SimulationWorker::exportTelemetryToXml(const QString &filePath)
+{
+    TelemetryXmlExporter exporter;
+    QString errorMessage;
+
+    if (!exporter.exportTelemetry(telemetryHistory_, filePath, &errorMessage))
+    {
+        emit telemetryExportFailed(errorMessage);
+        return;
+    }
+
+    emit telemetryExportSucceeded(filePath);
 }
 
 void SimulationWorker::receiveJsonConfig(const QString &json)
