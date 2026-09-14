@@ -489,8 +489,6 @@ simData spacecraft::getFullSimulationData() const
 
     simData_.statevector_ = getState();
 
-    simData_.spacecraftState_ = spacecraftState_;
-
     // Frames & Mission
     simData_.simFrameContext_ = simFrameContext_;
     simData_.missionContext_  = missionContext_;
@@ -511,6 +509,10 @@ simData spacecraft::getFullSimulationData() const
 
     // Sensors
     simData_.GLoad = getGload();
+
+    // Integrity
+    simData_.spacecraftIntegrity    = spacecraftIntegrity;
+    simData_.spacecraftState_       = spacecraftState_;
 
     // Output
     simData_.output = getConsoleTxt();

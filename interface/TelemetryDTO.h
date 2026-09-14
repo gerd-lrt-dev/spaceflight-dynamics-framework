@@ -112,8 +112,8 @@ struct Telemetry
      */
     struct HullIntegrity
     {
-        bool spacecraftIntegrity{true}; ///< True if the spacecraft is structurally intact.
-        QString spacecraftState{};      ///< Human-readable spacecraft state.
+        double spacecraftIntegrity{1.0};    ///< True if the spacecraft is structurally intact.
+        QString spacecraftState{};          ///< Human-readable spacecraft state.
     };
 
     /**

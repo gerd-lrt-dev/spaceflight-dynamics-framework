@@ -40,7 +40,7 @@ struct simData
     StateVector statevector_;
 
     // Spacecraft Integrity
-    bool spacecraftIntegrity;
+    double spacecraftIntegrity;
     SpacecraftState spacecraftState_;
 
     // Console output
