@@ -99,11 +99,6 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
     }
 }
 
-void simcontrol::updateFrames(CoordinateTransformer::State SBF_)
-{
-
-}
-
 //***********************************************************
 //*************        Public                   ************
 //***********************************************************

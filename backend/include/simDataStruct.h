@@ -36,6 +36,9 @@
  */
 struct simData
 {
+    // Time data
+    double time;
+
     // Navigation data
     StateVector statevector_;
 

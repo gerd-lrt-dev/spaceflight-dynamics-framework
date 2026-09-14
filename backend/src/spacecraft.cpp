@@ -487,6 +487,8 @@ simData spacecraft::getFullSimulationData() const
 
     // State
 
+    simData_.time = time;
+
     simData_.statevector_ = getState();
 
     // Frames & Mission
