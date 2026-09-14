@@ -74,28 +74,22 @@ public slots:
 
 signals:
     /**
-     * @brief Emitted after each simulation step.
+     * @brief Emitted after each completed simulation step.
      *
-     * This signal provides the complete spacecraft state required by the UI.
-     * It reflects the current simulation results after one discrete time step.
+     * Provides the complete frontend telemetry snapshot generated from the
+     * current backend simulation state.
      *
-     * @param time Simulation time [s]
+     * The telemetry object contains all data required by the user interface,
+     * including simulation time, navigation state, reference-frame data,
+     * mission context, spacecraft integrity, propulsion telemetry, sensor data
+     * and backend console output.
      *
-     * @param pos Current spacecraft position in inertial frame [m]
-     * @param vel Current spacecraft velocity in inertial frame [m/s]
+     * The signal is emitted once the backend state has been advanced by one
+     * discrete simulation timestep and the corresponding telemetry snapshot
+     * has been generated.
      *
-     * @param GLoad Current experienced load factor [-]
-     *
-     * @param spacecraftState_ Current spacecraft state (e.g. operational, landed, crashed)
-     *
-     * @param thrust Current aggregated thrust vector of all engines [N]
-     * @param targetThrust Commanded target thrust vector [N]
-     * @param thrustInPercentage Normalized thrust level relative to maximum available thrust [0..1]
-     *
-     * @param fuelMass Total remaining propellant mass [kg]
-     * @param fuelFlow Current total propellant consumption rate [kg/s]
-     *
-     * @param consoleOutput Formatted debug / telemetry output string
+     * @param telemetry_ Complete telemetry snapshot representing the current
+     *                   simulation state.
      */
     void stateUpdated(Telemetry telemetry_);
 
@@ -122,6 +116,7 @@ private:
     std::string jsonConfig;     ///< String with spacecraft config data
     QTimer *simulationTimer;    ///< Drives simulation ticks
     bool running = false;       ///< Simulation running flag
+    bool initialized = false;   ///< Config initializer flag
 
     QMutex mutex;               ///< Thread safety
     double requestedThrustPercent = 0.0; ///< Desired thrust in percentage

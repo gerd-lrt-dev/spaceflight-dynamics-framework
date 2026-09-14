@@ -16,19 +16,23 @@ SimulationWorker::SimulationWorker(QObject *parent)
 
 void SimulationWorker::start()
 {
-    try {
-        telemetryMapper_.initialize(jsonConfig);
-    }
-    catch (const std::exception& e)
+    if (!initialized)
     {
-        qCritical() << "Simulation start failed: " << e.what();
-        emit simulationError(QString::fromStdString(e.what()));
+        try
+        {
+            telemetryMapper_.initialize(jsonConfig);
+            initialized = true;
+        }
+        catch (const std::exception& e)
+        {
+            qCritical() << "Simulation start failed: " << e.what();
+            emit simulationError(QString::fromStdString(e.what()));
+            return;
+        }
     }
 
     running = true;
     simulationTimer->start();
-
-    qDebug("[simulationworker]-start-: Simulation started successfully");
 }
 
 void SimulationWorker::pause()
@@ -45,6 +49,8 @@ void SimulationWorker::stop()
     emit stateUpdated(Telemetry{});
 
     telemetryMapper_.setReset();
+
+    initialized = false;
 }
 
 void SimulationWorker::receiveJsonConfig(const QString &json)
