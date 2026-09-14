@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include <QDebug>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -196,14 +197,6 @@ void MainWindow::setupConnections()
             &SimulationWorker::start);
 
     connect(cockpit,
-            &cockpitPage::startRequested,
-            this,
-            [this]()
-            {
-                topBar->setExportEnabled(false);
-            });
-
-    connect(cockpit,
             &cockpitPage::pauseRequested,
             simulationWorker,
             &SimulationWorker::pause);
@@ -239,13 +232,43 @@ void MainWindow::setupConnections()
             &QThread::quit);
 
     // =====================================================
-    // SimulationWorker → Cockpit
+    // SimulationWorker → Frontend
     // =====================================================
 
     connect(simulationWorker,
             &SimulationWorker::stateUpdated,
             cockpit,
             &cockpitPage::onStateUpdated);
+
+    connect(simulationWorker,
+            &SimulationWorker::simulationStarted,
+            this,
+            [this]()
+            {
+                topBar->setExportEnabled(false);
+            });
+
+    connect(simulationWorker,
+            &SimulationWorker::historyOverwriteConfirmationRequested,
+            this,
+            [this]()
+            {
+                const QMessageBox::StandardButton answer = QMessageBox::warning(
+                    this,
+                    "Start New Simulation",
+                    "Telemetry data from the previous simulation is still buffered for export.\n\n"
+                    "If you continue, this buffered data will be deleted and cannot be exported afterwards.\n\n"
+                    "Do you want to start a new simulation anyway?",
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No);
+
+                if (answer == QMessageBox::Yes)
+                {
+                    QMetaObject::invokeMethod(simulationWorker,
+                                              "confirmStartWithHistoryReset",
+                                              Qt::QueuedConnection);
+                }
+            });
 }
 
 void MainWindow::sendCurrentConfigToWorker()
