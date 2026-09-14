@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include <QDebug>
+#include <QFileDialog>
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -108,6 +109,33 @@ void MainWindow::setupConnections()
             {
                 sendCurrentConfigToWorker();
                 stackedWidget->setCurrentWidget(cockpit);
+            });
+
+    connect(topBar,
+            &TopBarWidget::exportTelemetryRequested,
+            this,
+            [this]()
+            {
+                QString filePath = QFileDialog::getSaveFileName(
+                    this,
+                    "Export Telemetry as XML",
+                    "telemetry.xml",
+                    "XML files (*.xml)");
+
+                if (filePath.isEmpty())
+                {
+                    return;
+                }
+
+                if (!filePath.endsWith(".xml", Qt::CaseInsensitive))
+                {
+                    filePath += ".xml";
+                }
+
+                QMetaObject::invokeMethod(simulationWorker,
+                                          "exportTelemetryToXml",
+                                          Qt::QueuedConnection,
+                                          Q_ARG(QString, filePath));
             });
 
     connect(topBar,
@@ -246,6 +274,28 @@ void MainWindow::setupConnections()
             [this]()
             {
                 topBar->setExportEnabled(false);
+            });
+
+    connect(simulationWorker,
+            &SimulationWorker::telemetryExportSucceeded,
+            this,
+            [this](const QString &filePath)
+            {
+                QMessageBox::information(
+                    this,
+                    "Telemetry Export",
+                    QString("Telemetry data was exported successfully to:\n%1").arg(filePath));
+            });
+
+    connect(simulationWorker,
+            &SimulationWorker::telemetryExportFailed,
+            this,
+            [this](const QString &errorMessage)
+            {
+                QMessageBox::critical(
+                    this,
+                    "Telemetry Export Failed",
+                    errorMessage);
             });
 
     connect(simulationWorker,
