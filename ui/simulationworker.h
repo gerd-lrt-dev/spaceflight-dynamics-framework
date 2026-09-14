@@ -15,7 +15,6 @@
 #include <QMutexLocker>
 #include <QVector>
 #include <Eigen/Dense>
-#include <QVector>
 
 #include "FlightCommandDTO.h"
 #include "TelemetryMapper.h"
@@ -41,9 +40,18 @@ public:
 
 public slots:
     /**
-     * @brief Starts the simulation loop.
+     * @brief Starts or resumes the simulation loop.
+     *
+     * Starting a new simulation is blocked when telemetry history from the
+     * previous run is still buffered. In that case a confirmation request is
+     * emitted instead of deleting the data immediately.
      */
     void start();
+
+    /**
+     * @brief Confirms that buffered telemetry may be discarded and starts a new simulation.
+     */
+    void confirmStartWithHistoryReset();
 
     /**
      * @brief Pause the simulation loop.
@@ -73,6 +81,16 @@ public slots:
     void setAutopilotFlag(bool active);
 
 signals:
+    /**
+     * @brief Emitted after the simulation timer has successfully started.
+     */
+    void simulationStarted();
+
+    /**
+     * @brief Requests frontend confirmation before buffered export data is discarded.
+     */
+    void historyOverwriteConfirmationRequested();
+
     /**
      * @brief Emitted after each completed simulation step.
      *
@@ -128,6 +146,11 @@ private:
     // ==========================
 
     /**
+     * @brief Initializes the backend if required and starts the simulation timer.
+     */
+    void startSimulationInternal();
+
+    /**
      * @brief Collects a user-issued control command from the frontend.
      *
      * This function stores the thrust command values received from the user.
@@ -157,9 +180,6 @@ private:
      * directly manipulate automation commands.
      */
     void sendControlCommands();
-
-
-
 };
 
 #endif // SIMULATIONWORKER_H
