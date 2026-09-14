@@ -27,7 +27,6 @@
 #include "landingview.h"
 #include "uibuilder.h"
 #include "inputmapper.h"
-#include "datastructs.h"
 #include "TelemetryDTO.h"
 
 /**

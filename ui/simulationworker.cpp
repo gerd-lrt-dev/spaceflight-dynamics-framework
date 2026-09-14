@@ -92,6 +92,9 @@ void SimulationWorker::stepSimulation()
     // Get backend data via interface
     telemetry_ = telemetryMapper_.getQTTelemetryData();
 
+    // Withdraw telemetry data into history vector
+    telemetryHistory_.append(telemetry_);
+
     // signals
     emit stateUpdated(telemetry_);
 }

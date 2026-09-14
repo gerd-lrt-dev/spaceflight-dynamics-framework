@@ -15,9 +15,9 @@
 #include <QMutexLocker>
 #include <QVector>
 #include <Eigen/Dense>
+#include <QVector>
 
 #include "FlightCommandDTO.h"
-#include "datastructs.h"
 #include "TelemetryMapper.h"
 
 /**
@@ -112,6 +112,8 @@ private:
     TelemetryMapper telemetryMapper_;
     Telemetry telemetry_;
     FlightCommandDTO collectedCmdData;
+
+    QVector<Telemetry> telemetryHistory_;   ///< History of full telemetry data
 
     std::string jsonConfig;     ///< String with spacecraft config data
     QTimer *simulationTimer;    ///< Drives simulation ticks
