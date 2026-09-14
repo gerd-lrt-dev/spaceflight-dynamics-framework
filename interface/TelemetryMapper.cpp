@@ -110,6 +110,24 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
         backendData.simFrameContext_.MSC_State.altitude;
 
     // -------------------------------------------------------------------------
+    // Mission context
+    // -------------------------------------------------------------------------
+    FE.missionContext.MSC_LandingSite.latitude =
+        backendData.missionContext_.MSC_LandingSite.latitude;
+
+    FE.missionContext.MSC_LandingSite.longitude =
+        backendData.missionContext_.MSC_LandingSite.longitude;
+
+    FE.missionContext.MSC_LandingSite.altitude =
+        backendData.missionContext_.MSC_LandingSite.altitude;
+
+    FE.missionContext.MCMF_landingSite.position =
+        backendData.missionContext_.MCMF_landingSite.position;
+
+    FE.missionContext.MCI_landingSite.position =
+        backendData.missionContext_.MCI_landingSite.position;
+
+    // -------------------------------------------------------------------------
     // Hull integrity
     // -------------------------------------------------------------------------
 

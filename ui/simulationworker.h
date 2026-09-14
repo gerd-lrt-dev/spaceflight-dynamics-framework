@@ -123,8 +123,6 @@ private:
     QTimer *simulationTimer;    ///< Drives simulation ticks
     bool running = false;       ///< Simulation running flag
 
-    double currentTime = 0.0;   ///< Simulation time [s]
-
     QMutex mutex;               ///< Thread safety
     double requestedThrustPercent = 0.0; ///< Desired thrust in percentage
 

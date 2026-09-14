@@ -41,7 +41,6 @@ void SimulationWorker::stop()
 {
     running = false;
     simulationTimer->stop();
-    currentTime = 0.0;
 
     emit stateUpdated(Telemetry{});
 
@@ -77,9 +76,6 @@ void SimulationWorker::stepSimulation()
 
     // TODO: Should be change by timer event
     double dt = 0.05;   ///< Fixed discrete timestep
-
-    // times
-    currentTime += dt;
 
     // Withdraw user input due to thrust
     sendControlCommands();
