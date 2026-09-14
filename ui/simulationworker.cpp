@@ -16,10 +16,29 @@ SimulationWorker::SimulationWorker(QObject *parent)
 
 void SimulationWorker::start()
 {
+    if (!initialized && !telemetryHistory_.isEmpty())
+    {
+        emit historyOverwriteConfirmationRequested();
+        return;
+    }
+
+    startSimulationInternal();
+}
+
+void SimulationWorker::confirmStartWithHistoryReset()
+{
     if (!initialized)
     {
         telemetryHistory_.clear();
+    }
 
+    startSimulationInternal();
+}
+
+void SimulationWorker::startSimulationInternal()
+{
+    if (!initialized)
+    {
         try
         {
             telemetryMapper_.initialize(jsonConfig);
@@ -35,6 +54,7 @@ void SimulationWorker::start()
 
     running = true;
     simulationTimer->start();
+    emit simulationStarted();
 }
 
 void SimulationWorker::pause()
@@ -108,13 +128,10 @@ void SimulationWorker::collectControlCommands(const FlightCommandDTO &cmd, const
 
 void SimulationWorker::collectAutopilotCommand(bool autopilotActive)
 {
-    collectedCmdData.autopilotActive      = autopilotActive;
+    collectedCmdData.autopilotActive = autopilotActive;
 }
-
 
 void SimulationWorker::sendControlCommands()
 {
     telemetryMapper_.transferUserCommandtoBackend(collectedCmdData);
 }
-
-
