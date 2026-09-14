@@ -24,6 +24,8 @@ TopBarWidget::TopBarWidget(QWidget *parent)
     homeButton = uiBuilder.createTopBarButton("Home", this);
     selectSpacecraftButton = uiBuilder.createTopBarButton("Select Spacecraft", this);
     startSimulationButton = uiBuilder.createTopBarButton("Start Simulation", this);
+    exportTelemetryButton = uiBuilder.createTopBarButton("Export Telemetry", this);
+    exportTelemetryButton->setEnabled(false);
 
     controlsHelpButton = uiBuilder.createTopBarButton("Controls", this);
     coordinateHelpButton = uiBuilder.createTopBarButton("Coordinate Frames", this);
@@ -32,6 +34,7 @@ TopBarWidget::TopBarWidget(QWidget *parent)
     layout->addWidget(homeButton);
     layout->addWidget(selectSpacecraftButton);
     layout->addWidget(startSimulationButton);
+    layout->addWidget(exportTelemetryButton);
 
     layout->addStretch();
 
@@ -48,6 +51,9 @@ TopBarWidget::TopBarWidget(QWidget *parent)
     connect(startSimulationButton, &QPushButton::clicked,
             this, &TopBarWidget::startSimulationRequested);
 
+    connect(exportTelemetryButton, &QPushButton::clicked,
+            this, &TopBarWidget::exportTelemetryRequested);
+
     connect(controlsHelpButton, &QPushButton::clicked,
             this, &TopBarWidget::controlsHelpRequested);
 
@@ -56,4 +62,9 @@ TopBarWidget::TopBarWidget(QWidget *parent)
 
     connect(settingsButton, &QPushButton::clicked,
             this, &TopBarWidget::settingsRequested);
+}
+
+void TopBarWidget::setExportEnabled(bool enabled)
+{
+    exportTelemetryButton->setEnabled(enabled);
 }
