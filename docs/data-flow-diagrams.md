@@ -1,9 +1,9 @@
 # SDF Core Data Flow Documentation
 
 This document describes the most important data flows inside the **Spaceflight Dynamics Framework (SDF)**.
-It is intended as architectural reference material for future contributors and to support future refactoring efforts.
+It is intended as architectural reference material for future contributors and to support future refactoring and verification activities.
 
-The diagrams below focus on **architectural data flow and ownership** as of the current `main` branch. They cover both initialization and runtime execution.
+The diagrams below focus on **architectural data flow and ownership** on the current `main` branch. They cover initialization, runtime execution, frontend/backend communication, simulation lifecycle, frame derivation, and telemetry recording/export.
 
 A central architectural rule is that the configured spacecraft state may be expressed in different input frames, while the propagated runtime state is resolved once into **Moon-Centered Inertial (MCI)** coordinates and remains authoritative there.
 
@@ -18,9 +18,13 @@ Physics / Integration
         ↓
 Derived Frame Context
         ↓
-simData / Telemetry
+simData
         ↓
-Cockpit / Visualization
+TelemetryMapper
+        ↓
+TelemetryDTO
+        ├─→ Cockpit / Visualization
+        └─→ Telemetry History / XML Export
 ```
 
 The runtime control backbone is:
@@ -41,7 +45,7 @@ Actuation / Propulsion
         ↓
 SBF Forces + Torques
         ↓
-SBF-to-MCI Transform
+Current-Attitude SBF-to-MCI Transform
         ↓
 Physics Facade (physics::computeAcc)
         ↓
@@ -77,8 +81,9 @@ Cockpit / Visualization
 5. [Frontend ↔ Backend Communication](#diagram-4-frontend--backend-communication)
 6. [Simulation Lifecycle](#diagram-5-simulation-lifecycle)
 7. [Mission and Runtime Frame Context](#diagram-6-mission-and-runtime-frame-context)
-8. [Subsystem Responsibilities](#subsystem-responsibilities)
-9. [State Ownership Summary](#state-ownership-summary)
+8. [Telemetry Recording and XML Export](#diagram-7-telemetry-recording-and-xml-export)
+9. [Subsystem Responsibilities](#subsystem-responsibilities)
+10. [State Ownership Summary](#state-ownership-summary)
 
 ---
 
@@ -135,14 +140,12 @@ flowchart TD
 ### Initialization ownership
 
 - **`jsonConfigReader`** parses the configured initial-state representation and validates that position and velocity use the same supported frame.
-- **`customSpacecraft`** owns the spacecraft-specific configuration, including the selected `InitialStateFrame` and the configured ENU or MCI initial state.
-- **`MissionContext`** owns persistent mission references. The landing site is configured canonically in MSC and is resolved during initialization into MCMF, MCI, and an ENU frame.
-- **`spacecraft::setDefaultValues()`** performs the one-time initial-state resolution.
+- **`customSpacecraft`** owns spacecraft-specific configuration, including the selected initial-state frame and configured ENU or MCI state.
+- **`MissionContext`** owns persistent mission references. The landing site is configured canonically in MSC and resolved during initialization into MCMF, MCI, and ENU representations.
+- **`spacecraft::setDefaultValues()`** performs one-time initial-state resolution.
 - **`StateVector::MCI_Position` / `StateVector::MCI_Velocity`** become authoritative once initialization is complete.
 
 ### ENU initialization
-
-For landing-site-relative initialization:
 
 ```text
 Landing Site MSC
@@ -162,41 +165,37 @@ StateVector
 
 ENU is therefore an **input and mission/navigation representation**, not the physics integration frame.
 
-### Direct MCI initialization
-
-For direct MCI initialization, the configured MCI position and velocity are assigned directly to the runtime state without passing through the landing-site-relative conversion chain.
-
-This preserves low-level, orbital, and verification scenarios that are naturally specified in inertial coordinates.
+For direct MCI initialization, the configured MCI position and velocity are assigned directly to the runtime state.
 
 ---
 
 ## Diagram 1: Control Input to Applied Forces
 
-This diagram shows the complete control-input processing chain, from user/autopilot commands down to the forces and torques that enter the physics simulation. The concrete runtime path on current `main` is:
+The concrete manual runtime path is:
 
 `inputmapper → FlightCommandDTO → cockpitPage → SimulationWorker → TelemetryMapper → ControlCommand → InputArbiter → simcontrol → spacecraft → Thrust`
 
 ```mermaid
 flowchart LR
     subgraph ManualInputs
-        UI[User Input<br/>ui/ Cockpit widgets]
+        UI[User Input<br/>Cockpit widgets]
     end
 
     subgraph Autopilot
-        AP[Autopilot<br/>AdaptiveDescentController]
+        AP[AdaptiveDescentController]
         PD[PD Controller]
     end
 
-    IM[Control Input System<br/>ui/inputmapper.cpp]
+    IM[inputmapper]
     DTO[FlightCommandDTO]
-    CW[Cockpit Page<br/>cockpitPage]
-    SW[SimulationWorker<br/>simulation thread]
+    CW[cockpitPage]
+    SW[SimulationWorker]
     TM[TelemetryMapper]
     CC[ControlCommand]
     IA[InputArbiter]
     SC[simcontrol]
     SC2[spacecraft]
-    TH[Thrust<br/>orchestrator]
+    TH[Thrust]
 
     UI --> IM
     IM --> DTO
@@ -214,35 +213,38 @@ flowchart LR
 
 ### Ownership & responsibilities
 
-- **User Input / Autopilot** — owns the *intent* (what the spacecraft should do).
-- **`ui/inputmapper`** — translates raw input events (keyboard, throttle slider, etc.) into a normalized `FlightCommandDTO`.
-- **`cockpitPage`** — forwards the `FlightCommandDTO` to the worker living on the simulation thread.
-- **`SimulationWorker`** — owns the simulation thread boundary; receives frontend DTOs and drives the per-step processing.
-- **`TelemetryMapper`** — converts `FlightCommandDTO` into backend `ControlCommand` objects.
-- **`InputArbiter`** — decides which command source wins in a given mode (manual vs. autopilot) and routes the actuation request.
-- **`simcontrol`** — simulation orchestrator; applies the command to the `spacecraft` model.
-- **`Thrust`** — propulsion orchestrator; converts actuator commands into the actual forces and torques.
+- **User input / autopilot** owns intent.
+- **`inputmapper`** translates raw UI input into `FlightCommandDTO`.
+- **`cockpitPage`** forwards the DTO to the worker thread.
+- **`SimulationWorker`** owns the simulation thread boundary and step loop.
+- **`TelemetryMapper`** converts frontend command DTOs to backend `ControlCommand` objects.
+- **`InputArbiter`** selects/combines manual and automated commands.
+- **`simcontrol`** orchestrates the backend simulation step.
+- **`Thrust`** converts actuator commands into forces and torques.
 
-### Manual vs. autopilot paths
+The manual and autopilot paths remain separate until `InputArbiter`.
 
-The two command paths remain separate until `InputArbiter`, which combines or selects the applicable command fields before `simcontrol` forwards them to the spacecraft systems.
+### Per-step command timing
 
-- **Manual path**: `inputmapper → FlightCommandDTO → cockpitPage → SimulationWorker → TelemetryMapper → ControlCommand → InputArbiter`.
-- **Autopilot path**: `spacecraft state → AdaptiveDescentController → PD_Controller → ControlCommand → InputArbiter`. The PD controller belongs specifically to the automated-descent path, not the generic manual actuation path.
+Commands are transferred **before** the backend simulation advances. The current worker order is:
 
-### Rotational command actuation
+```text
+sendControlCommands()
+        ↓
+runStepSimulation(dt)
+        ↓
+getQTTelemetryData()
+        ↓
+append telemetry history
+        ↓
+emit stateUpdated(...)
+```
 
-`ControlCommand.rotation` reaches the rotational RCS path:
-
-`InputArbiter → simcontrol → spacecraft::setTargetRCSThrust(..., RCS_rotation) → Thrust → RCSControlAllocator → rotational RCS actuators`
-
-The `stabilize` and `killRotation` flags are still not fully processed and remain documented as incomplete.
+This ordering prevents a one-step delay between frontend command input and backend actuation.
 
 ---
 
 ## Diagram 2: Force Generation to Physics Calculation
-
-This diagram shows how propulsion forces and environmental models feed into the acceleration calculation. There is **no general force accumulator** that combines every physical force before the physics model; instead, forces are handled by their respective owners.
 
 ```mermaid
 flowchart LR
@@ -252,14 +254,16 @@ flowchart LR
     end
 
     TH[Thrust Orchestrator<br/>aggregates SBF forces/torques]
+    ATT[Current spacecraft attitude]
     TX[SBF-to-MCI Transform]
     PHY[Physics Facade<br/>backend/Physics]
-    GM[BasicMoonGravityModel<br/>translational physics model]
+    GM[BasicMoonGravityModel]
     AC[Total MCI Acceleration]
 
     ME --> TH
     RCS --> TH
     TH --> TX
+    ATT --> TX
     TX --> PHY
     PHY --> GM
     GM --> AC
@@ -267,23 +271,19 @@ flowchart LR
 
 ### Force sources and acceleration calculation
 
-- **Propulsion** — main engines and RCS thrusters produce forces/torques in the spacecraft body frame (SBF). The `Thrust` orchestrator aggregates these into net SBF thrust force and torque.
-- **Translational physics model** — `BasicMoonGravityModel` is the currently configured implementation behind `physics::computeAcc()`. The aggregated SBF thrust is transformed into the MCI frame, then `physics::computeAcc()` calls `BasicMoonGravityModel::computeAcceleration()` and combines gravity acceleration with thrust / mass to produce the total MCI acceleration. `BasicMoonGravityModel` is therefore not a parallel force source; it is the concrete physics model called through the `physics` façade.
-- **Aerodynamics** — not currently implemented; intended as a future extension.
+- Main engines and RCS produce force/torque in SBF.
+- `Thrust` aggregates the net SBF force and torque.
+- The net SBF thrust vector is transformed into MCI using the **current spacecraft attitude**, not a static initialization frame.
+- `physics::computeAcc()` calls the configured translational physics model and combines gravity with thrust/mass to obtain total MCI acceleration.
+- Controller output is an actuation command, not an additional physical force source.
 
-### Controller output is actuation input
-
-Controller output (e.g., the PD controller in automated descent, or RCS commands) is a *command or actuation input* to the propulsion models, not a separate physical force source. The propulsion models own conversion from command to force/torque.
-
-### Integration boundaries
-
-The physics façade derives linear and angular acceleration from the rigid-body equations of motion. The net propulsion force/torque and gravity are combined inside `physics::computeAcc()`; the integrator consumes the resulting accelerations (see Diagram 3).
+Generic vector transforms remain pure frame rotations where appropriate; rotating-frame state-derivative effects are a separate concern.
 
 ---
 
 ## Diagram 3: Physics Calculation to State Propagation
 
-This diagram shows how simulation state is propagated from one time step to the next. The authoritative translational state is propagated in MCI. `spacecraft::updateMovementData()` coordinates the physics and integration calls and commits the individual results to `StateVector`.
+The authoritative translational state is propagated in MCI. `spacecraft::updateMovementData()` coordinates physics/integration and commits the updated state before frame derivation.
 
 ```mermaid
 flowchart LR
@@ -292,9 +292,9 @@ flowchart LR
     end
 
     UMD[spacecraft::updateMovementData]
-    TH[Thrust Orchestrator<br/>SBF net force/torque]
+    TH[Thrust<br/>SBF net force/torque]
     TX[SBF-to-MCI Transform]
-    PHY[Physics Facade<br/>backend/Physics]
+    PHY[Physics Facade]
     GM[BasicMoonGravityModel]
     AA[Total MCI Acceleration]
     EI[EulerIntegrator]
@@ -315,54 +315,45 @@ flowchart LR
     UFC --> SFC
 ```
 
-### State ownership
-
-- **Authoritative `StateVector`** — owned by the `spacecraft` object; source of truth for propagated spacecraft position, velocity, attitude, and angular velocity.
-- **MCI position / velocity** — authoritative translational runtime representation used by physics and integration.
-- **`spacecraft::updateMovementData()`** — coordinates the physics and integration calls and commits the results back to the authoritative state.
-- **`Thrust` orchestrator** — aggregates net SBF force/torque from main engines and RCS.
-- **`backend/Physics`** — façade for translational and rotational physics; calls `BasicMoonGravityModel` through `physics::computeAcc()` and combines gravity with thrust / mass. It does not mutate state directly.
-- **`BasicMoonGravityModel`** — the currently configured translational physics model; computes gravitational acceleration and combines it with thrust / mass inside `physics::computeAcc()`.
-- **`backend/Integrators/EulerIntegrator`** — advances individual quantities (velocity, position, angular velocity, attitude) one time step. It does **not** construct or own a complete new `StateVector`.
-- **`SimulationFrameContext`** — stores derived frame representations reconstructed from the current authoritative state. These values are not integrated directly.
-
-### Update workflow
+### State ownership and update order
 
 1. `spacecraft::updateMovementData()` reads the current authoritative state.
-2. `Thrust` aggregates net SBF force/torque from propulsion.
-3. The SBF thrust is transformed into MCI; `physics::computeAcc()` calls `BasicMoonGravityModel::computeAcceleration()` and combines gravity with thrust / mass to produce total MCI acceleration.
-4. Rotational physics computes angular acceleration from net torque.
-5. `EulerIntegrator` advances each state component individually.
-6. `spacecraft` commits the updated values back to `StateVector`.
-7. `spacecraft::updateFrames(time)` derives MCMF, MSC, ENU, LVLH, and SBF representations from the updated state.
+2. `Thrust` aggregates net SBF force/torque.
+3. Current attitude transforms SBF thrust into MCI.
+4. Translational and rotational physics compute accelerations.
+5. `EulerIntegrator` advances individual state components.
+6. `spacecraft` commits velocity, position, angular velocity, and attitude to `StateVector`.
+7. `spacecraft::updateFrames(time)` reconstructs MCMF, MSC, ENU, LVLH, and SBF representations from the **updated** state.
 
-### Numerical integration
+`SimulationFrameContext` is therefore a coherent derived snapshot of the current authoritative state and is not independently integrated.
 
-Only `EulerIntegrator` is currently implemented. RK4 or other integrators should be considered future implementations and are not part of the current runtime path.
+Only `EulerIntegrator` is currently implemented.
 
 ---
 
 ## Diagram 4: Frontend ↔ Backend Communication
 
-This diagram shows the two-directional communication between the Qt cockpit UI and the simulation backend. The concrete boundary is the **Qt signal/slot mechanism between the UI thread and `SimulationWorker`, which lives in the simulation thread**.
+The concrete boundary is the Qt signal/slot mechanism between the UI thread and `SimulationWorker` in the simulation thread.
 
 ```mermaid
 flowchart LR
     subgraph UIThread
-        CW[Cockpit widgets<br/>ui/]
+        CW[Cockpit widgets]
         DTO[FlightCommandDTO]
     end
 
-    SW[SimulationWorker<br/>simulation thread]
-    TM[TelemetryMapper<br/>owned by SimulationWorker]
+    SW[SimulationWorker]
+    TM[TelemetryMapper]
     CC[ControlCommand]
     SC[simcontrol]
     SC2[spacecraft]
+    CLK[Simulation Time]
     SV[StateVector]
     FC[SimulationFrameContext]
     MC[MissionContext]
     SD[simData]
     TD[TelemetryDTO]
+    HIST[Telemetry History]
 
     CW -->|user command| DTO
     DTO --> SW
@@ -371,86 +362,118 @@ flowchart LR
     CC --> SC
     SC --> SC2
 
+    SC2 --> CLK
     SC2 --> SV
     SC2 --> FC
     SC2 --> MC
+    CLK --> SD
     SV --> SD
     FC --> SD
     MC --> SD
-    SC2 -->|engines + RCS + tanks + GLoad| SD
+    SC2 -->|engines + RCS + tanks + GLoad + integrity + console| SD
     SD --> TM
     TM --> TD
-    TD -->|stateUpdated signal| SW
-    SW -->|across thread boundary| CW
+    TD --> HIST
+    TD --> SW
+    SW -->|stateUpdated across thread boundary| CW
 ```
 
 ### Downlink flow: UI → Backend
 
-- User actions in cockpit widgets produce a `FlightCommandDTO`.
-- `cockpitPage` passes the DTO to `SimulationWorker` (queued across threads).
-- `SimulationWorker` calls `TelemetryMapper` to convert the DTO into a backend `ControlCommand`.
-- `ControlCommand` flows through `InputArbiter` → `simcontrol` → `spacecraft` → actuation/propulsion.
-- All command mapping happens **in-process** between C++ data structures; there is no serialization step.
+- Cockpit actions produce `FlightCommandDTO` objects.
+- `SimulationWorker` receives frontend DTOs on the simulation thread.
+- `TelemetryMapper` converts them into backend `ControlCommand` objects.
+- Commands flow through `InputArbiter → simcontrol → spacecraft → propulsion`.
 
 ### Uplink flow: Backend → UI
 
-- At the end of a simulation step, `spacecraft` aggregates the authoritative `StateVector`, `SimulationFrameContext`, `MissionContext`, propulsion state, tanks, G-load, integrity, and console output into `simData`.
-- `TelemetryMapper` maps the authoritative MCI navigation state and the derived MCI/MCMF/MSC/ENU/LVLH frame states into `TelemetryDTO`.
-- `SimulationWorker` emits `stateUpdated(TelemetryDTO)` via Qt signal/slot.
-- `cockpitPage::onStateUpdated` receives the DTO and updates the instrument widgets.
+At the end of each completed simulation step:
+
+- `spacecraft` exposes the authoritative simulation time and aggregates `StateVector`, `SimulationFrameContext`, `MissionContext`, propulsion, tanks, G-load, integrity, and console output into `simData`.
+- `TelemetryMapper` maps that snapshot into `TelemetryDTO`.
+- `TelemetryDTO::time` is sourced from backend simulation time; the worker no longer maintains an independent frontend simulation clock.
+- Mission and frame context are mapped through the same telemetry boundary.
+- `SimulationWorker` stores the snapshot in telemetry history and emits `stateUpdated(TelemetryDTO)`.
+- `cockpitPage::onStateUpdated` refreshes the UI.
+
+### Authoritative simulation time
+
+```text
+spacecraft::time
+        ↓
+simData::time
+        ↓
+TelemetryMapper
+        ↓
+TelemetryDTO::time
+        ↓
+Cockpit / Export
+```
+
+The same backend time that drives time-dependent frame derivation is therefore also the time exposed through telemetry.
 
 ### Thread ownership
 
-- **UI state** (widgets, displays) is owned by the UI thread.
-- **Simulation state** (`spacecraft`, `simcontrol`, `TelemetryMapper`, `StateVector`, `MissionContext`, `SimulationFrameContext`) is owned by the simulation thread via `SimulationWorker`.
-- **DTOs** are value objects passed across the thread boundary by signal/slot; they do not contain shared mutable state.
+- UI widgets/state belong to the UI thread.
+- `SimulationWorker`, `TelemetryMapper`, `simcontrol`, `spacecraft`, and backend simulation state belong to the simulation thread.
+- DTOs are value objects passed across the thread boundary and contain no shared mutable backend state.
 
 ---
 
 ## Diagram 5: Simulation Lifecycle
 
-This diagram captures configuration loading, initial-state resolution, the per-step clock, and pause/stop controls.
+The lifecycle distinguishes **initial start**, **pause/resume**, and **stop/reset**. A resumed simulation must not be reinitialized.
 
 ```mermaid
-flowchart LR
-    subgraph Startup
-        CM[ConfigManager]
-        MW[MainWindow]
-        JCR[jsonConfigReader]
-    end
+flowchart TD
+    CFG[Configuration available]
+    START[Start requested]
+    INITQ{initialized?}
+    HISTQ{old telemetry history exists?}
+    CONF[Request overwrite confirmation]
+    CLEAR[Clear old history]
+    INIT[TelemetryMapper::initialize<br/>simcontrol::initialize<br/>spacecraft construction]
+    RUN[Start QTimer / running = true]
+    STEP[stepSimulation]
+    PAUSE[Pause requested]
+    HOLD[Stop QTimer<br/>preserve backend state]
+    RESUME[Start requested again]
+    STOP[Stop requested]
+    RESET[Stop QTimer<br/>emit Telemetry{}<br/>backend reset<br/>initialized = false]
 
-    SW[SimulationWorker]
-    TM[TelemetryMapper]
-    SC[simcontrol]
-    CFG[customSpacecraft + MissionContext]
-    SC2[spacecraft]
-    INIT[Mission-frame + initial-state resolution]
-    SV[Authoritative MCI StateVector]
-    T[QTimer<br/>50 ms]
+    CFG --> START
+    START --> INITQ
+    INITQ -->|false| HISTQ
+    HISTQ -->|yes| CONF
+    CONF --> CLEAR
+    HISTQ -->|no| INIT
+    CLEAR --> INIT
+    INIT --> RUN
+    INITQ -->|true| RUN
+    RUN --> STEP
 
-    CM --> MW
-    MW --> SW
-    SW --> TM
-    TM --> SC
-    SC --> JCR
-    JCR --> CFG
-    CFG --> SC2
-    SC2 --> INIT
-    INIT --> SV
-    T -->|stepSimulation| SW
-    SW -->|pause/stop| SC
+    STEP --> PAUSE
+    PAUSE --> HOLD
+    HOLD --> RESUME
+    RESUME --> INITQ
+
+    STEP --> STOP
+    HOLD --> STOP
+    STOP --> RESET
 ```
 
-### Lifecycle steps
+### Lifecycle semantics
 
-1. **Configuration loading** (DF-001): `ConfigManager → MainWindow → SimulationWorker → TelemetryMapper → simcontrol → jsonConfigReader`.
-2. **Configuration parsing**: `jsonConfigReader` produces spacecraft configuration data and `MissionContext`. It validates the selected initial-state frame mode.
-3. **Initialization** (DF-002): `SimulationWorker::start → TelemetryMapper::initialize → simcontrol::initialize → spacecraft construction`.
-4. **Mission-frame initialization**: the canonical MSC landing site is resolved into MCMF, MCI, and the landing-site ENU frame.
-5. **Initial-state resolution**: ENU input is transformed `ENU → MCMF → MCI`, while direct MCI input is accepted unchanged. The resolved state is committed to the authoritative `StateVector`.
-6. **Run loop** (DF-003): a 50 ms `QTimer` drives `SimulationWorker::stepSimulation → runStepSimulation(0.05) → simcontrol::runSimulation`.
-7. **Frame derivation**: after propagation, `spacecraft::updateFrames(time)` reconstructs the current `SimulationFrameContext` from the authoritative state.
-8. **Pause / stop** (DF-004): cockpit actions call `SimulationWorker::pause` / `stop`.
+1. **Configuration loading**: `ConfigManager → MainWindow → SimulationWorker` supplies the JSON configuration.
+2. **Initial start**: if no simulation session is initialized, `TelemetryMapper::initialize → simcontrol::initialize` creates the backend simulation and resolves the initial state.
+3. **History protection**: if an earlier stopped run left telemetry history in the worker, starting a new session requests overwrite confirmation before that history is cleared.
+4. **Run loop**: a 50 ms `QTimer` drives a fixed `dt = 0.05 s` backend step.
+5. **Pause**: `SimulationWorker::pause()` stops the timer only. The backend state, simulation time, fuel state, attitude, and all other simulation state remain unchanged.
+6. **Resume**: a subsequent start sees `initialized == true`, skips backend initialization, and continues the existing simulation session.
+7. **Stop**: the worker stops the timer, emits an empty telemetry DTO to reset the UI, requests the backend reset, and sets `initialized = false`.
+8. **Restart after stop**: the next confirmed start creates a new simulation session from configuration.
+
+Pause therefore means **freeze and resume**, while stop means **terminate/reset the current simulation session**.
 
 ---
 
@@ -494,7 +517,7 @@ flowchart LR
 
 ### `MissionContext`
 
-`MissionContext` stores stable mission references that are independent of the current spacecraft state.
+`MissionContext` stores stable mission references independent of the current spacecraft state.
 
 For the current landing implementation:
 
@@ -503,7 +526,7 @@ For the current landing implementation:
 - `MCI_landingSite` is derived during initialization for inertial consumers.
 - `ENU_landingSite` defines the local landing-site frame used for landing-relative navigation and telemetry.
 
-These are **mission references**, not propagated spacecraft state.
+These are mission references, not propagated spacecraft state.
 
 ### `SimulationFrameContext`
 
@@ -516,9 +539,46 @@ These are **mission references**, not propagated spacecraft state.
 - LVLH
 - SBF frame definition
 
-The context is reconstructed from the current `StateVector` by `spacecraft::updateFrames()` and is intended for GNC, telemetry, visualization, validation/export, and other frame-dependent consumers.
+The context is reconstructed from the current `StateVector` by `spacecraft::updateFrames()` **after the current step state has been committed**.
 
 No `SimulationFrameContext` representation is independently integrated by the physics engine.
+
+---
+
+## Diagram 7: Telemetry Recording and XML Export
+
+Scientific telemetry export reuses the same `TelemetryDTO` snapshots consumed by the frontend. Recording is owned by `SimulationWorker`; XML serialization is delegated to `TelemetryXmlExporter`.
+
+```mermaid
+flowchart LR
+    SD[simData]
+    TM[TelemetryMapper]
+    TD[TelemetryDTO<br/>coherent step snapshot]
+    SW[SimulationWorker]
+    UI[Cockpit / Visualization]
+    HIST[telemetryHistory_]
+    EXP[TelemetryXmlExporter]
+    XML[XML telemetry file]
+
+    SD --> TM
+    TM --> TD
+    TD --> SW
+    SW -->|stateUpdated| UI
+    SW --> HIST
+    HIST -->|export request| EXP
+    EXP --> XML
+```
+
+### Recording semantics
+
+- One telemetry snapshot is collected after each completed backend simulation step.
+- The history therefore uses the same simulation time, navigation state, frame context, mission context, propulsion data, integrity, and sensors exposed to other telemetry consumers.
+- Pause does not create additional simulation snapshots because no backend steps occur while the timer is stopped.
+- Stop terminates the active session but does not silently overwrite an existing history buffer.
+- Starting a new simulation with existing history requires explicit overwrite confirmation before clearing the recorded data.
+- `TelemetryXmlExporter` is responsible for serialization only; it does not own or generate simulation state.
+
+This preserves a single telemetry contract for UI visualization and scientific export.
 
 ---
 
@@ -527,45 +587,48 @@ No `SimulationFrameContext` representation is independently integrated by the ph
 | Subsystem | Primary Responsibility | Owns State? | Thread |
 |---|---|---|---|
 | `ui/` (Cockpit / widgets) | Render telemetry, capture user input | Yes — UI state | UI thread |
-| `interface/` (DTOs / Mapper) | Translate between UI and backend representations | No — pure data contracts / mapper owned by SimulationWorker | Simulation thread |
-| `SimulationWorker` | Own the simulation thread, drive step loop, ferry DTOs across thread boundary | Yes — worker lifecycle | Simulation thread |
-| `jsonConfigReader` | Parse spacecraft/mission configuration and validate initial-state frame selection | No — stateless parser | Simulation thread during initialization |
-| `customSpacecraft` | Hold spacecraft configuration, including configured initial-state representation | Yes — configuration data | Simulation thread |
-| `MissionContext` | Hold persistent mission references such as the landing site and derived mission reference frames | Yes — mission reference data | Simulation thread |
-| `simcontrol` | Orchestrate initialization and each simulation step | No — orchestration logic | Simulation thread |
-| `spacecraft` | Hold and commit authoritative `StateVector`, resolve initial state, derive runtime frame representations, coordinate movement update | Yes — simulation state | Simulation thread |
+| `interface/` (DTOs / Mapper) | Translate between frontend and backend representations | No — contracts / translation | Simulation thread |
+| `SimulationWorker` | Own simulation session lifecycle, step timer, telemetry history, DTO transport, export requests | Yes — worker/session state and telemetry history | Simulation thread |
+| `TelemetryXmlExporter` | Serialize recorded telemetry history to XML | No — serialization only | Simulation thread / caller context |
+| `jsonConfigReader` | Parse spacecraft/mission configuration and validate initial-state frame selection | No — parser | During initialization |
+| `customSpacecraft` | Hold spacecraft configuration and configured initial-state representation | Yes — configuration data | Simulation thread |
+| `MissionContext` | Hold persistent mission references | Yes — mission reference data | Simulation thread |
+| `simcontrol` | Orchestrate backend initialization and each simulation step | No — orchestration logic | Simulation thread |
+| `spacecraft` | Hold authoritative state, simulation time, resolve initial state, derive runtime frame representations | Yes — simulation state | Simulation thread |
 | `StateVector` | Authoritative propagated spacecraft state | Yes — owned by `spacecraft` | Simulation thread |
-| `SimulationFrameContext` | Hold frame representations derived from the authoritative state | Derived state only | Simulation thread |
-| `CoordinateTransformer` | Perform transformations between MCI, MCMF, MSC, ENU, LVLH, and SBF representations | No — computation only | Simulation thread |
-| `backend/Physics` | Compute accelerations from forces/torques | No — read-only physics model | Simulation thread |
-| `BasicMoonGravityModel` | Compute gravitational acceleration | No — physics model | Simulation thread |
-| `backend/Integrators/EulerIntegrator` | Advance individual state components in time | No — computation only | Simulation thread |
-| `backend/Control` / `Controller` / `InputArbiter` | Map/routes commands to actuator signals | No — control logic | Simulation thread |
-| `backend/Thrust` | Convert actuator commands to forces/torques | No — propulsion model | Simulation thread |
+| `SimulationFrameContext` | Hold frame representations derived from authoritative state | Derived state only | Simulation thread |
+| `CoordinateTransformer` | Transform between MCI, MCMF, MSC, ENU, LVLH, and SBF representations | No — computation only | Simulation thread |
+| `backend/Physics` | Compute accelerations from forces/torques | No — computation only | Simulation thread |
+| `BasicMoonGravityModel` | Compute translational gravitational acceleration | No — physics model | Simulation thread |
+| `backend/Integrators/EulerIntegrator` | Advance individual state components | No — computation only | Simulation thread |
+| `backend/Control` / `Controller` / `InputArbiter` | Route/select commands and create actuator requests | No — control logic | Simulation thread |
+| `backend/Thrust` | Convert actuator commands into forces/torques and expose propulsion telemetry | No — propulsion model | Simulation thread |
 
 ---
 
 ## State Ownership Summary
 
-- **Configured initial state** is owned by `customSpacecraft` and may currently be expressed either in ENU relative to the landing site or directly in MCI.
-- **Mission reference data** is owned by `MissionContext`; the landing site is canonically configured in MSC and its MCMF/MCI/ENU representations are derived during initialization.
+- **Configured initial state** is owned by `customSpacecraft` and may be expressed in ENU relative to the landing site or directly in MCI.
+- **Mission reference data** is owned by `MissionContext`.
 - **Authoritative runtime spacecraft state** is owned by `spacecraft` through `StateVector`.
-- **MCI position and velocity** are the authoritative translational state used for propagation after initial-state resolution.
-- **Derived frame state** is stored in `SimulationFrameContext` and reconstructed from the authoritative state; MCMF, MSC, ENU, and LVLH are not independently propagated.
-- **Input intent** is owned by the user / autopilot.
-- **Control commands** are represented by `FlightCommandDTO` on the frontend side and routed through `ControlCommand` / `InputArbiter` in the backend.
-- **Forces and torques** are computed by `Thrust` and the physics models but are transient values for the current simulation step.
-- **`simData`** is the per-step backend telemetry snapshot and contains `StateVector`, `MissionContext`, `SimulationFrameContext`, propulsion, fuel, integrity, sensor, and console data.
-- **`TelemetryDTO`** is the frontend-facing value representation produced by `TelemetryMapper`. It includes authoritative MCI navigation data and derived frame states used by cockpit/visualization consumers.
-- **UI state** is a read-only view of simulation telemetry, refreshed through `TelemetryDTO` across the Qt signal/slot boundary.
+- **Authoritative simulation time** is maintained by the backend spacecraft simulation and propagated through `simData::time → TelemetryDTO::time`.
+- **MCI position and velocity** are the authoritative translational state used for propagation.
+- **Derived frame state** is stored in `SimulationFrameContext` and reconstructed after each state commit; it is not independently propagated.
+- **Input intent** is owned by the user/autopilot.
+- **Control commands** are represented by `FlightCommandDTO` on the frontend side and routed through backend `ControlCommand` / `InputArbiter`.
+- **Forces and torques** are transient per-step physical values produced by propulsion/physics models.
+- **`simData`** is the backend per-step telemetry aggregation snapshot and contains time, `StateVector`, `MissionContext`, `SimulationFrameContext`, propulsion, fuel, integrity, sensor, and console data.
+- **`TelemetryDTO`** is the frontend/export-facing value representation produced by `TelemetryMapper` from one coherent backend snapshot.
+- **Telemetry history** is owned by `SimulationWorker` and stores successive `TelemetryDTO` snapshots for export.
+- **UI state** is a read-only view of simulation telemetry refreshed across the Qt signal/slot boundary.
 
 ---
 
 ## Notes
 
-- These diagrams intentionally omit most class-level implementation detail; for implementation specifics, see the header files in `backend/include/`, `interface/`, and the UI sources in `ui/`.
-- The distinction between **configuration representation**, **authoritative runtime state**, **mission reference context**, and **derived frame context** is intentional and should be preserved in future refactoring.
-- ENU is currently tied to the configured landing-site reference and is primarily intended for landing-relative navigation, telemetry, and guidance. The physics integration frame remains MCI.
-- Propulsion forces are defined in SBF and transformed into MCI before entering translational physics. Detailed propulsion-direction and RCS validation belongs to dedicated verification activities rather than this architectural data-flow document.
-- The boundary between subsystems is designed to keep coupling low: the physics model does not know about the UI, and the UI does not directly modify simulation state.
-- Website publication of these diagrams is tracked separately and is not part of this documentation update.
+- These diagrams intentionally omit most class-level implementation detail; see headers and source files for concrete APIs.
+- The distinction between **configuration representation**, **authoritative runtime state**, **mission reference context**, **derived frame context**, and **telemetry snapshot/history** should be preserved in future refactoring.
+- ENU is tied to the configured landing-site reference and is primarily intended for landing-relative navigation, telemetry, and guidance. Physics integration remains MCI-based.
+- Propulsion forces are defined in SBF and transformed into MCI using the current spacecraft attitude before entering translational physics.
+- The UI does not directly modify backend domain state; command and telemetry DTOs form the application-facing boundary.
+- Website publication of these diagrams is tracked separately and is intentionally not part of this documentation update.
