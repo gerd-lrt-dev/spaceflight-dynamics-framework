@@ -75,6 +75,7 @@ void simcontrol::processCommands()
     setTargetMainEngineThrust(activeCommand.mainEngine);
     setTargetRCSThrust(activeCommand.translation, EngineType::RCS_translation);
     setTargetRCSThrust(activeCommand.rotation, EngineType::RCS_rotation);
+    setAttitudeKillRotation(activeCommand.killRotation);
 
 }
 
@@ -214,6 +215,11 @@ void simcontrol::setTargetMainEngineThrust(const double& thrustPercent, const do
 void simcontrol::setTargetRCSThrust(const Eigen::Vector3d &SBF_RCS_Command, const EngineType &engineType)
 {
     landerSpacecraft->setTargetRCSThrust(SBF_RCS_Command, engineType);
+}
+
+void simcontrol::setAttitudeKillRotation(bool killRotation)
+{
+
 }
 
 void simcontrol::setResetBoolean()

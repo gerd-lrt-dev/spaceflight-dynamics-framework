@@ -127,6 +127,15 @@ private:
     void setTargetRCSThrust(const Eigen::Vector3d &SBF_translation, const EngineType &engineType);
 
     /**
+     * @brief Set kill rotation flag
+     *
+     * kills attitude velocity
+     *
+     * @param killRotation true/false
+     */
+    void setAttitudeKillRotation(bool killRotation);
+
+    /**
      * @brief Process commands
      *
      * This class accepts all commands from the front end. The commands are then sent
