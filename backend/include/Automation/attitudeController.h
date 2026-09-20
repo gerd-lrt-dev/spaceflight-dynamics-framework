@@ -11,7 +11,7 @@ public:
     {
     }
 
-    double killRotationOfOneAxis(const double& omega, const double& dt) const override;
+    Eigen::Vector3d killRotation(const Eigen::Vector3d& omega, const double& dt) const override;
 
 private:
     std::unique_ptr<IController> controller_;

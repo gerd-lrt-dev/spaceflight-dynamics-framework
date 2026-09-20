@@ -5,6 +5,7 @@
 #include "simDataStruct.h"
 #include "jsonConfigReader.h"
 #include "Control/inputArbiter.h"
+#include "Automation/iAttitudeControl.h"
 #include "Coordinates/missionContext.h"
 #include "Coordinates/simulationFrameContext.h"
 
@@ -39,10 +40,11 @@ private:
     //***********************************************************
     //*************        Members                   ************
     //***********************************************************
-    std::unique_ptr<spacecraft>     landerSpacecraft;   ///< Spacecraft with specs and integrity
-    std::unique_ptr<InputArbiter>   inputArbiter_;      ///< Arbiter for input commands
-    std::unique_ptr<IAutopilot>     autopilot_;         ///< Virtual autopilot instance
-    std::unique_ptr<IController>    controller_;        ///< Virtual controller instance
+    std::unique_ptr<spacecraft>         landerSpacecraft;   ///< Spacecraft with specs and integrity
+    std::unique_ptr<InputArbiter>       inputArbiter_;      ///< Arbiter for input commands
+    std::unique_ptr<IAutopilot>         autopilot_;         ///< Virtual autopilot instance
+    std::unique_ptr<IController>        controller_;        ///< Virtual controller instance
+    std::unique_ptr<IAttitudeControl>   attController_;     ///< Virtual attitude autopilot instance
 
     std::string jsonConfigString;                   ///< String with raw space config data provided by frontend
     customSpacecraft spacecraftConfig_;             ///< Config for used spacecraft provided by json config
@@ -152,7 +154,7 @@ private:
      * @param engineNr [-] Number of engine that will be controlled automatically
      * @param dt [s] Discrete timestep
      */
-    void runAutopilot(const SpacecraftState& currentSpacecraftstate, const int &engineNr, const double& dt);
+    void runAutopilot(const SpacecraftState& currentSpacecraftstate, const double& dt);
 
 public:
     //***********************************************************

@@ -1,6 +1,7 @@
 #include "simcontrol.h"
 #include "logger.h"
 #include "Automation/adaptiveDescentController.h"
+#include "Automation/attitudeController.h"
 #include "Controller/pd_controller.h"
 
 #include <iostream>
@@ -79,7 +80,7 @@ void simcontrol::processCommands()
 
 }
 
-void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, const int &engineNr, const double& dt)
+void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, const double& dt)
 {
     // --- Autopilot Control ---
     if(currentSpacecraftstate == SpacecraftState::Operational)
@@ -89,6 +90,10 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, spacecraftConfig_.engines_[0].maxThrust);
         ControlCommand autoCmd{};
         autoCmd.mainEngine = autoThrustNormalized;
+
+        Eigen::Vector3d autoAttitudeThrust = attController_->killRotation(landerSpacecraft->getState().SBF_AngularVelocity, dt);
+
+
         receiveCommandFromAutopilot(autoCmd);
     }
     else if (currentSpacecraftstate == SpacecraftState::Landed)
@@ -106,8 +111,9 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
 
 simcontrol::simcontrol(double t0) : initialTime(t0)
 {
-    autopilot_  = std::make_unique<AdaptiveDescentController>(spacecraftConfig_.safeVelocity);
-    controller_ = std::make_unique<PD_Controller>();
+    autopilot_      = std::make_unique<AdaptiveDescentController>(spacecraftConfig_.safeVelocity);
+    controller_     = std::make_unique<PD_Controller>();
+    attController_  = std::make_unique<AttitudeController>(std::make_unique<PD_Controller>());
 }
 
 simcontrol::~simcontrol()
@@ -139,7 +145,7 @@ void simcontrol::runSimulation(const double dt)
         logger.log("Simulation step started. dt = " + std::to_string(dt));
 
         // --- Autopilot Control ---
-        runAutopilot(landerSpacecraft->getSpacecraftState(), 0, dt);
+        runAutopilot(landerSpacecraft->getSpacecraftState(), dt);
 
         // Select active command and apply it
         processCommands();

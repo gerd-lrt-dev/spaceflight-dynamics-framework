@@ -157,6 +157,7 @@ double basicRCSModel::getMaxThrust() const
 {
     return rcsConfig_.maxThrust;
 }
+
 // -------------------------------------------------------------------------
 // Private calculation methods
 // -------------------------------------------------------------------------
