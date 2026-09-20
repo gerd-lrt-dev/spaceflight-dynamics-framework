@@ -728,6 +728,26 @@ QGroupBox *cockpitPage::setupLandingBox()
 
     thrustLayout->addWidget(btnAutopilot);
 
+    // === Attitude Control ===
+    QHBoxLayout *attitudeControlLayout = new QHBoxLayout();
+
+    btnKillRotation = new QPushButton("KILL ROTATION");
+    btnKillRotation->setCheckable(true);
+    btnKillRotation->setStyleSheet(
+        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 6px; }"
+        "QPushButton:checked { background-color: #FF9800; color: black; }"
+        );
+
+    btnStabilize = new QPushButton("STABILIZE");
+    btnStabilize->setCheckable(true);
+    btnStabilize->setStyleSheet(
+        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 6px; }"
+        "QPushButton:checked { background-color: #4FC3F7; color: black; }"
+        );
+
+    attitudeControlLayout->addWidget(btnKillRotation);
+    attitudeControlLayout->addWidget(btnStabilize);
+    thrustLayout->addLayout(attitudeControlLayout);
 
     landingLayout->addLayout(simControlLayout);
 
@@ -751,6 +771,30 @@ void cockpitPage::setupConnections()
             });
 
     connect(btnAutopilot, &QPushButton::clicked, this, &cockpitPage::onAutopilotClicked);
+
+    connect(btnKillRotation, &QPushButton::clicked, this, [this](bool checked)
+            {
+                if (checked && btnStabilize->isChecked())
+                {
+                    btnStabilize->setChecked(false);
+                    collectedCmd.stabilize = false;
+                }
+
+                collectedCmd.killRotation = checked;
+                sendFlightCmd();
+            });
+
+    connect(btnStabilize, &QPushButton::clicked, this, [this](bool checked)
+            {
+                if (checked && btnKillRotation->isChecked())
+                {
+                    btnKillRotation->setChecked(false);
+                    collectedCmd.killRotation = false;
+                }
+
+                collectedCmd.stabilize = checked;
+                sendFlightCmd();
+            });
 
     connect(autopilotBlinkTimer, &QTimer::timeout, this, &cockpitPage::onAutopilotBlinkTimeout);
 
