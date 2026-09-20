@@ -510,9 +510,11 @@ private:
     // Buttons
     // =====================================================
 
-    QPushButton *btnSimStart; ///< Simulation start button
-    QPushButton *btnSimPause; ///< Simulation pause button
-    QPushButton *btnSimStop;  ///< Simulation stop button
+    QPushButton *btnSimStart;      ///< Simulation start button
+    QPushButton *btnSimPause;      ///< Simulation pause button
+    QPushButton *btnSimStop;       ///< Simulation stop button
+    QPushButton *btnKillRotation;  ///< Toggles angular-rate damping mode
+    QPushButton *btnStabilize;     ///< Toggles attitude stabilization mode
 
     // =====================================================
     // Thrust Controle Console
