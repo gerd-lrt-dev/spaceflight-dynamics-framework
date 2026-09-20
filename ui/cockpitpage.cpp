@@ -800,10 +800,10 @@ void cockpitPage::setupConnections()
 
     connect(m_inputMapper, &inputmapper::RCS_cmdRequested, this, [this](FlightCommandDTO cmd)
             {
+                // The input mapper owns only manual RCS axis commands.
+                // Attitude mode flags are owned by their dedicated cockpit buttons.
                 collectedCmd.translation = cmd.translation;
                 collectedCmd.rotation    = cmd.rotation;
-                collectedCmd.stabilize   = cmd.stabilize;
-                collectedCmd.killRotation = cmd.killRotation;
                 sendFlightCmd();
             });
 }
