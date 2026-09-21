@@ -17,3 +17,12 @@ Eigen::Vector3d AttitudeController::killRotation(const Eigen::Vector3d& omega, c
 
     return rotationCmd;
 }
+
+Eigen::Vector3d AttitudeController::stablize(const Eigen::Vector3d& currentOrientation, const Eigen::Vector3d& targetOrientation, const Eigen::Vector3d& angularVelocity)
+{
+    constexpr double tetaTolerance = 0.005 // rad
+
+    Eigen::Vector3d rotationCmd{0.0, 0.0, 0.0};
+
+    if (std::abs())
+}

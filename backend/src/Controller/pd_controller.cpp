@@ -19,6 +19,26 @@ double PD_Controller::control(const double &targetValue, const double &measuredV
     return controlValue;
 }
 
+double PD_Controller::controlWithOwnDTerm(const double &targetValue, const double &measuredValue, const double differential, const double &K_p, const double &K_d, const double &dt) const
+{
+    double error        = calcError(targetValue, measuredValue);
+
+    double P_term = error * K_p;
+
+    double D_term = differential * K_d;
+
+    double controlValue = P_term + D_term;
+
+    return controlValue;
+}
+
+Eigen::Quaterniond PD_Controller::controlQuaternion(const double& targetValue, const double &currentValue, const double& differential, const double& K_P, const double& K_D) const
+{
+    Eigen::Quaterniond qError = calcQError(targetValue, currentValue);
+
+
+}
+
 // ------------------------------------------------
 // Private:
 // ------------------------------------------------
@@ -34,4 +54,9 @@ double PD_Controller::calcDifferential(const double &error, const double &error_
     error_old_ = error;
 
     return differential;
+}
+
+Eigen::Quaterniond PD_Controller::calcQError(const Eigen::Quaterniond& target, const Eigen::Quaterniond& current) const
+{
+    return target.conjugate() * current;
 }
