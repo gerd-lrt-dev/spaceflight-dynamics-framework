@@ -91,7 +91,11 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         ControlCommand autoCmd{};
         autoCmd.mainEngine = autoThrustNormalized;
 
-        Eigen::Vector3d autoAttitudeThrust = attController_->killRotation(landerSpacecraft->getState().SBF_AngularVelocity, dt);
+        if (autoCmd.killRotation)
+        {
+            Eigen::Vector3d autoAttitudeThrust = attController_->killRotation(landerSpacecraft->getState().SBF_AngularVelocity, dt);
+        }
+
 
 
         receiveCommandFromAutopilot(autoCmd);
