@@ -28,7 +28,7 @@
         "ENU_InitialPosition": {
           "east": 0.0,
           "north": 0.0,
-          "up": 300.0
+          "up": 30000.0
         },
 
         "ENU_InitialVelocity": {

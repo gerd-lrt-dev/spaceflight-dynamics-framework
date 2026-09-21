@@ -90,7 +90,7 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, spacecraftConfig_.engines_[0].maxThrust);
 
         // Auto attitude control mechanism
-        double autoAttitudeRCSThrust = attController_->killRotation(landerSpacecraft->MCI_getVelocity(), dt);
+        Eigen::Vector3d autoAttitudeRCSThrust = attController_->killRotation(landerSpacecraft->MCI_getVelocity(), dt);
 
         // Withdraw auto commands into autoCmd
         ControlCommand autoCmd{};

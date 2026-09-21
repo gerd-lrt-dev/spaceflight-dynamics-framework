@@ -1,4 +1,5 @@
 #include "Control/inputArbiter.h"
+#include <iostream>
 
 ControlCommand InputArbiter::chooseCommand()
 {
@@ -6,7 +7,7 @@ ControlCommand InputArbiter::chooseCommand()
 
     if (!automationActive)
     {
-        return usrCmd_;
+        cmd = usrCmd_;
     }
     else
     {
@@ -19,10 +20,7 @@ ControlCommand InputArbiter::chooseCommand()
         cmd.killRotation        = usrCmd_.killRotation;
     }
 
-    if (autoRotationActive)
-    {
-        cmd.rotation = autoCmd_.rotation;
-    }
+    if (autoRotationActive) cmd.rotation = autoCmd_.rotation;
 
     return cmd;
 }
@@ -32,7 +30,10 @@ void InputArbiter::receiveUserControlCommand(const ControlCommand &userCmd)
     usrCmd_ = userCmd;
     automationActive = usrCmd_.autopilotActive;
 
-    if (usrCmd_.killRotation || usrCmd_.stabilize) autoRotationActive = true;
+    if (usrCmd_.killRotation || usrCmd_.stabilize)
+    {
+        autoRotationActive = true;
+    }
 }
 void InputArbiter::receiveAutoControlCommand(const ControlCommand &autoCmd)
 {
