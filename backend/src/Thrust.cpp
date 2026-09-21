@@ -79,8 +79,6 @@ void Thrust::setTargetThrustInPercentage(EngineType engine, const double &tMainE
             if (model->getEngineType() == EngineType::RCS_translation)
             {
                 const double command = RCSControlAllocator::mapTranslationCommandToThrusterPercentage(tRCSThrust, model->getSBF_DirectionOfThrust());
-                if (command != 0)
-                std::cout << "[Thrust]-setTargetThrustInPercentage-: Thrust allocated for direction: \n" << model->getSBF_DirectionOfThrust() << std::endl;
 
                 model->setTargetInPercentage(command);
             }
@@ -96,16 +94,6 @@ void Thrust::setRCSRotationTargetThrustInPercentage(const Eigen::Vector3d &RCSTh
         {
             const double command =
                 RCSControlAllocator::mapAttitudeCommandToThrusterPercentage(RCSThrust, model->getEnginePosition(), centerOfMass, model->getSBF_DirectionOfThrust());
-
-            if (command != 0.0)
-            {
-                std::cout
-                    << "[Thrust]-setRCSRotationTargetThrustInPercentage- "
-                    << "Thrust allocated to <"
-                    << model->getEngineName()
-                    << ">."
-                    << std::endl;
-            }
 
             model->setTargetInPercentage(command);
         }
