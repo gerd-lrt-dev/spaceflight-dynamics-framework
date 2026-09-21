@@ -7,9 +7,7 @@
 class AttitudeController : public IAttitudeControl
 {
 public:
-    explicit AttitudeController(std::unique_ptr<IController> controller) : controllerX_(std::move(controller)), controllerY_(std::move(controller)), controllerZ_(std::move(controller))
-    {
-    }
+    AttitudeController();
 
     Eigen::Vector3d killRotation(const Eigen::Vector3d& omega, const double& dt) const override;
 

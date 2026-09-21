@@ -75,7 +75,16 @@ void simcontrol::processCommands()
 
     setTargetMainEngineThrust(activeCommand.mainEngine);
     setTargetRCSThrust(activeCommand.translation, EngineType::RCS_translation);
-    setTargetRCSThrust(activeCommand.rotation, EngineType::RCS_rotation);
+
+    if (activeCommand.killRotation)
+    {
+        setTargetRCSThrust(attController_->killRotation(landerSpacecraft->getState().SBF_AngularVelocity, dt), EngineType::RCS_rotation);
+    }
+    else
+    {
+        setTargetRCSThrust(activeCommand.rotation, EngineType::RCS_rotation);
+    }
+
     setAttitudeKillRotation(activeCommand.killRotation);
 
 }
@@ -90,13 +99,6 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, spacecraftConfig_.engines_[0].maxThrust);
         ControlCommand autoCmd{};
         autoCmd.mainEngine = autoThrustNormalized;
-
-        if (autoCmd.killRotation)
-        {
-            Eigen::Vector3d autoAttitudeThrust = attController_->killRotation(landerSpacecraft->getState().SBF_AngularVelocity, dt);
-        }
-
-
 
         receiveCommandFromAutopilot(autoCmd);
     }

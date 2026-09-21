@@ -1,4 +1,10 @@
 #include "Automation/attitudeController.h"
+#include "Controller/pd_controller.h"
+
+AttitudeController::AttitudeController() : controllerX_(std::make_unique<PD_Controller>()), controllerY_(std::make_unique<PD_Controller>()), controllerZ_(std::make_unique<PD_Controller>())
+{
+
+}
 
 Eigen::Vector3d AttitudeController::killRotation(const Eigen::Vector3d& omega, const double& dt) const
 {
