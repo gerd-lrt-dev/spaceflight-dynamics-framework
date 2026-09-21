@@ -84,6 +84,7 @@ public:
 private:
     void setAutomationActiveFlag(bool on);
     bool automationActive = false;
+    bool autoRotationActive = false;
     ControlCommand usrCmd_;
     ControlCommand autoCmd_;
 };

@@ -19,13 +19,20 @@ ControlCommand InputArbiter::chooseCommand()
         cmd.killRotation        = usrCmd_.killRotation;
     }
 
+    if (autoRotationActive)
+    {
+        cmd.rotation = autoCmd_.rotation;
+    }
+
     return cmd;
 }
 
 void InputArbiter::receiveUserControlCommand(const ControlCommand &userCmd)
 {
     usrCmd_ = userCmd;
-    automationActive = userCmd.autopilotActive;
+    automationActive = usrCmd_.autopilotActive;
+
+    if (usrCmd_.killRotation || usrCmd_.stabilize) autoRotationActive = true;
 }
 void InputArbiter::receiveAutoControlCommand(const ControlCommand &autoCmd)
 {

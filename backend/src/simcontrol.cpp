@@ -75,16 +75,7 @@ void simcontrol::processCommands()
 
     setTargetMainEngineThrust(activeCommand.mainEngine);
     setTargetRCSThrust(activeCommand.translation, EngineType::RCS_translation);
-
-    if (activeCommand.killRotation)
-    {
-        setTargetRCSThrust(attController_->killRotation(landerSpacecraft->getState().SBF_AngularVelocity, dt), EngineType::RCS_rotation);
-    }
-    else
-    {
-        setTargetRCSThrust(activeCommand.rotation, EngineType::RCS_rotation);
-    }
-
+    setTargetRCSThrust(activeCommand.rotation, EngineType::RCS_rotation);
     setAttitudeKillRotation(activeCommand.killRotation);
 
 }
@@ -97,8 +88,14 @@ void simcontrol::runAutopilot(const SpacecraftState& currentSpacecraftstate, con
         // Autopilot is used for main engine of spacecraft with index number 0!
         double autoThrust = autopilot_->setAutoThrustInNewton(controller_.get(), spacecraftConfig_.engines_[0].maxThrust, landerSpacecraft->ENU_getVelocity().z(), landerSpacecraft->ENU_getPosition().z(), dt, spacecraftConfig_.emptyMass + spacecraftConfig_.fuelM, config_.moonGravity);
         double autoThrustNormalized = autopilot_->normalizAutoThrust(autoThrust, spacecraftConfig_.engines_[0].maxThrust);
+
+        // Auto attitude control mechanism
+        double autoAttitudeRCSThrust = attController_->killRotation(landerSpacecraft->MCI_getVelocity(), dt);
+
+        // Withdraw auto commands into autoCmd
         ControlCommand autoCmd{};
-        autoCmd.mainEngine = autoThrustNormalized;
+        autoCmd.mainEngine  = autoThrustNormalized;
+        autoCmd.rotation    = autoAttitudeRCSThrust;
 
         receiveCommandFromAutopilot(autoCmd);
     }
@@ -119,7 +116,7 @@ simcontrol::simcontrol(double t0) : initialTime(t0)
 {
     autopilot_      = std::make_unique<AdaptiveDescentController>(spacecraftConfig_.safeVelocity);
     controller_     = std::make_unique<PD_Controller>();
-    attController_  = std::make_unique<AttitudeController>(std::make_unique<PD_Controller>());
+    attController_  = std::make_unique<AttitudeController>();
 }
 
 simcontrol::~simcontrol()
