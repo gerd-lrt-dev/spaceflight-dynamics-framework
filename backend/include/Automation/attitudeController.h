@@ -45,8 +45,11 @@ public:
      * attitude. Later calls use quaternion attitude error and angular-rate damping
      * to generate the rotational command.
      *
-     * When both attitude error and angular velocity are within their configured
-     * tolerances, a zero command is returned to prevent RCS limit cycling.
+     * A hysteresis band is applied around the settled state. Correction is
+     * disabled once attitude error and angular velocity fall below the inner
+     * thresholds and is only re-enabled after either quantity exceeds the
+     * corresponding outer threshold. This reduces RCS chattering with the
+     * current binary thruster allocation.
      *
      * @param currentOrientation Current spacecraft attitude quaternion.
      * @param angularVelocity Current angular velocity expressed in SBF [rad/s].
@@ -73,6 +76,7 @@ private:
 
     Eigen::Quaterniond targetOrientation_{1.0, 0.0, 0.0, 0.0}; ///< Captured Stabilize target attitude.
     bool stabilizeInitialized_ = false; ///< True after the current Stabilize target has been captured.
+    bool stabilizeCorrectionActive_ = true; ///< True while Stabilize is actively commanding attitude correction.
 };
 
 #endif // ATTITUDECONTROLLER_H
