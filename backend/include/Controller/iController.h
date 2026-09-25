@@ -63,5 +63,5 @@ public:
      *
      * @return Calculated control output.
      */
-    virtual Eigen::Quaternion controlQuaternion(const double& targetValue, const double &currentValue, const double& differential, const double& K_P, const double& K_D) const = 0;
+    virtual Eigen::Vector3d controlQuaternion(const Eigen::Quaterniond& target, const Eigen::Quaterniond& current, const Eigen::Vector3d& angularVelocity, const Eigen::Vector3d& K_P, const Eigen::Vector3d& K_D) const = 0;
 };
