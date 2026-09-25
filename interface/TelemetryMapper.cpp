@@ -138,6 +138,16 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
         spacecraftStateToQString(backendData.spacecraftState_);
 
     // -------------------------------------------------------------------------
+    // Automation
+    // -------------------------------------------------------------------------
+
+    FE.automation.killRotationActive =
+        backendData.killRotationActive;
+
+    FE.automation.stabilizeActive =
+        backendData.stabilizeActive;
+
+    // -------------------------------------------------------------------------
     // Console
     // -------------------------------------------------------------------------
 
