@@ -11,7 +11,7 @@ public:
 
     Eigen::Vector3d killRotation(const Eigen::Vector3d& omega, const double& dt) const override;
 
-    Eigen::Vector3d stabalize(const Eigen::Quaterniond& currentOrientation, const Eigen::Quaterniond& targetOrientation, const Eigen::Vector3d& angularVelocity);
+    Eigen::Vector3d stabilize(const Eigen::Quaterniond& currentOrientation, const Eigen::Quaterniond& targetOrientation, const Eigen::Vector3d& angularVelocity) const override;
 
 
 private:

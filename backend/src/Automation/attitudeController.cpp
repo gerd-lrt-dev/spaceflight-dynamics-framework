@@ -18,7 +18,7 @@ Eigen::Vector3d AttitudeController::killRotation(const Eigen::Vector3d& omega, c
     return rotationCmd;
 }
 
-Eigen::Vector3d AttitudeController::stabalize(const Eigen::Quaterniond& currentOrientation, const Eigen::Quaterniond& targetOrientation, const Eigen::Vector3d& angularVelocity)
+Eigen::Vector3d AttitudeController::stabilize(const Eigen::Quaterniond& currentOrientation, const Eigen::Quaterniond& targetOrientation, const Eigen::Vector3d& angularVelocity) const
 {
     return stabController_->controlQuaternion(targetOrientation, currentOrientation, angularVelocity, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0});
 }
