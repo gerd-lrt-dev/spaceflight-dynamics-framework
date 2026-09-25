@@ -11,13 +11,15 @@ public:
 
     Eigen::Vector3d killRotation(const Eigen::Vector3d& omega, const double& dt) const override;
 
-    Eigen::Vector3d stablize(const Eigen::Vector3d& currentOrientation, const Eigen::Vector3d& targetOrientation, const Eigen::Vector3d& angularVelocity);
+    Eigen::Vector3d stabalize(const Eigen::Quaterniond& currentOrientation, const Eigen::Quaterniond& targetOrientation, const Eigen::Vector3d& angularVelocity);
 
 
 private:
     std::unique_ptr<IController> controllerX_;
     std::unique_ptr<IController> controllerY_;
     std::unique_ptr<IController> controllerZ_;
+
+    std::unique_ptr<IController> stabController_;
 };
 
 #endif // ATTITUDECONTROLLER_H

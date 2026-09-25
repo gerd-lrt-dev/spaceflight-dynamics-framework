@@ -1,7 +1,7 @@
 #include "Automation/attitudeController.h"
 #include "Controller/pd_controller.h"
 
-AttitudeController::AttitudeController() : controllerX_(std::make_unique<PD_Controller>()), controllerY_(std::make_unique<PD_Controller>()), controllerZ_(std::make_unique<PD_Controller>())
+AttitudeController::AttitudeController() : controllerX_(std::make_unique<PD_Controller>()), controllerY_(std::make_unique<PD_Controller>()), controllerZ_(std::make_unique<PD_Controller>()), stabController_(std::make_unique<PD_Controller>())
 {
 
 }
@@ -18,11 +18,7 @@ Eigen::Vector3d AttitudeController::killRotation(const Eigen::Vector3d& omega, c
     return rotationCmd;
 }
 
-Eigen::Vector3d AttitudeController::stablize(const Eigen::Vector3d& currentOrientation, const Eigen::Vector3d& targetOrientation, const Eigen::Vector3d& angularVelocity)
+Eigen::Vector3d AttitudeController::stabalize(const Eigen::Quaterniond& currentOrientation, const Eigen::Quaterniond& targetOrientation, const Eigen::Vector3d& angularVelocity)
 {
-    constexpr double tetaTolerance = 0.005 // rad
-
-    Eigen::Vector3d rotationCmd{0.0, 0.0, 0.0};
-
-    if (std::abs())
+    return stabController_->controlQuaternion(targetOrientation, currentOrientation, angularVelocity, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0});
 }

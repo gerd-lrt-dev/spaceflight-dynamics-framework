@@ -57,7 +57,7 @@ public:
      *
      * @return Quaternion representing the resulting control output.
      */
-    Eigen::Quaternion controlQuaternion(const double& targetValue, const double &currentValue, const double& differential, const Eigen::quaterniond& K_P, const Eigen::quaterniond& K_D) const override;
+    Eigen::Vector3d controlQuaternion(const Eigen::Quaterniond& target, const Eigen::Quaterniond& current, const Eigen::Vector3d& differential, const Eigen::Vector3d& K_p, const Eigen::Vector3d& K_d) const override;
 
 private:
     //***********************************************************
@@ -76,7 +76,7 @@ private:
     *
     * Mutable to allow modification in const compute function.
     */
-    mutable Eigen::Quaternion qError_old_{0.0, 0.0, 0.0, 0.0};
+    mutable Eigen::Quaterniond qError_old_{0.0, 0.0, 0.0, 0.0};
 
     //***********************************************************
     //*************        Methods                   ************
@@ -108,5 +108,5 @@ private:
      * @param measureValue Current measured value.
      * @return Error = target^(-1) * measured.
      */
-    Eigen::Quaternion calcQError(const Eigen::Quaternion& target, const Eigen::Quaternion& current) const;
+    Eigen::Quaterniond calcQError(const Eigen::Quaterniond& target, const Eigen::Quaterniond& current) const;
 };
