@@ -23,8 +23,10 @@ Eigen::Vector3d AttitudeController::killRotation(const Eigen::Vector3d& omega, c
 
 Eigen::Vector3d AttitudeController::stabilize(const Eigen::Quaterniond& currentOrientation, const Eigen::Vector3d& angularVelocity)
 {
-    constexpr double attitudeTolerance = 0.5 * 3.14159265358979323846 / 180.0; // rad
-    constexpr double omegaTolerance    = 0.005;                                // rad/s
+    constexpr double attitudeToleranceOff = 0.5 * 3.14159265358979323846 / 180.0; // rad
+    constexpr double attitudeToleranceOn  = 1.0 * 3.14159265358979323846 / 180.0; // rad
+    constexpr double omegaToleranceOff    = 0.005;                                // rad/s
+    constexpr double omegaToleranceOn     = 0.010;                                // rad/s
 
     const Eigen::Quaterniond currentNormalized = currentOrientation.normalized();
 
@@ -32,6 +34,7 @@ Eigen::Vector3d AttitudeController::stabilize(const Eigen::Quaterniond& currentO
     {
         targetOrientation_ = currentNormalized;
         stabilizeInitialized_ = true;
+        stabilizeCorrectionActive_ = true;
     }
 
     Eigen::Quaterniond qError =
@@ -46,13 +49,33 @@ Eigen::Vector3d AttitudeController::stabilize(const Eigen::Quaterniond& currentO
     const double attitudeErrorAngle =
         2.0 * std::acos(qErrorScalar);
 
-    const bool attitudeWithinTolerance =
-        attitudeErrorAngle < attitudeTolerance;
+    const double maxAngularVelocity =
+        angularVelocity.cwiseAbs().maxCoeff();
 
-    const bool angularVelocityWithinTolerance =
-        angularVelocity.cwiseAbs().maxCoeff() < omegaTolerance;
+    if (stabilizeCorrectionActive_)
+    {
+        const bool attitudeSettled =
+            attitudeErrorAngle < attitudeToleranceOff;
 
-    if (attitudeWithinTolerance && angularVelocityWithinTolerance)
+        const bool angularVelocitySettled =
+            maxAngularVelocity < omegaToleranceOff;
+
+        if (attitudeSettled && angularVelocitySettled)
+            stabilizeCorrectionActive_ = false;
+    }
+    else
+    {
+        const bool attitudeOutsideHoldBand =
+            attitudeErrorAngle > attitudeToleranceOn;
+
+        const bool angularVelocityOutsideHoldBand =
+            maxAngularVelocity > omegaToleranceOn;
+
+        if (attitudeOutsideHoldBand || angularVelocityOutsideHoldBand)
+            stabilizeCorrectionActive_ = true;
+    }
+
+    if (!stabilizeCorrectionActive_)
         return Eigen::Vector3d::Zero();
 
     return stabController_->controlQuaternion(
@@ -66,4 +89,5 @@ Eigen::Vector3d AttitudeController::stabilize(const Eigen::Quaterniond& currentO
 void AttitudeController::deactivateStabilize()
 {
     stabilizeInitialized_ = false;
+    stabilizeCorrectionActive_ = true;
 }
