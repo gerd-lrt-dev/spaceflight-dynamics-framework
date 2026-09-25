@@ -81,11 +81,14 @@ public:
     void receiveUserControlCommand(const ControlCommand &userCmd);
     void receiveAutoControlCommand(const ControlCommand &autoCmd);
 
+    bool isKillRotationActive() const;
+    bool isStabilizeActive() const;
+
 private:
     void setAutomationActiveFlag(bool on);
     bool automationActive       = false;
     bool killRotationActive     = false;
-    bool stablizeRotationActive = false;
+    bool stabilizeRotationActive = false;
 
     ControlCommand usrCmd_;
     ControlCommand autoCmd_;
