@@ -18,6 +18,7 @@ ControlCommand InputArbiter::chooseCommand()
         cmd.rotation            = usrCmd_.rotation;
         cmd.autopilotActive     = usrCmd_.autopilotActive;
         cmd.killRotation        = usrCmd_.killRotation;
+        cmd.stabilize           = usrCmd_.stabilize;
     }
 
     if (killRotationActive || stabilizeRotationActive) cmd.rotation = autoCmd_.rotation;
