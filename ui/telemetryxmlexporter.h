@@ -57,6 +57,9 @@ private:
     void writeHullIntegrity(QXmlStreamWriter& writer,
                             const Telemetry::HullIntegrity& hullIntegrity) const;
 
+    void writeAutomation(QXmlStreamWriter& writer,
+                         const Telemetry::Automation& automation) const;
+
     void writeConsole(QXmlStreamWriter& writer,
                       const Telemetry::Console& console) const;
 
