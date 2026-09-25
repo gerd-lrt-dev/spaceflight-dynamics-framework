@@ -57,7 +57,7 @@ public:
      *
      * @return Quaternion representing the resulting control output.
      */
-    Eigen::Quaternion controlQuaternion(const double& targetValue, const double &currentValue, const double& differential, const double& K_P, const double& K_D) const override;
+    Eigen::Quaternion controlQuaternion(const double& targetValue, const double &currentValue, const double& differential, const Eigen::quaterniond& K_P, const Eigen::quaterniond& K_D) const override;
 
 private:
     //***********************************************************

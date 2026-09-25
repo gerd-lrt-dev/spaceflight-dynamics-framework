@@ -32,11 +32,21 @@ double PD_Controller::controlWithOwnDTerm(const double &targetValue, const doubl
     return controlValue;
 }
 
-Eigen::Quaterniond PD_Controller::controlQuaternion(const double& targetValue, const double &currentValue, const double& differential, const double& K_P, const double& K_D) const
+Eigen::Quaterniond PD_Controller::controlQuaternion(const double& targetValue, const double &currentValue, const double& differential, const Eigen::quaterniond& K_p, const Eigen::quaterniond& K_d) const
 {
     Eigen::Quaterniond qError = calcQError(targetValue, currentValue);
 
+    if (qError.w() < 0.0) qError.coeffs() *= -1.0;
 
+    Eigen::Vector3d attitudeError = qError.vec();
+
+    Eigen::Vector3d P_term = - K_p * attitudeError;
+
+    Eigen::Vector3d D_term = - K_d * differential;
+
+    Eigen::Vector3d controlValue = P_term + D_term;
+
+    return controlValue;
 }
 
 // ------------------------------------------------
