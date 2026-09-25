@@ -42,20 +42,19 @@ public:
     double controlWithOwnDTerm(const double &targetValue, const double &measuredValue, const double differential, const double &K_p, const double &K_d, const double &dt) const override;
 
     /**
-     * @brief Computes a quaternion-based PD control output.
+     * @brief Compute a three-axis quaternion-based PD control output.
      *
-     * Calculates a quaternion control response from the deviation between the
-     * desired target value and the current value. The derivative contribution is
-     * supplied explicitly through the differential term and is weighted together
-     * with the proportional contribution by the corresponding controller gains.
+     * Forms the quaternion attitude error between target and current orientation,
+     * applies shortest-rotation handling and uses the vector part of the error as
+     * the proportional term. The externally supplied differential vector is used
+     * directly as the damping term.
      *
-     * @param targetValue Desired target value.
-     * @param currentValue Current measured value.
-     * @param differential Differential term used for damping.
-     * @param K_P Proportional gain.
-     * @param K_D Derivative gain.
-     *
-     * @return Quaternion representing the resulting control output.
+     * @param target Desired target attitude quaternion.
+     * @param current Current attitude quaternion.
+     * @param differential Angular-velocity vector used as derivative damping [rad/s].
+     * @param K_p Three-axis proportional gain vector.
+     * @param K_d Three-axis derivative gain vector.
+     * @return Three-axis rotational control command.
      */
     Eigen::Vector3d controlQuaternion(const Eigen::Quaterniond& target, const Eigen::Quaterniond& current, const Eigen::Vector3d& differential, const Eigen::Vector3d& K_p, const Eigen::Vector3d& K_d) const override;
 
@@ -70,13 +69,6 @@ private:
      * Mutable to allow modification in const compute function.
      */
     mutable double error_old_ = 0.0;
-
-    /**
-    * @brief Previous error used to calculate derivative term.
-    *
-    * Mutable to allow modification in const compute function.
-    */
-    mutable Eigen::Quaterniond qError_old_{0.0, 0.0, 0.0, 0.0};
 
     //***********************************************************
     //*************        Methods                   ************
