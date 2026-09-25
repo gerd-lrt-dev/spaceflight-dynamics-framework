@@ -88,6 +88,7 @@ void TelemetryXmlExporter::writeTelemetrySnapshot(QXmlStreamWriter& writer,
     writeMissionContext(writer, telemetry.missionContext);
     writeFrameContext(writer, telemetry.frameContext);
     writeHullIntegrity(writer, telemetry.hullIntegrity);
+    writeAutomation(writer, telemetry.automation);
     writeConsole(writer, telemetry.console);
     writePropulsionSystems(writer, telemetry.propulsionSystems);
     writeSensor(writer, telemetry.sensor);
@@ -150,6 +151,18 @@ void TelemetryXmlExporter::writeHullIntegrity(
     writeDouble(writer, "spacecraftIntegrity", hullIntegrity.spacecraftIntegrity);
     writer.writeTextElement("spacecraftState", hullIntegrity.spacecraftState);
 
+    writer.writeEndElement();
+}
+
+void TelemetryXmlExporter::writeAutomation(
+    QXmlStreamWriter& writer,
+    const Telemetry::Automation& automation) const
+{
+    writer.writeStartElement("automation");
+    writer.writeTextElement("killRotationActive",
+                            automation.killRotationActive ? "true" : "false");
+    writer.writeTextElement("stabilizeActive",
+                            automation.stabilizeActive ? "true" : "false");
     writer.writeEndElement();
 }
 
