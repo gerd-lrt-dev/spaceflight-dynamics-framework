@@ -28,7 +28,7 @@ struct ControlCommand{
      * @note Units: radians or normalized input depending on implementation.
      *       Must be interpreted consistently by the simulation core.
      */
-    Eigen::Vector3d rotation;
+    Eigen::Vector3d rotation{0.0, 0.0, 0.0};
 
     /**
      * @brief Translational command (RCS linear control).
@@ -43,7 +43,7 @@ struct ControlCommand{
      * @note Typically mapped to RCS thruster groups.
      *       Units are usually normalized input [-1.0, 1.0].
      */
-    Eigen::Vector3d translation;
+    Eigen::Vector3d translation{0.0, 0.0, 0.0};
 
     /**
      * @brief Stabilization request flag.
