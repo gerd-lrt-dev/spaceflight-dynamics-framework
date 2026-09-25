@@ -49,6 +49,16 @@ struct simData
     // Console output
     std::string output;
 
+    /**
+     * @brief Active automatic attitude-control modes.
+     *
+     * These flags represent the control modes that were active for the
+     * corresponding simulation snapshot and are exported for verification
+     * and post-processing.
+     */
+    bool killRotationActive{false};
+    bool stabilizeActive{false};
+
     // MainEngine data
     ME_ThrustState ME_ThrustState_;
 
