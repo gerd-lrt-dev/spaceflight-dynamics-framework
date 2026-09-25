@@ -182,6 +182,10 @@ void simcontrol::runSimulation(const double dt)
         // --- Retrieve full simulation data ---
         simdata_ = landerSpacecraft->getFullSimulationData();
 
+        // Preserve active attitude automation modes in telemetry.
+        simdata_.killRotationActive = inputArbiter_->isKillRotationActive();
+        simdata_.stabilizeActive    = inputArbiter_->isStabilizeActive();
+
         // --- Log results (adapt later to new state vector) ---
         /*
         logger.log("Step results send to UI - Pos: (" +
