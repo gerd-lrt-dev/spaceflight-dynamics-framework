@@ -77,9 +77,28 @@ struct Telemetry
             Eigen::Vector3d position{0.0, 0.0, 0.0}; ///< Position vector.
         };
 
+        /**
+         * @struct ENUFrame
+         * @brief Represents a local East-North-Up tangent frame.
+        *
+        * The frame is attached to a fixed location on the lunar surface and is
+        * commonly used for local navigation, landing guidance, terrain-relative
+        * operations, and surface rendering.
+        */
+        struct ENUFrame
+        {
+            Eigen::Vector3d east;
+            Eigen::Vector3d north;
+            Eigen::Vector3d up;
+
+            PositionState origin;
+        };
+
         SurfaceCoordinates MSC_LandingSite; ///< Landing site in Moon Surface Coordinates.
         PositionState MCMF_landingSite;     ///< Landing site position in Moon-Centered Moon-Fixed frame.
         PositionState MCI_landingSite;      ///< Landing site position in Moon-Centered Inertial frame.
+        ENUFrame ENU_frame;                 ///< ENU frame attached to landing site in Moon-Centered Inertial frame.
+
     };
 
     /**
@@ -99,10 +118,29 @@ struct Telemetry
             Eigen::Vector3d velocity{0.0, 0.0, 0.0}; ///< Velocity vector.
         };
 
+        /**
+        * @struct LVLHFrame
+        * @brief Represents a Local Vertical Local Horizontal orbital frame.
+        *
+        * The frame is centered on an orbiting spacecraft and rotates with the
+        * orbital trajectory. It is commonly used for rendezvous, docking,
+        * relative navigation, and local orbital guidance.
+        *
+        */
+        struct LVLHFrame {
+            Eigen::Vector3d forward;
+            Eigen::Vector3d right;
+            Eigen::Vector3d down;
+
+            State origin;
+        };
+
         State MCI_State;  ///< State in Moon-Centered Inertial frame.
         State MCMF_State; ///< State in Moon-Centered Moon-Fixed frame.
         State ENU_State;  ///< State in local East-North-Up frame.
         State LVLH_State; ///< State in Local Vertical Local Horizontal frame.
+
+        LVLHFrame LVLH_frame; ///< Local Vertical Local Horizontal Frame.
 
         MissionContext::SurfaceCoordinates MSC_State; ///< State represented as Moon Surface Coordinates.
     };

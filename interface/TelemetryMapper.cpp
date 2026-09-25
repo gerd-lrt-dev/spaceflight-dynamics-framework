@@ -68,6 +68,89 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
         backendData.statevector_.SBF_AngularVelocity;
 
     // -------------------------------------------------------------------------
+    // Mission Context
+    // -------------------------------------------------------------------------
+
+    FE.missionContext.MSC_LandingSite.latitude =
+        backendData.missionContext_.MSC_LandingSite.latitude;
+
+    FE.missionContext.MSC_LandingSite.longitude =
+        backendData.missionContext_.MSC_LandingSite.longitude;
+
+    FE.missionContext.MSC_LandingSite.altitude =
+        backendData.missionContext_.MSC_LandingSite.altitude;
+
+    FE.missionContext.MCMF_landingSite.position =
+        backendData.missionContext_.MCMF_landingSite.position;
+
+    FE.missionContext.MCI_landingSite.position =
+        backendData.missionContext_.MCI_landingSite.position;
+
+    FE.missionContext.ENU_frame.origin.position =
+        backendData.missionContext_.ENU_landingSite.origin.position;
+
+    FE.missionContext.ENU_frame.east =
+        backendData.missionContext_.ENU_landingSite.east;
+
+    FE.missionContext.ENU_frame.north =
+        backendData.missionContext_.ENU_landingSite.north;
+
+    FE.missionContext.ENU_frame.up =
+        backendData.missionContext_.ENU_landingSite.up;
+
+    // -------------------------------------------------------------------------
+    // Simulation Frame Context
+    // -------------------------------------------------------------------------
+
+    FE.frameContext.MCI_State.position =
+        backendData.simFrameContext_.MCI_State.position;
+
+    FE.frameContext.MCI_State.velocity =
+        backendData.simFrameContext_.MCI_State.velocity;
+
+    FE.frameContext.MCMF_State.position =
+        backendData.simFrameContext_.MCMF_State.position;
+
+    FE.frameContext.MCMF_State.velocity =
+        backendData.simFrameContext_.MCMF_State.velocity;
+
+    FE.frameContext.MSC_State.latitude =
+        backendData.simFrameContext_.MSC_State.latitude;
+
+    FE.frameContext.MSC_State.longitude =
+        backendData.simFrameContext_.MSC_State.longitude;
+
+    FE.frameContext.MSC_State.altitude =
+        backendData.simFrameContext_.MSC_State.altitude;
+
+    FE.frameContext.ENU_State.position =
+        backendData.simFrameContext_.ENU_State.position;
+
+    FE.frameContext.ENU_State.velocity =
+        backendData.simFrameContext_.ENU_State.velocity;
+
+    FE.frameContext.LVLH_State.position =
+        backendData.simFrameContext_.LVLH_State.position;
+
+    FE.frameContext.LVLH_State.velocity =
+        backendData.simFrameContext_.LVLH_State.velocity;
+
+    FE.frameContext.LVLH_frame.origin.position =
+        backendData.simFrameContext_.LVLH_Frame.origin.position;
+
+    FE.frameContext.LVLH_frame.origin.velocity =
+        backendData.simFrameContext_.LVLH_Frame.origin.velocity;
+
+    FE.frameContext.LVLH_frame.forward =
+        backendData.simFrameContext_.LVLH_Frame.forward;
+
+    FE.frameContext.LVLH_frame.right =
+        backendData.simFrameContext_.LVLH_Frame.right;
+
+    FE.frameContext.LVLH_frame.down =
+        backendData.simFrameContext_.LVLH_Frame.down;
+
+    // -------------------------------------------------------------------------
     // Hull integrity
     // -------------------------------------------------------------------------
 
