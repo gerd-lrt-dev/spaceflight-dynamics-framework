@@ -222,19 +222,7 @@ public slots:
      * @param fuelMass Remaining fuel mass in kilograms.
      * @param fuelFlow Current fuel flow in kilograms per second.
      */
-    void onStateUpdated(double time,
-                        const Eigen::Vector3d& pos,
-                        const Eigen::Vector3d& vel,
-                        const double& GLoad,
-                        const QString spacecraftState_,
-                        const Eigen::Vector3d thrust,
-                        const Eigen::Vector3d targetThrust,
-                        const Eigen::Vector3d thrustInPercentage,
-                        QVector<Telemetry::PropulsionSystems::RCSThrust> RCSTelemetryVec_,
-                        QVector<Telemetry::PropulsionSystems::Tank> tanks,
-                        double fuelMass,
-                        double fuelFlow,
-                        QString consoleOutput);
+    void onStateUpdated(double time, Telemetry telemetry_);
 
 private slots:
     /**

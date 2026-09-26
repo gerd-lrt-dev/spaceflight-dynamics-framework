@@ -245,7 +245,7 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
         frontendTank.capacity =
             backendTank.capacity;
 
-        frontendTank.mass =
+        frontendTank.propellantMass =
             backendTank.mass;
 
         frontendTank.fillLevel =
@@ -253,6 +253,10 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
 
         FE.propulsionSystems.fuelTanks.append(frontendTank);
     }
+
+    FE.propulsionSystems.fuelMass = backendData.fuelMass;
+
+    FE.propulsionSystems.fuelFlow = backendData.fuelFlow;
 
     // -------------------------------------------------------------------------
     // Sensors

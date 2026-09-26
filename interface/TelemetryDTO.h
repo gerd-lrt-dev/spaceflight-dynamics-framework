@@ -87,9 +87,9 @@ struct Telemetry
         */
         struct ENUFrame
         {
-            Eigen::Vector3d east;
-            Eigen::Vector3d north;
-            Eigen::Vector3d up;
+            Eigen::Vector3d east{0.0, 0.0, 0.0};
+            Eigen::Vector3d north{0.0, 0.0, 0.0};
+            Eigen::Vector3d up{0.0, 0.0, 0.0};
 
             PositionState origin;
         };
@@ -128,9 +128,9 @@ struct Telemetry
         *
         */
         struct LVLHFrame {
-            Eigen::Vector3d forward;
-            Eigen::Vector3d right;
-            Eigen::Vector3d down;
+            Eigen::Vector3d forward{0.0, 0.0, 0.0};
+            Eigen::Vector3d right{0.0, 0.0, 0.0};
+            Eigen::Vector3d down{0.0, 0.0, 0.0};
 
             State origin;
         };
@@ -200,17 +200,35 @@ struct Telemetry
          */
         struct Tank
         {
-            int ID{-1};              ///< Unique tank identifier.
-            QString name{};          ///< Human-readable tank name.
-            QString role{};          ///< Tank role, e.g. main propellant or RCS.
-            double capacity{0.0};    ///< Maximum tank capacity.
-            double mass{0.0};        ///< Current propellant mass.
-            double fillLevel{0.0};   ///< Current normalized fill level.
+            int ID{-1};                     ///< Unique tank identifier.
+            QString name{};                 ///< Human-readable tank name.
+            QString role{};                 ///< Tank role, e.g. main propellant or RCS.
+            double capacity{0.0};           ///< Maximum tank capacity.
+            double propellantMass{0.0};     ///< Current propellant mass.
+            double fillLevel{0.0};          ///< Current normalized fill level.
         };
 
         MainEngineThrust mainEngine;   ///< Main engine telemetry.
         QVector<RCSThrust> RCSEngines; ///< Collection of RCS engine telemetry.
         QVector<Tank> fuelTanks;       ///< Collection of fuel tank telemetry.
+        /**
+        * @brief Total remaining fuel mass of all installed tanks.
+        *
+        * Represents the summed fuel mass across the complete propulsion system.
+        *
+        * Unit: kg
+        */
+        double fuelMass{0.0};
+
+        /**
+        * @brief Total fuel mass flow rate.
+        *
+        * Represents the combined instantaneous fuel consumption of all active
+        * propulsion elements.
+        *
+        * Unit: kg/s
+        */
+        double fuelFlow{0.0};
     };
 
     /**

@@ -495,7 +495,7 @@ void cockpitPage::rebuildFuelTankPanel(const QVector<Telemetry::PropulsionSystem
 
         QLCDNumber *lcdMass = new QLCDNumber();
         configureLCD(lcdMass, 8);
-        lcdMass->display(QString::number(tank.mass, 'f', 1));
+        lcdMass->display(QString::number(tank.propellantMass, 'f', 1));
 
         QProgressBar *barFill = new QProgressBar();
         barFill->setRange(0, 100);
@@ -520,7 +520,7 @@ void cockpitPage::rebuildFuelTankPanel(const QVector<Telemetry::PropulsionSystem
         QLabel *lblMass = new QLabel("Remaining [kg]");
         QLabel *lblFill = new QLabel(
             QString("Fill Level [%]  (%1 / %2 kg)")
-                .arg(tank.mass, 0, 'f', 1)
+                .arg(tank.propellantMass, 0, 'f', 1)
                 .arg(tank.capacity, 0, 'f', 1)
             );
 
@@ -727,7 +727,7 @@ void cockpitPage::updateFuelTanks(const QVector<Telemetry::PropulsionSystems::Ta
     {
         const Telemetry::PropulsionSystems::Tank& tank = tanks[i];
 
-        lcdTankMasses[i]->display(QString::number(tank.mass, 'f', 1));
+        lcdTankMasses[i]->display(QString::number(tank.propellantMass, 'f', 1));
 
         int fillPercent = static_cast<int>(qBound(0.0, tank.fillLevel * 100.0, 100.0));
         barTankFillLevels[i]->setValue(fillPercent);
@@ -939,43 +939,34 @@ void cockpitPage::sendFlightCmd()
 // ------------------------------------------------
 // Slots
 // ------------------------------------------------
-void cockpitPage::onStateUpdated(double time,
-                                 const Eigen::Vector3d& pos,
-                                 const Eigen::Vector3d& vel,
-                                 const double& GLoad,
-                                 const QString spacecraftState_,
-                                 const Eigen::Vector3d thrust,
-                                 const Eigen::Vector3d targetThrust,
-                                 const Eigen::Vector3d thrustInPercentage,
-                                 QVector<Telemetry::PropulsionSystems::RCSThrust> RCSTelemetryVec_,
-                                 QVector<Telemetry::PropulsionSystems::Tank> tanks,
-                                 double fuelMass,
-                                 double fuelFlow,
-                                 QString consoleOutput_)
+void cockpitPage::onStateUpdated(double time, Telemetry telemetry_)
 {
     updateTime(time);
-    updatePosition(pos);
+    updatePosition(telemetry_.navigation.MCI_position);
     updateRotation({0.0, 0.0, 0.0});
-    updateVelocity(vel);
-    updateAngularVelocity({0.0, 0.0, 0.0});
-    updateAcceleration(qRound(GLoad * 100.0) / 100.0);
+    updateVelocity(telemetry_.navigation.MCI_velocity);
+    updateAngularVelocity(telemetry_.navigation.SBF_AngularVelocity);
+    updateAcceleration(qRound(telemetry_.sensor.GLoad * 100.0) / 100.0);
+    Eigen::Vector3d thrust = telemetry_.propulsionSystems.mainEngine.SBF_direction * telemetry_.propulsionSystems.mainEngine.T_current;
     updateThrust({qRound(thrust.x() * 10.0) / 10.0, qRound(thrust.y() * 10.0) / 10.0, qRound(thrust.z() * 10.0) / 10.0});
+    Eigen::Vector3d targetThrust = telemetry_.propulsionSystems.mainEngine.SBF_direction * telemetry_.propulsionSystems.mainEngine.T_target;
     updateTargetThrust({qRound(targetThrust.x() * 10.0) / 10.0, qRound(targetThrust.y() * 10.0) / 10.0, qRound(targetThrust.z() * 10.0) / 10.0});
 
-    updateFuelTanks(tanks);
-    updateFuelMass(qRound(fuelMass * 10.0) / 10.0);
-    updateFuelFlow(qRound(fuelFlow * 100.0) / 100.0);
-    updateRCSThrusters(RCSTelemetryVec_);
-    updateHullStatus(spacecraftState_);
+    updateFuelTanks(telemetry_.propulsionSystems.fuelTanks);
+    updateFuelMass(qRound(telemetry_.propulsionSystems.fuelMass * 10.0) / 10.0);
+    updateFuelFlow(qRound(telemetry_.propulsionSystems.fuelFlow * 100.0) / 100.0);
+    updateRCSThrusters(telemetry_.propulsionSystems.RCSEngines);
+    updateHullStatus(telemetry_.hullIntegrity.spacecraftState);
 
-    landingView->setPositionENU(pos);
-    landingView->setVelocityENU(vel);
+    landingView->setPositionENU(telemetry_.navigation.MCI_position);
+    landingView->setVelocityENU(telemetry_.navigation.MCI_position);
     landingView->setYawDeg(0.0);          // DUMMY later from Quaternion/Euler
     landingView->setTargetENU({0,0,0});   // DUMMY
+    Eigen::Vector3d thrustInPercentage = telemetry_.propulsionSystems.mainEngine.SBF_direction * telemetry_.propulsionSystems.mainEngine.T_targetPercentage;
     landingView->setThrust(-thrustInPercentage.z());
-    landingView->setHullIntact(spacecraftState_);
+    landingView->setHullIntact(telemetry_.hullIntegrity.spacecraftState);
 
-    (autopilotActive) ? consoleOutput(consoleOutput_) : consoleOutput("No controlling active");
+    (autopilotActive) ? consoleOutput(telemetry_.console.output) : consoleOutput("No controlling active");
 
 }
 
