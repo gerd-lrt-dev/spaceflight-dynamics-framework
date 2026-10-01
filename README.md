@@ -115,25 +115,52 @@ Research topics include:
 
 ## ✅ Current Project Status
 
-The first major milestone of SDF has been completed.
+SDF has reached **Code Freeze for the first SDF Light release**.
 
-**Milestone 1 — 6DoF Core Simulation**
+The implementation scope of the initial **6DoF Core Simulation** is considered feature-complete. Development is now transitioning from feature implementation to **release qualification, verification and acceptance testing**.
 
-Implemented:
+### Code Freeze
+
+For SDF Light, Code Freeze means:
+
+- no new `D-issues` (development/features) are planned for the release
+- the production code baseline is kept stable
+- `T-issues` are now the primary focus for testing, verification and release acceptance
+- `B-issues` may still be created and fixed if acceptance testing reveals reproducible defects
+- non-critical enhancements and architectural extensions are deferred to later releases
+
+### Implemented release baseline
+
+The current SDF Light baseline includes:
 
 - Full translational rigid-body dynamics
 - Full rotational rigid-body dynamics
-- Quaternion attitude propagation
-- Modular propulsion system
+- Quaternion-based attitude propagation
+- Quaternion-based attitude stabilization
+- Modular main-engine and RCS propulsion
 - Force & torque aggregation
-- Numerical integration framework
-- Modular physics architecture
+- Deterministic fixed-step numerical propagation
+- Multi-frame coordinate architecture
+- Landing-site-relative initialization
+- Structured telemetry export
+- Qt cockpit demonstration application
 
-Current focus:
+### Test and verification status
 
-- Physics validation
-- Cockpit adaptation
-- SDF Light release
+The automated test infrastructure introduced with **T03** is now established and provides:
+
+- GoogleTest-based C++ tests
+- CTest integration
+- separated unit, integration and verification test structure
+- a reproducible local PASS / FAIL workflow for release qualification
+
+The project is currently in the **acceptance-test phase** for SDF Light. The remaining work is focused on analytical reference cases, end-to-end verification, regression testing and the final Milestone 1 acceptance.
+
+### Release status
+
+**SDF Light is approaching its first public release.**
+
+No additional functionality is planned for the release baseline. Remaining production-code changes should only result from confirmed defects found during verification or final release-candidate testing.
 
 ------------------------------------------------------------------------
 
