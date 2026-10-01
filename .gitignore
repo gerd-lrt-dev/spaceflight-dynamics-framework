@@ -1,5 +1,6 @@
 # Build-Ordner
 build/
+build-tests/
 
 # Mac OS Systemdateien
 .DS_Store

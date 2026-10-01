@@ -8,9 +8,14 @@ find_package(Eigen3 REQUIRED)
 
 include(CTest)
 
+option(BUILD_FRONTEND "Build Qt frontend" ON)
+
 add_subdirectory(backend)
-add_subdirectory(ui)
-add_subdirectory(interface)
+
+if(BUILD_FRONTEND)
+    add_subdirectory(ui)
+    add_subdirectory(interface)
+endif()
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
