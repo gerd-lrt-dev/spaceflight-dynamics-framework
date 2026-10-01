@@ -9,3 +9,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(unit)
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/integration/CMakeLists.txt")
+    add_subdirectory(integration)
+endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/verification/CMakeLists.txt")
+    add_subdirectory(verification)
+endif()
