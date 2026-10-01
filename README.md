@@ -1,7 +1,7 @@
 # Spaceflight Dynamics Framework (SDF)
 
 <p align="center">
-  <img src="docs/images/logo.png" width="220">
+  <img src="docs/images/Logo_with_background.png" width="220">
 </p>
 
 <p align="center">
