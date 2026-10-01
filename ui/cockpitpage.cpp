@@ -1140,7 +1140,7 @@ void cockpitPage::onStateUpdated(Telemetry telemetry_)
     const Eigen::Vector3d directionMCI =telemetry_.navigation.IB_Orientation* telemetry_.propulsionSystems.mainEngine.SBF_direction;
 
     // MCI -> MCMF rotation
-    const double theta = 2.26617e-6 * telemetry_.time;
+    const double theta = 2.6617e-6 * telemetry_.time;
 
     const Eigen::Quaterniond qMCItoMCMF(std::cos(theta * 0.5), 0.0, 0.0, std::sin(theta * 0.5));
 
