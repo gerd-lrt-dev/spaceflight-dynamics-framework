@@ -1034,7 +1034,7 @@ void LandingView::drawStatusBox(
                    )
 
         << QString("Frame : LOCAL ENU")
-        << QString("Ref   : MCI")
+        << QString("Origin : LANDING SITE")
         << QString("Axes  : X=E  Y=N  Z=U");
 
     const int lineHeight = 16;

@@ -94,6 +94,12 @@ Telemetry TelemetryMapper::getQTTelemetryData() const
     FE.frameContext.ENU_State.velocity =
         backendData.simFrameContext_.ENU_State.velocity;
 
+    FE.frameContext.ENUFrame_.east = backendData.simFrameContext_.ENU_Frame.east;
+    FE.frameContext.ENUFrame_.north = backendData.simFrameContext_.ENU_Frame.north;
+    FE.frameContext.ENUFrame_.up = backendData.simFrameContext_.ENU_Frame.up;
+
+    backendData.simFrameContext_.ENU_Frame.origin = backendData.simFrameContext_.ENU_Frame.origin;
+
     FE.frameContext.LVLH_State.position =
         backendData.simFrameContext_.LVLH_State.position;
 

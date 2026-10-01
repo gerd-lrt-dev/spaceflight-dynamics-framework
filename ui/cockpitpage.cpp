@@ -227,7 +227,7 @@ QGroupBox *cockpitPage::setupNavBox()
 
     QWidget *timeDetailBox = uibuilder.setupDetailBox(timePanel, {"TIME [s]"}, "SIMULATION TIME DATA", 1);
     QWidget *absPosDetailBox = uibuilder.setupDetailBox(absolutePosPanel, {"X [m]", "Y [m]", "Z [m]"}, "MCI_POSITION", 3);
-    QWidget *absRotDetailBox = uibuilder.setupDetailBox(absoluteRotPanel, {"LAT [°]", "LON [°]", "ROT [°]"}, "IB_ROTATION", 3);
+    QWidget *absRotDetailBox = uibuilder.setupDetailBox(absoluteRotPanel, {"ROLL [°]", "PITCH [°]", "YAW [°]"}, "IB_ROTATION", 3);
     QWidget *absTransVelDetailBox = uibuilder.setupDetailBox(absoluteTransVelPanel, {"VX [m/s]", "VY [m/s]", "VZ [m/s]"}, "MCI_VELOCITY", 3);
     QWidget *absAngVelDetailBox = uibuilder.setupDetailBox(absoluteAngVelPanel, {"ROLL [°/s]", "PITCH [°/s]", "YAW [°/s]"}, "SBF_ANGULAR VEL", 3);
 
@@ -1125,12 +1125,41 @@ void cockpitPage::onStateUpdated(Telemetry telemetry_)
     // HULL INTEGRITY
     updateHullStatus(telemetry_.hullIntegrity.spacecraftState);
 
+    // LANDING VIEW
     landingView->setPositionENU(telemetry_.frameContext.ENU_State.position);
     landingView->setVelocityENU(telemetry_.frameContext.ENU_State.velocity);
     landingView->setYawDeg(0.0);          // DUMMY later from Quaternion/Euler
     landingView->setTargetENU({0,0,0});   // target ENU is zero because the ENU frame is fixed on the landing site
     landingView->setThrust(telemetry_.propulsionSystems.mainEngine.T_current);
     landingView->setHullIntact(telemetry_.hullIntegrity.spacecraftState);
+
+    //********************************************************************
+    //***************** MCI -> ENU Projection temporary ******************
+    //********************************************************************
+
+    const Eigen::Vector3d directionMCI =telemetry_.navigation.IB_Orientation* telemetry_.propulsionSystems.mainEngine.SBF_direction;
+
+    // MCI -> MCMF rotation
+    const double theta = 2.26617 * std::pow(10, -6)  * telemetry_.time;
+
+    const Eigen::Quaterniond qMCItoMCMF(std::cos(theta * 0.5), 0.0, 0.0, std::sin(theta * 0.5));
+
+    const Eigen::Vector3d directionMCMF =qMCItoMCMF * directionMCI;
+
+    // MCMF -> ENU projection
+    const auto& enu = telemetry_.frameContext.ENUFrame_;
+
+    const Eigen::Vector3d directionENU(
+        directionMCMF.dot(enu.east),
+        directionMCMF.dot(enu.north),
+        directionMCMF.dot(enu.up)
+        );
+
+    landingView->setMainEngineDirectionENU(directionENU);
+
+    //********************************************************************
+    //***************** ------------------------------ ******************
+    //********************************************************************
 
     (autopilotActive) ? consoleOutput(telemetry_.console.output) : consoleOutput("No controlling active");
 

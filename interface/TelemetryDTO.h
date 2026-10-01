@@ -45,8 +45,33 @@ struct Telemetry
     {
         Eigen::Vector3d MCI_position{0.0, 0.0, 0.0};            ///< Spacecraft position in Moon-Centered Inertial frame.
         Eigen::Vector3d MCI_velocity{0.0, 0.0, 0.0};            ///< Spacecraft velocity in Moon-Centered Inertial frame.
-        Eigen::Quaterniond IB_Orientation{1.0, 0.0, 0.0, 0.0};  ///< Spacecraft attitude quaternion from inertial frame to body frame.
+        Eigen::Quaterniond IB_Orientation{1.0, 0.0, 0.0, 0.0};  ///< Spacecraft attitude quaternion from SBF frame to MCI frame.
         Eigen::Vector3d SBF_AngularVelocity{0.0, 0.0, 0.0};     ///< Angular velocity expressed in Spacecraft Body Frame.
+    };
+
+    /**
+     * @brief Local East-North-Up reference frame used for frontend telemetry.
+     *
+     * Represents the orthonormal basis vectors and origin state of the active
+     * ENU frame. The frame is typically attached to the configured landing site
+     * and is used by the frontend for local navigation and visualization.
+     */
+    struct ENUFrame
+    {
+        Eigen::Vector3d east;   ///< Unit vector of the local East axis expressed in MCMF.
+        Eigen::Vector3d north;  ///< Unit vector of the local North axis expressed in MCMF.
+        Eigen::Vector3d up;     ///< Unit vector of the local Up axis expressed in MCMF.
+
+        /**
+     * @brief Origin state of the ENU frame.
+     */
+        struct Origin
+        {
+            Eigen::Vector3d position; ///< ENU frame origin position expressed in MCMF [m].
+            Eigen::Vector3d velocity; ///< ENU frame origin velocity expressed in MCMF [m/s].
+        };
+
+        Origin origin;
     };
 
     /**
@@ -103,6 +128,8 @@ struct Telemetry
         State MCMF_State; ///< State in Moon-Centered Moon-Fixed frame.
         State ENU_State;  ///< State in local East-North-Up frame.
         State LVLH_State; ///< State in Local Vertical Local Horizontal frame.
+
+        ENUFrame ENUFrame_; ///< Frame for UI transformation calculation
 
         MissionContext::SurfaceCoordinates MSC_State; ///< State represented as Moon Surface Coordinates.
     };

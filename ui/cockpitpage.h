@@ -422,19 +422,17 @@ private:
 
     QLCDNumber *lcdTime;            ///< Simulation time display [s]
 
-    // Moon Centered Inertial (physical truth)
     QLCDNumber *MCI_lcdPosX;        ///< Position in x [m]
     QLCDNumber *MCI_lcdPosY;        ///< Position in y [m]
     QLCDNumber *MCI_lcdPosZ;        ///< Position in z [m]
 
-    // Local Navigation Frame
-    QLCDNumber *IB_lcdLat;         ///< Latitude [°]
-    QLCDNumber *IB_lcdLon;         ///< Longitude [°]
-    QLCDNumber *IB_lcdRot;         ///< Rotation [°]
+    QLCDNumber *IB_lcdLat;         ///< Roll [°]
+    QLCDNumber *IB_lcdLon;         ///< Pitch [°]
+    QLCDNumber *IB_lcdRot;         ///< Yaw [°]
 
-    QLCDNumber *MCI_lcdVelX;        ///< Velocity in x -> North [m/s]
-    QLCDNumber *MCI_lcdVelY;        ///< Velocity in y -> East [m/s]
-    QLCDNumber *MCI_lcdVelZ;        ///< Velocity in z -> Up [m/s]
+    QLCDNumber *MCI_lcdVelX;        ///< Velocity in MCI x[m/s]
+    QLCDNumber *MCI_lcdVelY;        ///< Velocity in MCI y[m/s]
+    QLCDNumber *MCI_lcdVelZ;        ///< Velocity in MCI z[m/s]
 
     QLCDNumber *SBF_lcdRoll;        ///< Roll [°/s]
     QLCDNumber *SBF_lcdPitch;       ///< Pitch [°/s]
