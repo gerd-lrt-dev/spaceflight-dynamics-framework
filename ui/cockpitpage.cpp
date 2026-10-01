@@ -279,7 +279,7 @@ QGroupBox *cockpitPage::setupEngineBox()
         uibuilder.setupDetailBox(
             currentThrustPanel,
             {"Thrust [N] X:", "Thrust [N] Y:", "Thrust [N] Z:"},
-            "LNF_CURRENT THRUST",
+            "SBF_CURRENT THRUST",
             3
             );
 
@@ -287,7 +287,7 @@ QGroupBox *cockpitPage::setupEngineBox()
         uibuilder.setupDetailBox(
             targetThrustPanel,
             {"Thrust [N] X:", "Thrust [N] Y:", "Thrust [N] Z:"},
-            "LNF_TARGET THRUST",
+            "SBF_TARGET THRUST",
             3
             );
 
