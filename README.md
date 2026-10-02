@@ -45,7 +45,7 @@ targeting completely different spacecraft missions and simulation
 scenarios.
 
 <p align="center">
-  <img src="docs/images/cockpit.jpg" width="900">
+  <img src="docs/images/cockpit.png" width="900">
 </p>
 
 <p align="center">
