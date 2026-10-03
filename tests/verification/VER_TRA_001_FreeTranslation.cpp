@@ -29,7 +29,7 @@ public:
     }
 };
 
-auto physicModel        = std::make_shared<ZeroAccelerationModel>();
+auto physicsModel        = std::make_shared<ZeroAccelerationModel>();
 
 auto rotationalModel    = std::make_shared<DummyRotationalModel>();
 
@@ -37,5 +37,5 @@ auto integrator         = std::make_shared<EulerIntegrator>();
 
 auto sensor             = std::make_shared<DummySensor>();
 
-physics physicsSystem(IPhysicsModel, rotationalModel, integrator, sensor);
+physics physicsSystem(physicsModel, rotationalModel, integrator, sensor);
 
