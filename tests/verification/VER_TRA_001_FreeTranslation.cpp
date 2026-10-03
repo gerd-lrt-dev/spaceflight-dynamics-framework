@@ -46,6 +46,10 @@ physics physicsSystem(physicsModel, rotationalModel, integrator, sensor);
 TEST(VER_TRA_001_FreeTranslation, MatchesAnalyticalSolution)
 {
     // Starting conditions
+    // Verification frame:
+    // Position and velocity are treated as inertial translational state vectors.
+    // No rotating-frame or coordinate transformation effects are part of VER-TRA-001.
+
     Eigen::Vector3d position{1000.0, -2000.0, 3000.0};
     Eigen::Vector3d velocity{10.0, -5.0, 2.0};
 
