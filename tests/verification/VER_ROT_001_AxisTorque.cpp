@@ -24,22 +24,22 @@ public:
     }
 };
 
-EnvironmentConfig cfg;
-
-auto physicsModel        = std::make_shared<ZeroAccelerationModel>();
-
-auto rotationalModel    = std::make_shared<RigidBodyRotationalModel>(cfg);
-
-auto integrator         = std::make_shared<EulerIntegrator>();
-
-auto sensor             = std::make_shared<DummySensor>();
-
-// Physics instance
-physics physicsSystem(physicsModel, rotationalModel, integrator, sensor);
-
 // Test module
 TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
 {
+    EnvironmentConfig cfg;
+
+    auto physicsModel        = std::make_shared<ZeroAccelerationModel>();
+
+    auto rotationalModel    = std::make_shared<RigidBodyRotationalModel>(cfg);
+
+    auto integrator         = std::make_shared<EulerIntegrator>();
+
+    auto sensor             = std::make_shared<DummySensor>();
+
+    // Physics instance
+    physics physicsSystem(physicsModel, rotationalModel, integrator, sensor);
+
     const Eigen::Matrix3d inertia = (Eigen::Matrix3d() <<
                                     100.0,  0.0,    0.0,
                                     0.0,    200.0,  0.0,
