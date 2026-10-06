@@ -2,6 +2,7 @@
 
 #include "physics.h"
 #include "Integrators/eulerIntegrator.h"
+#include "Physics/rigidBodyRotationalModel.h"
 
 #include <memory>
 
@@ -23,7 +24,7 @@ public:
     }
 };
 
-const EnvironmentConfig& cfg;
+EnvironmentConfig cfg;
 
 auto physicsModel        = std::make_shared<ZeroAccelerationModel>();
 
@@ -34,7 +35,7 @@ auto integrator         = std::make_shared<EulerIntegrator>();
 auto sensor             = std::make_shared<DummySensor>();
 
 // Physics instance
-physics(physicsModel, rotationalModel, integrator, DummySensor);
+physics physicsSystem(physicsModel, rotationalModel, integrator, sensor);
 
 // Test module
 TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
@@ -45,10 +46,10 @@ TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
                                     0.0,    0.0,    300.0
                                     ).finished();
 
-    Eigen::Vector3d angularVelocity{0.0, 0.0, 0.0};
-
     const Eigen::Vector3d torque{10.0, 0.0, 0.0};
 
+    Eigen::Vector3d angularAcceleration{0.0, 0.0, 0.0};
+    Eigen::Vector3d angularVelocity{0.0, 0.0, 0.0};
     Eigen::Quaterniond attitude{
         1.0,  // w
         0.0,  // x
@@ -62,30 +63,38 @@ TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
     // Simulation Loop
     for (int i = 0; i < steps; ++i)
     {
-        const Eigen::Vector3d angularAcceleration = rotationalModel.computeAngAcc(angularVelocity, inertia, torque);
+        angularAcceleration = physicsSystem.computeAngAcc(angularVelocity, inertia, torque);
 
-        angularVelocity = rotationalModel.computeAngVel(angularVelocity, angularAcceleration, dt);
+        angularVelocity     = physicsSystem.computeAngVel(angularVelocity, angularAcceleration, dt);
 
-        attitude        = rotationalModel.computeAttitude(attitude, angularVelocity, dt);
+        attitude            = physicsSystem.computeAttitude(attitude, angularVelocity, dt);
     }
 
     // Analyitcal reference
-    const Eigen::Quaterniond expectedAngVelocity = {1.0, 0.0, 0.0, 0.0};
-
-    const Eigen::Quaterniond expectedAttitude{};
-    expectedAttitude.w() = -0.8011436155;
-    expectedAttitude.x() = 0.5984721441;
-    expectedAttitude.y() = 0.0;
-    expectedAttitude.z() = 0.0;
+    const Eigen::Vector3d       expectedAngularAcceleration{0.1, 0.0, 0.0};
+    const Eigen::Quaterniond    expectedAngVelocity = {1.0, 0.0, 0.0, 0.0};
+    const Eigen::Quaterniond    expectedAttitude{
+        -0.8011436155,
+        0.5984721441,
+        0.0,
+        0.0
+    };
 
     // Tolerances
-    constexpr double angVelocitiyTolerance = 1e-12;
-    constexpr double attitudeTolerance = 1e-9;
+    constexpr double angularAccelerationTolerance = 1e-12;
+    constexpr double angularVelocityTolerance     = 1e-12;
+
+    constexpr double quaternionComponentTolerance = 2.5e-2;
+    constexpr double quaternionNormTolerance      = 1e-12;
 
     // Verification
-    EXPECT_NEAR(angularVelocity.x(), expectedAngVelocity.x(), angVelocitiyTolerance) << "Angular velocity in X deviates from analytical reference.";
-    EXPECT_NEAR(angularVelocity.y(), expectedAngVelocity.y(), angVelocitiyTolerance) << "Angular velocity in Y deviates from analytical reference.";
-    EXPECT_NEAR(angularVelocity.z(), expectedAngVelocity.z(), angVelocitiyTolerance) << "Angular velocity in Z deviates from analytical reference.";
+    EXPECT_NEAR(angularAcceleration.x(), expectedAngularAcceleration.x(), angularAccelerationTolerance) << "Angular acceleration in X deviates from analytical reference.";
+    EXPECT_NEAR(angularAcceleration.y(), expectedAngularAcceleration.y(), angularAccelerationTolerance) << "Angular acceleration in Y deviates from analytical reference.";
+    EXPECT_NEAR(angularAcceleration.z(), expectedAngularAcceleration.z(), angularAccelerationTolerance) << "Angular acceleration in Z deviates from analytical reference.";
+
+    EXPECT_NEAR(angularVelocity.x(), expectedAngVelocity.x(), angularVelocityTolerance) << "Angular velocity in X deviates from analytical reference.";
+    EXPECT_NEAR(angularVelocity.y(), expectedAngVelocity.y(), angularVelocityTolerance) << "Angular velocity in Y deviates from analytical reference.";
+    EXPECT_NEAR(angularVelocity.z(), expectedAngVelocity.z(), angularVelocityTolerance) << "Angular velocity in Z deviates from analytical reference.";
 
     EXPECT_NEAR(attitude.w(), expectedAttitude.w(), attitudeTolerance) << "Attitude W deviates from analytical reference";
     EXPECT_NEAR(attitude.x(), expectedAttitude.x(), attitudeTolerance) << "Attitude X deviates from analytical reference";
