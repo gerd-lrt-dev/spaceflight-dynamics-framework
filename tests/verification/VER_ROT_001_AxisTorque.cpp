@@ -72,7 +72,7 @@ TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
 
     // Analyitcal reference
     const Eigen::Vector3d       expectedAngularAcceleration{0.1, 0.0, 0.0};
-    const Eigen::Quaterniond    expectedAngVelocity = {1.0, 0.0, 0.0, 0.0};
+    const Eigen::Vector3d       expectedAngularVelocity{1.0, 0.0, 0.0};
     const Eigen::Quaterniond    expectedAttitude{
         -0.8011436155,
         0.5984721441,
@@ -92,12 +92,14 @@ TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
     EXPECT_NEAR(angularAcceleration.y(), expectedAngularAcceleration.y(), angularAccelerationTolerance) << "Angular acceleration in Y deviates from analytical reference.";
     EXPECT_NEAR(angularAcceleration.z(), expectedAngularAcceleration.z(), angularAccelerationTolerance) << "Angular acceleration in Z deviates from analytical reference.";
 
-    EXPECT_NEAR(angularVelocity.x(), expectedAngVelocity.x(), angularVelocityTolerance) << "Angular velocity in X deviates from analytical reference.";
-    EXPECT_NEAR(angularVelocity.y(), expectedAngVelocity.y(), angularVelocityTolerance) << "Angular velocity in Y deviates from analytical reference.";
-    EXPECT_NEAR(angularVelocity.z(), expectedAngVelocity.z(), angularVelocityTolerance) << "Angular velocity in Z deviates from analytical reference.";
+    EXPECT_NEAR(angularVelocity.x(), expectedAngularVelocity.x(), angularVelocityTolerance) << "Angular velocity in X deviates from analytical reference.";
+    EXPECT_NEAR(angularVelocity.y(), expectedAngularVelocity.y(), angularVelocityTolerance) << "Angular velocity in Y deviates from analytical reference.";
+    EXPECT_NEAR(angularVelocity.z(), expectedAngularVelocity.z(), angularVelocityTolerance) << "Angular velocity in Z deviates from analytical reference.";
 
-    EXPECT_NEAR(attitude.w(), expectedAttitude.w(), attitudeTolerance) << "Attitude W deviates from analytical reference";
-    EXPECT_NEAR(attitude.x(), expectedAttitude.x(), attitudeTolerance) << "Attitude X deviates from analytical reference";
-    EXPECT_NEAR(attitude.y(), expectedAttitude.y(), attitudeTolerance) << "Attitude Y deviates from analytical reference";
-    EXPECT_NEAR(attitude.z(), expectedAttitude.z(), attitudeTolerance) << "Attitude Z deviates from analytical reference";
+    EXPECT_NEAR(attitude.w(), expectedAttitude.w(), quaternionComponentTolerance) << "Attitude W deviates from analytical reference";
+    EXPECT_NEAR(attitude.x(), expectedAttitude.x(), quaternionComponentTolerance) << "Attitude X deviates from analytical reference";
+    EXPECT_NEAR(attitude.y(), expectedAttitude.y(), quaternionComponentTolerance) << "Attitude Y deviates from analytical reference";
+    EXPECT_NEAR(attitude.z(), expectedAttitude.z(), quaternionComponentTolerance) << "Attitude Z deviates from analytical reference";
+
+    EXPECT_NEAR(attitude.norm(), 1.0, quaternionNormTolerance) << "Attitude quaternion norm deviates from unity.";
 }
