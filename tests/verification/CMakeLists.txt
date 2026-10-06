@@ -1,6 +1,7 @@
 add_executable(
     verification_tests
     VER_TRA_001_FreeTranslation.cpp
+    VER_ROT_001_AxisTorque.cpp
 )
 
 target_link_libraries(
