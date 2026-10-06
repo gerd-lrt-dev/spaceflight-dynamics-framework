@@ -6,7 +6,9 @@
 
 #include <memory>
 
-// Classes
+// Test helpers
+namespace
+{
 
 class ZeroAccelerationModel : public IPhysicsModel{
 public:
@@ -24,6 +26,8 @@ public:
     }
 };
 
+} // namespace
+
 // Test module
 TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
 {
@@ -39,6 +43,14 @@ TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
 
     // Physics instance
     physics physicsSystem(physicsModel, rotationalModel, integrator, sensor);
+
+    // Verification conventions:
+    // - Torque and angular velocity are expressed in the spacecraft body-fixed frame (SBF).
+    // - Rotation is restricted to the positive SBF x-axis (principal axis).
+    // - Initial attitude is the identity quaternion.
+    // - SDF attitude quaternion represents the rotation from SBF to the inertial frame.
+    // - Eigen quaternion component order is (w, x, y, z).
+    // - SDF propagates attitude using the updated angular velocity omega_(n+1).
 
     const Eigen::Matrix3d inertia = (Eigen::Matrix3d() <<
                                     100.0,  0.0,    0.0,
@@ -70,7 +82,20 @@ TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
         attitude            = physicsSystem.computeAttitude(attitude, angularVelocity, dt);
     }
 
-    // Analyitcal reference
+    // Analytical reference:
+    //
+    // alpha_x = tau_x / I_xx
+    //         = 10 / 100
+    //         = 0.1 rad/s^2
+    //
+    // omega_x(10 s) = alpha_x * t
+    //                 = 1.0 rad/s
+    //
+    // theta_x(10 s) = 0.5 * alpha_x * t^2
+    //                 = 5.0 rad
+    //
+    // q_ref = [cos(theta/2), sin(theta/2), 0, 0]
+
     const Eigen::Vector3d       expectedAngularAcceleration{0.1, 0.0, 0.0};
     const Eigen::Vector3d       expectedAngularVelocity{1.0, 0.0, 0.0};
     const Eigen::Quaterniond    expectedAttitude{
@@ -80,7 +105,14 @@ TEST(VER_ROT_001_AxisTorque, MatchesAnalyticalSolution)
         0.0
     };
 
-    // Tolerances
+    // Tolerances:
+    // Angular acceleration and angular velocity use tight absolute tolerances because
+    // the selected principal-axis case eliminates gyroscopic cross-coupling and has
+    // an analytically exact reference apart from floating-point roundoff.
+    //
+    // Quaternion components use a wider tolerance because SDF propagates quaternion
+    // kinematics numerically using explicit Euler integration with normalization.
+
     constexpr double angularAccelerationTolerance = 1e-12;
     constexpr double angularVelocityTolerance     = 1e-12;
 
