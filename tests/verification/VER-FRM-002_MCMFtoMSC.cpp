@@ -3,8 +3,6 @@
 #include "Coordinates/coordinateTransformer.h"
 #include "environmentConfig.h"
 
-#include <memory>
-
 TEST(VER_FRM_002_MCMFtoMSC, EquatorPrimeMeridianBasis)
 {
     // Backend source
@@ -13,8 +11,9 @@ TEST(VER_FRM_002_MCMFtoMSC, EquatorPrimeMeridianBasis)
 
 
     // Tolerances
-    constexpr double angularTolerance  = 1e-12; // rad
-    constexpr double altitudeTolerance = 1e-6;  // m
+    constexpr double angularTolerance   = 1e-12;    // rad
+    constexpr double altitudeTolerance  = 1e-6;     // m
+    constexpr double cartesianTolerance = 1e-6;     // m
 
     //*****************************************************************************
     //*************Case 1 - Equator / Prime Meridian / Surface*********************
@@ -35,9 +34,9 @@ TEST(VER_FRM_002_MCMFtoMSC, EquatorPrimeMeridianBasis)
     CoordinateTransformer::MoonSurfaceCoordinates resultCase1 = transformer.MCMFtoMSC(startCase1);
 
     // Verification
-    EXPECT_NEAR(resultCase1.latitude, expectedResultCase1.latitude, angularTolerance)   << "CASE1: Latitude attitude deviates from analytical reference.";
-    EXPECT_NEAR(resultCase1.longitude, expectedResultCase1.longitude, angularTolerance) << "CASE1: Longitude attitude deviates from analytical reference.";
-    EXPECT_NEAR(resultCase1.altitude, expectedResultCase1.altitude, altitudeTolerance)  << "CASE1: Altitude attitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase1.latitude, expectedResultCase1.latitude, angularTolerance)   << "CASE1: Latitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase1.longitude, expectedResultCase1.longitude, angularTolerance) << "CASE1: Longitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase1.altitude, expectedResultCase1.altitude, altitudeTolerance)  << "CASE1: Altitude deviates from analytical reference.";
 
 
     //*****************************************************************************
@@ -58,9 +57,9 @@ TEST(VER_FRM_002_MCMFtoMSC, EquatorPrimeMeridianBasis)
     CoordinateTransformer::MoonSurfaceCoordinates resultCase2 = transformer.MCMFtoMSC(startCase2);
 
     // Verification
-    EXPECT_NEAR(resultCase2.latitude, expectedResultCase2.latitude, angularTolerance)   << "CASE2: Latitude attitude deviates from analytical reference.";
-    EXPECT_NEAR(resultCase2.longitude, expectedResultCase2.longitude, angularTolerance) << "CASE2: Longitude attitude deviates from analytical reference.";
-    EXPECT_NEAR(resultCase2.altitude, expectedResultCase2.altitude, altitudeTolerance)  << "CASE2: Altitude attitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase2.latitude, expectedResultCase2.latitude, angularTolerance)   << "CASE2: Latitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase2.longitude, expectedResultCase2.longitude, angularTolerance) << "CASE2: Longitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase2.altitude, expectedResultCase2.altitude, altitudeTolerance)  << "CASE2: Altitude deviates from analytical reference.";
 
     //*****************************************************************************
     //*************Case 3 — North Pole*********************************************
@@ -80,8 +79,8 @@ TEST(VER_FRM_002_MCMFtoMSC, EquatorPrimeMeridianBasis)
     CoordinateTransformer::MoonSurfaceCoordinates resultCase3 = transformer.MCMFtoMSC(startCase3);
 
     // Verification
-    EXPECT_NEAR(resultCase3.latitude, expectedResultCase3.latitude, angularTolerance)   << "CASE3: Latitude attitude deviates from analytical reference.";
-    EXPECT_NEAR(resultCase3.altitude, expectedResultCase3.altitude, altitudeTolerance)  << "CASE3: Altitude attitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase3.latitude, expectedResultCase3.latitude, angularTolerance)   << "CASE3: Latitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase3.altitude, expectedResultCase3.altitude, altitudeTolerance)  << "CASE3: Altitude deviates from analytical reference.";
 
     //*****************************************************************************
     //*************Case 4 — 1000 m above equator***********************************
@@ -95,15 +94,90 @@ TEST(VER_FRM_002_MCMFtoMSC, EquatorPrimeMeridianBasis)
     startCase4.velocity = Eigen::Vector3d::Zero();
 
     expectedResultCase4.latitude    = 0.0;      // rad
-    expectedResultCase4.longitude   = 0.0;      // rad
+    expectedResultCase4.longitude   = 0.0;      // not used because longitude is not mathmatical specified!
     expectedResultCase4.altitude    = 1000.0;   // m
 
     CoordinateTransformer::MoonSurfaceCoordinates resultCase4 = transformer.MCMFtoMSC(startCase4);
 
     // Verification
-    EXPECT_NEAR(resultCase4.latitude, expectedResultCase4.latitude, angularTolerance)   << "CASE4: Latitude attitude deviates from analytical reference.";
-    EXPECT_NEAR(resultCase4.longitude, expectedResultCase4.longitude, angularTolerance)   << "CASE4: Longitude attitude deviates from analytical reference.";
-    EXPECT_NEAR(resultCase4.altitude, expectedResultCase4.altitude, altitudeTolerance)  << "CASE4: Altitude attitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase4.latitude, expectedResultCase4.latitude, angularTolerance)   << "CASE4: Latitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase4.longitude, expectedResultCase4.longitude, angularTolerance)   << "CASE4: Longitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase4.altitude, expectedResultCase4.altitude, altitudeTolerance)  << "CASE4: Altitude deviates from analytical reference.";
+
+    //*****************************************************************************
+    //*************Case 5 — Equator / -90° Longitude*******************************
+    //*****************************************************************************
+
+    // Conditions
+    CoordinateTransformer::State startCase5;                            // Starting conditions
+    CoordinateTransformer::MoonSurfaceCoordinates expectedResultCase5;  // Expected Result
+
+    startCase5.position = {0.0, - econfig.radiusMoon, 0.0};
+    startCase5.velocity = Eigen::Vector3d::Zero();
+
+    expectedResultCase5.latitude    = 0.0;      // rad
+    expectedResultCase5.longitude   = - M_PI/2;   // rad
+    expectedResultCase5.altitude    = 0.0;      // m
+
+    CoordinateTransformer::MoonSurfaceCoordinates resultCase5 = transformer.MCMFtoMSC(startCase5);
+
+    // Verification
+    EXPECT_NEAR(resultCase5.latitude, expectedResultCase5.latitude, angularTolerance)   << "CASE5: Latitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase5.longitude, expectedResultCase5.longitude, angularTolerance) << "CASE5: Longitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase5.altitude, expectedResultCase5.altitude, altitudeTolerance)  << "CASE5: Altitude deviates from analytical reference.";
+
+    //*****************************************************************************
+    //*************Case 6 — South Pole*********************************************
+    //*****************************************************************************
+
+    // Conditions
+    CoordinateTransformer::State startCase6;                            // Starting conditions
+    CoordinateTransformer::MoonSurfaceCoordinates expectedResultCase6;  // Expected Result
+
+    startCase6.position = {0.0, 0.0, - econfig.radiusMoon};
+    startCase6.velocity = Eigen::Vector3d::Zero();
+
+    expectedResultCase6.latitude    = - M_PI/2;   // rad
+    expectedResultCase6.longitude   = 0.0;      // not used because longitude is not mathmatical specified!
+    expectedResultCase6.altitude    = 0.0;      // m
+
+    CoordinateTransformer::MoonSurfaceCoordinates resultCase6 = transformer.MCMFtoMSC(startCase6);
+
+    // Verification
+    EXPECT_NEAR(resultCase6.latitude, expectedResultCase6.latitude, angularTolerance)   << "CASE6: Latitude deviates from analytical reference.";
+    EXPECT_NEAR(resultCase6.altitude, expectedResultCase6.altitude, altitudeTolerance)  << "CASE6: Altitude deviates from analytical reference.";
+
+    //*****************************************************************************
+    //*************Case 7 — Longitude Wraparound***********************************
+    //*****************************************************************************
+
+    // Conditions
+    CoordinateTransformer::MoonSurfaceCoordinates startCase7;   // Starting conditions
+    CoordinateTransformer::State expectedResultCase7;           // Expected Result
+    CoordinateTransformer::State expectedResultCase7afterReTransformation; // Expected Result after transformation back to MCMF
+
+    startCase7.latitude  = 0.0;     // rad
+    startCase7.longitude = M_PI;    // rad
+    startCase7.altitude  = 0.0;     // m
+
+    expectedResultCase7.position    = {-econfig.radiusMoon, 0.0, 0.0};
+    expectedResultCase7.velocity    = Eigen::Vector3d::Zero();
 
 
+    CoordinateTransformer::State resultCase7 = transformer.MSCtoMCMF(startCase7);
+
+    // Verification
+    EXPECT_NEAR(resultCase7.position.x(), expectedResultCase7.position.x(), cartesianTolerance)             << "CASE7: Coordinate in X deviates from analytical reference.";
+    EXPECT_NEAR(resultCase7.position.y(), expectedResultCase7.position.y(), cartesianTolerance)             << "CASE7: Coordinate in Y deviates from analytical reference.";
+    EXPECT_NEAR(resultCase7.position.z(), expectedResultCase7.position.z(), cartesianTolerance)             << "CASE7: Coordinate in Z deviates from analytical reference.";
+
+    // Transformation back to MSC
+    CoordinateTransformer::MoonSurfaceCoordinates expectedResultAfterReTransformationCase7;
+    expectedResultAfterReTransformationCase7.latitude   = 0.0;
+    expectedResultAfterReTransformationCase7.longitude  = M_PI;
+    expectedResultAfterReTransformationCase7.altitude   = 0.0;
+
+    CoordinateTransformer::MoonSurfaceCoordinates resultCase7AfterReTransformation = transformer.MCMFtoMSC(resultCase7);
+
+    EXPECT_NEAR(std::abs(resultCase7AfterReTransformation.longitude), expectedResultAfterReTransformationCase7.longitude, angularTolerance);
 }
