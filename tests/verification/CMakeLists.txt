@@ -2,6 +2,7 @@ add_executable(
     verification_tests
     VER_TRA_001_FreeTranslation.cpp
     VER_ROT_001_AxisTorque.cpp
+    VER-FRM-002_MCMFtoMSC.cpp
 )
 
 target_link_libraries(
