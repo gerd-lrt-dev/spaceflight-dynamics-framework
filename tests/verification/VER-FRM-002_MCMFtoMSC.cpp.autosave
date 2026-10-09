@@ -186,7 +186,10 @@ TEST(VER_FRM_002_MCMFtoMSC, EquatorPrimeMeridianBasis)
     //*****************************************************************************
 
     // Conditions
-    const CoordinateTransformer::MoonSurfaceCoordinates startCase7  = {89.999 * M_PI / 180.0, 45.0 * M_PI / 180.0, 100.0};   // Starting conditions
+    const CoordinateTransformer::MoonSurfaceCoordinates startCase8  = {89.999 * M_PI / 180.0, 45.0 * M_PI / 180.0, 100.0};   // Starting conditions
     const CoordinateTransformer::State.position = {21.4430808463, 21.4430808463, 1737499.99973536}
-
+    
+    const CoordinateTransformer::State resultCase8 = transformer.MCMFtoMSC(startCase8)
+    
+    EXPECT_NEAR()
 }
