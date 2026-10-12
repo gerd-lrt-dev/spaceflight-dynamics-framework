@@ -4,6 +4,7 @@ add_executable(
     VER_ROT_001_AxisTorque.cpp
     VER-FRM-002_MCMFtoMSC.cpp
     VER-FRM-003_ENU.cpp
+    VER-FRM-004_MCI_MCMF.cpp
 )
 
 target_link_libraries(
