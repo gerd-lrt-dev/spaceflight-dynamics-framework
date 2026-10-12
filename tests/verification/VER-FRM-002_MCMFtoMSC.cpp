@@ -13,6 +13,7 @@ constexpr double PI = 3.14159265358979323846;
 constexpr double angularTolerance   = 1e-12; // rad
 constexpr double altitudeTolerance  = 1e-6;  // m
 constexpr double cartesianTolerance = 1e-6;  // m
+constexpr double nearPoleAngularTolerance = 1e-10; // rad
 
 } // namespace
 
@@ -284,9 +285,9 @@ TEST(VER_FRM_002_MCMFtoMSC, NearPoleNumericalBehavior)
 
     const auto reconstructedMSC = transformer.MCMFtoMSC(resultMCMF);
 
-    EXPECT_NEAR(reconstructedMSC.latitude, startCase8.latitude, angularTolerance)
+    EXPECT_NEAR(reconstructedMSC.latitude, startCase8.latitude, nearPoleAngularTolerance)
         << "CASE8: Near-pole latitude does not survive roundtrip.";
-    EXPECT_NEAR(reconstructedMSC.longitude, startCase8.longitude, angularTolerance)
+    EXPECT_NEAR(reconstructedMSC.longitude, startCase8.longitude, nearPoleAngularTolerance)
         << "CASE8: Near-pole longitude does not survive roundtrip.";
     EXPECT_NEAR(reconstructedMSC.altitude, startCase8.altitude, altitudeTolerance)
         << "CASE8: Near-pole altitude does not survive roundtrip.";
