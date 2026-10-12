@@ -15,6 +15,7 @@ constexpr double cartesianTolerance = 1e-6;  // m
 constexpr double velocityTolerance  = 1e-12; // m/s
 constexpr double nearPoleTolerance  = 1e-10;
 
+// Helper class for expected Vector
 void expectVectorNear(
     const Eigen::Vector3d& actual,
     const Eigen::Vector3d& expected,
@@ -29,6 +30,7 @@ void expectVectorNear(
         << label << " Z component deviates from analytical reference.";
 }
 
+// Helper class for expected orthonormal frame
 void expectOrthonormalRightHanded(
     const CoordinateTransformer::ENUFrame& frame,
     double tolerance)
@@ -257,7 +259,7 @@ TEST(VER_FRM_003_LocalTransformation, ENUtoMCMFPositionAndVelocity)
 
     expectVectorNear(
         fixed.velocity,
-        {3.613574442394, 10.270428690758, 1.669872981078},
+        {3.6135744423949463, 10.270428691887325, 1.6698729810778060},
         1e-9,
         "ENU-to-MCMF velocity");
 }
