@@ -6,6 +6,7 @@ add_executable(
     VER-FRM-003_ENU.cpp
     VER-FRM-004_MCI_MCMF.cpp
     VER-FRM-005_SBF_MCI.cpp
+    VER-FRM-006_LVLH.cpp
 )
 
 target_link_libraries(
