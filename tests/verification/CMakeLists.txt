@@ -7,6 +7,7 @@ add_executable(
     VER-FRM-004_MCI_MCMF.cpp
     VER-FRM-005_SBF_MCI.cpp
     VER-FRM-006_LVLH.cpp
+    VER-FRM-007_Robustness.cpp
 )
 
 target_link_libraries(
