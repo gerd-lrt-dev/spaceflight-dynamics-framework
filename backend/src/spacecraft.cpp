@@ -95,7 +95,7 @@ void spacecraft::updateMovementData(double dt)
     Eigen::Vector3d MCI_velocity = physics_->computeVel(MCI_getVelocity(), MCI_acceleration, dt);
 
     // --- Compute position ---
-    Eigen::Vector3d MCI_position = physics_->computePos(MCI_getPosition(), MCI_velocity, MCI_acceleration, dt);
+    Eigen::Vector3d MCI_position = physics_->computePos(MCI_getPosition(), MCI_getVelocity(), MCI_acceleration, dt);
 
     // --- Compute orientation and angular velocity ---
     Eigen::Vector3d SBF_torque      = thrustOrchestration.getTotalTorque();
