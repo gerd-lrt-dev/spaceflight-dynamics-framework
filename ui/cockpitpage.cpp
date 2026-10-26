@@ -1017,39 +1017,44 @@ void cockpitPage::updateMainEngineThrustDirectionInMCI(Eigen::Vector3d MCI_MEDir
     SBF_lcdThrustDirection_Z->display(QString::number(MCI_MEDirection.z(), 'f', 1));
 }
 
-void cockpitPage::updateRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
+void cockpitPage::updateRCSThrusters(
+    const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
 {
+    const int activeCount = static_cast<int>(
+        std::count_if(
+            rcsStates.cbegin(),
+            rcsStates.cend(),
+            [](const auto& state)
+            {
+                return std::abs(state.T_current) > 1e-9;
+            }));
 
-    const QVector<Telemetry::PropulsionSystems::RCSThrust> activeStates =
-        filterActiveRCSThrusters(rcsStates);
+    updateRCSActivity(activeCount, rcsStates.size());
 
-    updateRCSActivity(activeStates.size(), rcsStates.size());
+    if (rcsStates.size() != lcdRCSCurrentThrust.size())
+        rebuildRCSThrusterPanel(rcsStates);
 
-    if (activeStates.size() != lcdRCSCurrentThrust.size())
-    {
-        rebuildRCSThrusterPanel(activeStates);
-    }
-
-    if (activeStates.isEmpty())
-    {
-        //consoleOutput("No active RCS thrusters");
-        return;
-    }
-
-    const int count = qMin(activeStates.size(), lcdRCSCurrentThrust.size());
+    const int count = qMin(rcsStates.size(), lcdRCSCurrentThrust.size());
 
     for (int i = 0; i < count; ++i)
     {
-        const Telemetry::PropulsionSystems::RCSThrust& state = activeStates[i];
+        const auto& state = rcsStates[i];
 
         lblRCSEngineNames[i]->setText(state.engineName);
-        lblRCSAxes[i]->setText(QString("Axis: %1").arg(getAxisLabel(state.SBF_direction)));
+        lblRCSAxes[i]->setText(
+            QString("Axis: %1").arg(getAxisLabel(state.SBF_direction)));
 
-        lcdRCSCurrentThrust[i]->display(QString::number(state.T_current, 'f', 1));
-        lcdRCSTargetThrust[i]->display(QString::number(state.T_target, 'f', 1));
+        lcdRCSCurrentThrust[i]->display(
+            QString::number(state.T_current, 'f', 1));
+        lcdRCSTargetThrust[i]->display(
+            QString::number(state.T_target, 'f', 1));
 
-        const int actuatorPercent =
-            static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.maxThrust) * 100.0, 100.0));
+        const int actuatorPercent = static_cast<int>(
+            qBound(
+                0.0,
+                getNormalizedThrustState(
+                    state.T_current, state.maxThrust) * 100.0,
+                100.0));
 
         barRCSActuatorStates[i]->setValue(actuatorPercent);
     }
