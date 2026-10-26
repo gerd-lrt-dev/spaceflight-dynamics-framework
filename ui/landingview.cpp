@@ -10,7 +10,8 @@
 LandingView::LandingView(QWidget *parent)
     : QWidget(parent)
 {
-    setMinimumSize(320, 260);
+    // The parent cockpit selects a minimum size appropriate to its layout mode.
+    setMinimumSize(0, 0);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     connect(&animationTimer, &QTimer::timeout, this, [this]() {

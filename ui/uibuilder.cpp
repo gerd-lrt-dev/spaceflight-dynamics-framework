@@ -1,5 +1,7 @@
 #include "uibuilder.h"
 
+#include <QSizePolicy>
+
 UIBuilder::UIBuilder() {}
 
 const QString UIBuilder::STDButtonLayout::styleSheet =
@@ -28,9 +30,9 @@ const QString UIBuilder::TopBarButtonLayout::styleSheet =
     "QPushButton#TopBarButton { "
     "background-color: #13233A; "
     "color: #E6EEF8; "
-    "font-size: 14px; "
+    "font-size: 13px; "
     "font-weight: 600; "
-    "padding: 6px 14px; "
+    "padding: 4px 8px; "
     "border-radius: 6px; "
     "border: 1px solid #223A5E; "
     "}"
@@ -50,9 +52,7 @@ QPushButton* UIBuilder::createButton(const QString &buttonName, QWidget *parent)
     QPushButton *button = new QPushButton(buttonName, parent);
     button->setObjectName("STDButton");
     button->setFixedSize(STDButtonLayout::buttonwidth, STDButtonLayout::buttonHeight);
-
     button->setStyleSheet(STDButtonLayout::styleSheet);
-
     return button;
 }
 
@@ -60,11 +60,14 @@ QPushButton* UIBuilder::createTopBarButton(const QString &buttonName, QWidget *p
 {
     QPushButton *button = new QPushButton(buttonName, parent);
     button->setObjectName("TopBarButton");
-    button->setFixedSize(TopBarButtonLayout::buttonWidth,
-                         TopBarButtonLayout::buttonHeight);
+
+    // Unlike the standard page buttons, top-bar buttons must be able to
+    // shrink when the application is displayed on a smaller screen.
+    button->setMinimumWidth(0);
+    button->setMinimumHeight(32);
+    button->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     button->setStyleSheet(TopBarButtonLayout::styleSheet);
-
     return button;
 }
 
@@ -73,7 +76,6 @@ QLabel* UIBuilder::createCopyright(const QString &copyRightStr, QWidget *parent)
     QLabel *copyright = new QLabel(copyRightStr, parent);
     copyright->setAlignment(Qt::AlignCenter);
     copyright->setStyleSheet("color: #AFC2D9; font-size: 14px; font-weight: 500; letter-spacing: 1px;");
-
     return copyright;
 }
 
@@ -83,7 +85,6 @@ QLabel* UIBuilder::createPageTitle(const QString &titleStr, QWidget *parent)
     title->setAlignment(Qt::AlignCenter);
     title->setStyleSheet("font-size: 32px;"
                          "font-weight: bold;");
-
     return title;
 }
 
@@ -115,26 +116,19 @@ QWidget *UIBuilder::setupDetailBox(const QVector<QLCDNumber*> &lcdPanels, const 
     title->setStyleSheet("color: #4FC3F7; font-weight: bold;");
 
     QGridLayout *grid = new QGridLayout();
-
     for (int i = 0; i < lcdPanels.size(); ++i)
     {
         QWidget *lcdField = createLcdField(namesOfPanels[i], lcdPanels[i], 8);
-
-        int row = i / columns;
-        int col = i % columns;
-
+        const int row = i / columns;
+        const int col = i % columns;
         grid->addWidget(lcdField, row, col);
     }
 
     mainLayout->addWidget(title);
     mainLayout->addLayout(grid);
-
     return box;
 }
 
-//*******************************
-// Private
-//*******************************
 static void configureLCD(QLCDNumber* lcd, int digits)
 {
     lcd->setDigitCount(digits);
@@ -146,7 +140,6 @@ QWidget* UIBuilder::createLcdField(const QString& title, QLCDNumber* lcd, int di
 {
     QWidget *field = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(field);
-
     layout->setContentsMargins(2, 2, 2, 2);
     layout->setSpacing(2);
 
@@ -155,9 +148,7 @@ QWidget* UIBuilder::createLcdField(const QString& title, QLCDNumber* lcd, int di
     label->setStyleSheet("color: #AFC7DF; font-size: 10px;");
 
     configureLCD(lcd, digits);
-
     layout->addWidget(label);
     layout->addWidget(lcd);
-
     return field;
 }
