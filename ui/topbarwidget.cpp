@@ -3,6 +3,7 @@
 
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QSizePolicy>
 
 TopBarWidget::TopBarWidget(QWidget *parent)
     : QWidget(parent)
@@ -10,9 +11,11 @@ TopBarWidget::TopBarWidget(QWidget *parent)
     UIBuilder uiBuilder;
 
     auto *layout = new QHBoxLayout(this);
+    layout->setContentsMargins(6, 4, 6, 4);
+    layout->setSpacing(4);
 
-    layout->setContentsMargins(12, 6, 12, 6);
-    layout->setSpacing(8);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    setMinimumHeight(40);
 
     setStyleSheet(
         "TopBarWidget { "
@@ -31,35 +34,29 @@ TopBarWidget::TopBarWidget(QWidget *parent)
     coordinateHelpButton = uiBuilder.createTopBarButton("Coordinate Frames", this);
     settingsButton = uiBuilder.createTopBarButton("Settings", this);
 
+    // Keep the main navigation and utility buttons together. Flexible button
+    // widths allow the layout to adapt to narrower windows without clipping.
     layout->addWidget(homeButton);
     layout->addWidget(selectSpacecraftButton);
     layout->addWidget(startSimulationButton);
     layout->addWidget(exportTelemetryButton);
-
-    layout->addStretch();
-
+    layout->addStretch(1);
     layout->addWidget(controlsHelpButton);
     layout->addWidget(coordinateHelpButton);
     layout->addWidget(settingsButton);
 
     connect(homeButton, &QPushButton::clicked,
             this, &TopBarWidget::homeRequested);
-
     connect(selectSpacecraftButton, &QPushButton::clicked,
             this, &TopBarWidget::selectSpacecraftRequested);
-
     connect(startSimulationButton, &QPushButton::clicked,
             this, &TopBarWidget::startSimulationRequested);
-
     connect(exportTelemetryButton, &QPushButton::clicked,
             this, &TopBarWidget::exportTelemetryRequested);
-
     connect(controlsHelpButton, &QPushButton::clicked,
             this, &TopBarWidget::controlsHelpRequested);
-
     connect(coordinateHelpButton, &QPushButton::clicked,
             this, &TopBarWidget::coordinateHelpRequested);
-
     connect(settingsButton, &QPushButton::clicked,
             this, &TopBarWidget::settingsRequested);
 }

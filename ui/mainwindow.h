@@ -170,12 +170,6 @@ private:
      */
     void sendCurrentConfigToWorker();
 
-protected:
-    /**
-     * @brief Handles initial window sizing after the window is shown.
-     * @param event Qt show event.
-     */
-    void showEvent(QShowEvent *event) override;
 };
 
 #endif // MAINWINDOW_H

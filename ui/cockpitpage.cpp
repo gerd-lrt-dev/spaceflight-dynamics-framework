@@ -1,6 +1,7 @@
 #include "cockpitpage.h"
 
 #include <QGridLayout>
+#include <QResizeEvent>
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -89,47 +90,127 @@ QWidget* cockpitPage::createLcdField(const QString& title, QLCDNumber* lcd, int 
 void cockpitPage::setupUI()
 {
     qDebug() << "setupUI called on:" << this;
-    QGridLayout *mainLayout = new QGridLayout(this);
-    mainLayout->setSpacing(12);
-    mainLayout->setContentsMargins(10, 10, 10, 10);
 
-    mainLayout->setRowStretch(0, 1);
-    mainLayout->setRowStretch(1, 1);
-
-    mainLayout->setColumnStretch(0, 1);
-    mainLayout->setColumnStretch(1, 1);
-    mainLayout->setColumnStretch(2, 1);
+    mainLayout = new QGridLayout(this);
+    mainLayout->setSpacing(8);
+    mainLayout->setContentsMargins(6, 6, 6, 6);
 
     setStyleSheet(
         "QWidget { background-color: #07111F; color: #E6EEF8; }"
-        "QGroupBox { border: 1px solid #223A5E; border-radius: 8px; margin-top: 22px; padding-top: 18px; font-weight: bold; }"
+        "QGroupBox { border: 1px solid #223A5E; border-radius: 8px; margin-top: 20px; padding-top: 14px; font-weight: bold; }"
         "QGroupBox::title { color: #38BDF8; }"
         "QLCDNumber { background-color: #020617; color: #38BDF8; border: 1px solid #223A5E; border-radius: 4px; }"
         "QSlider::groove:horizontal { height: 6px; background: #2F4A72; }"
         "QSlider::handle:horizontal { width: 14px; background: #4FC3F7; margin: -4px 0; border-radius: 3px; }"
         );
 
-    // ================= NAV =================
-    QGroupBox *navBox = setupNavBox();
+    // Construct each panel once. Responsive changes only move these widgets.
+    navBox = setupNavBox();
+    engineBox = setupEngineBox();
+    fuelBox = setupFuelBox();
+    statusBox = setupStatusBox();
+    landingViewBox = setupLandingViewBox();
+    flightControlsBox = setupFlightControlsBox();
 
-    // ================= ENGINE =================
-    QGroupBox *engineBox = setupEngineBox();
+    for (QGroupBox *panel : {navBox, fuelBox, engineBox, statusBox,
+                             landingViewBox, flightControlsBox})
+    {
+        panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        panel->setMinimumSize(0, 0);
+    }
 
-    // ================= FUEL =================
-    QGroupBox *fuelBox = setupFuelBox();
+    applyLayoutMode(LayoutMode::Desktop);
+    updateLayoutMode();
+}
 
-    // ================= STATUS =================
-    QGroupBox *statusBox = setupStatusBox();
+void cockpitPage::resizeEvent(QResizeEvent *event)
+{
+    QWidget::resizeEvent(event);
+    updateLayoutMode();
+}
 
-    // ================= LANDING VIEW =================
-    QGroupBox *landingBox = setupLandingBox();
+void cockpitPage::updateLayoutMode()
+{
+    const QSize available = size();
+    LayoutMode nextMode;
 
-    // ================= GRID ASSEMBLY =================
-    mainLayout->addWidget(navBox,     0, 0);
-    mainLayout->addWidget(fuelBox,    1, 0);
-    mainLayout->addWidget(landingBox, 0, 1, 2, 1);
-    mainLayout->addWidget(engineBox,  0, 2);
-    mainLayout->addWidget(statusBox,  1, 2);
+    if (available.width() >= 1400 && available.height() >= 800)
+        nextMode = LayoutMode::Desktop;
+    else if (available.width() >= 1100 && available.height() >= 650)
+        nextMode = LayoutMode::Compact;
+    else
+        nextMode = LayoutMode::SmallScreen;
+
+    if (nextMode != currentLayoutMode)
+        applyLayoutMode(nextMode);
+}
+
+void cockpitPage::applyLayoutMode(LayoutMode mode)
+{
+    if (!mainLayout)
+        return;
+
+    // Remove layout items, not widgets: widget instances and connections survive.
+    while (QLayoutItem *item = mainLayout->takeAt(0))
+        delete item;
+
+    for (int row = 0; row < 4; ++row)
+        mainLayout->setRowStretch(row, 0);
+    for (int column = 0; column < 3; ++column)
+        mainLayout->setColumnStretch(column, 0);
+
+    mainLayout->setSpacing(mode == LayoutMode::Desktop ? 12 : 6);
+    mainLayout->setContentsMargins(mode == LayoutMode::Desktop ? 10 : 4,
+                                   mode == LayoutMode::Desktop ? 10 : 4,
+                                   mode == LayoutMode::Desktop ? 10 : 4,
+                                   mode == LayoutMode::Desktop ? 10 : 4);
+
+    const bool showLandingView = mode != LayoutMode::SmallScreen;
+    landingViewBox->setVisible(showLandingView);
+    navBox->setVisible(true);
+    fuelBox->setVisible(true);
+    engineBox->setVisible(true);
+    statusBox->setVisible(true);
+    flightControlsBox->setVisible(true);
+
+    if (mode == LayoutMode::Desktop || mode == LayoutMode::Compact)
+    {
+        // NAV / LANDING VIEW / ENGINE
+        // FUEL / FLIGHT CONTROLS / STATUS
+        mainLayout->addWidget(navBox,             0, 0);
+        mainLayout->addWidget(fuelBox,             1, 0);
+        mainLayout->addWidget(landingViewBox,      0, 1);
+        mainLayout->addWidget(flightControlsBox,   1, 1);
+        mainLayout->addWidget(engineBox,           0, 2);
+        mainLayout->addWidget(statusBox,           1, 2);
+
+        mainLayout->setColumnStretch(0, 1);
+        mainLayout->setColumnStretch(1, mode == LayoutMode::Desktop ? 1 : 1);
+        mainLayout->setColumnStretch(2, 1);
+        mainLayout->setRowStretch(0, 1);
+        mainLayout->setRowStretch(1, 1);
+        landingView->setMinimumSize(mode == LayoutMode::Desktop ? QSize(240, 180)
+                                                                : QSize(160, 100));
+    }
+    else
+    {
+        // Prioritize controls on small displays; the visualization is hidden.
+        // Telemetry remains visible in two columns, with fuel tanks scrolling internally.
+        mainLayout->addWidget(flightControlsBox,  0, 0, 1, 2);
+        mainLayout->addWidget(navBox,              1, 0);
+        mainLayout->addWidget(engineBox,           1, 1);
+        mainLayout->addWidget(fuelBox,             2, 0);
+        mainLayout->addWidget(statusBox,           2, 1);
+
+        mainLayout->setColumnStretch(0, 1);
+        mainLayout->setColumnStretch(1, 1);
+        mainLayout->setRowStretch(1, 1);
+        mainLayout->setRowStretch(2, 1);
+        landingView->setMinimumSize(0, 0);
+    }
+
+    currentLayoutMode = mode;
+    mainLayout->activate();
 }
 
 void cockpitPage::initializeQTObjects()
@@ -318,6 +399,10 @@ QGroupBox *cockpitPage::setupEngineBox()
     rcsScrollArea->setFrameShape(QFrame::NoFrame);
     rcsScrollArea->setWidget(rcsThrusterContainer);
     rcsScrollArea->setMinimumHeight(160);
+    rcsScrollArea->setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::Expanding
+        );
 
     // Layout
     engineLayout->addWidget(currentThrustDetailBox,       0, 0);
@@ -333,6 +418,9 @@ QGroupBox *cockpitPage::setupEngineBox()
     engineLayout->setRowStretch(1, 1);
     engineLayout->setRowStretch(2, 0);
     engineLayout->setRowStretch(3, 2);
+
+    engineLayout->setColumnStretch(0, 1);
+    engineLayout->setColumnStretch(1, 1);
 
     return engineBox;
 }
@@ -482,21 +570,12 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSys
     rcsThrusterLayout->addStretch();
 }
 
-QVector<Telemetry::PropulsionSystems::RCSThrust> cockpitPage::filterActiveRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates) const
+QVector<Telemetry::PropulsionSystems::RCSThrust>
+cockpitPage::filterActiveRCSThrusters(
+    const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates) const
 {
-    QVector<Telemetry::PropulsionSystems::RCSThrust> active;
-
-    for (const auto& state : rcsStates)
-    {
-        if (std::abs(state.T_current) > 0.01 ||
-            std::abs(state.T_target) > 0.01 ||
-            (getNormalizedThrustState(state.T_current, state.maxThrust)) > 0.01)
-        {
-            active.push_back(state);
-        }
-    }
-
-    return active;
+    // Display all configured RCS thrusters, including inactive ones.
+    return rcsStates;
 }
 
 // ================= FUEL =================
@@ -683,22 +762,35 @@ QGroupBox *cockpitPage::setupStatusBox()
 }
 
 // ================= LANDING VIEW =================
-QGroupBox *cockpitPage::setupLandingBox()
+QGroupBox *cockpitPage::setupLandingViewBox()
 {
-    QGroupBox *landingBox = new QGroupBox("LANDING VIEW");
-    QVBoxLayout *landingLayout = new QVBoxLayout(landingBox);
+    QGroupBox *viewBox = new QGroupBox("LANDING VIEW");
+    QVBoxLayout *viewLayout = new QVBoxLayout(viewBox);
+    viewLayout->setContentsMargins(6, 6, 6, 6);
 
-    landingView = new LandingView(this);
-    landingView->setMinimumSize(240, 180);
-    landingLayout->addWidget(landingView, 1);
+    landingView = new LandingView(viewBox);
+    landingView->setMinimumSize(0, 0);
+    landingView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    viewLayout->addWidget(landingView, 1);
+    return viewBox;
+}
 
-    // === Thrust Control Console ===
+QGroupBox *cockpitPage::setupFlightControlsBox()
+{
+    QGroupBox *controlsBox = new QGroupBox("FLIGHT CONTROLS");
+    QVBoxLayout *controlsLayout = new QVBoxLayout(controlsBox);
+    controlsLayout->setContentsMargins(6, 6, 6, 6);
+    controlsLayout->setSpacing(6);
+
     QGroupBox *thrustBox = new QGroupBox("CONTROL UNIT");
     QVBoxLayout *thrustLayout = new QVBoxLayout(thrustBox);
+    thrustLayout->setContentsMargins(6, 6, 6, 6);
+    thrustLayout->setSpacing(4);
 
     thrustSlider = new QSlider(Qt::Horizontal);
     thrustSlider->setRange(0, 100);
     thrustSlider->setValue(0);
+    thrustSlider->setMinimumHeight(24);
 
     lblThrustCmd = new QLabel("Commanded Thrust: 0 %");
     lblThrustCmd->setAlignment(Qt::AlignCenter);
@@ -706,52 +798,45 @@ QGroupBox *cockpitPage::setupLandingBox()
     thrustLayout->addWidget(thrustSlider);
     thrustLayout->addWidget(lblThrustCmd);
 
-    landingLayout->addWidget(thrustBox);
-
-    // === Simulation Controls ===
-    QHBoxLayout *simControlLayout = new QHBoxLayout();
-    btnSimStart = new QPushButton("START");
-    btnSimPause = new QPushButton("PAUSE");
-    btnSimStop  = new QPushButton("STOP");
-
-    simControlLayout->addWidget(btnSimStart);
-    simControlLayout->addWidget(btnSimPause);
-    simControlLayout->addWidget(btnSimStop);
-
-    // === Autopilot Toggle ===
     btnAutopilot = new QPushButton("AUTOPILOT OFF");
     btnAutopilot->setCheckable(true);
     btnAutopilot->setStyleSheet(
-        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 6px; }"
-        "QPushButton:checked { background-color: #00BCD4; color: black; }"
-        );
-
+        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 5px; }"
+        "QPushButton:checked { background-color: #00BCD4; color: black; }");
     thrustLayout->addWidget(btnAutopilot);
 
-    // === Attitude Control ===
     QHBoxLayout *attitudeControlLayout = new QHBoxLayout();
-
     btnKillRotation = new QPushButton("KILL ROTATION");
     btnKillRotation->setCheckable(true);
     btnKillRotation->setStyleSheet(
-        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 6px; }"
-        "QPushButton:checked { background-color: #FF9800; color: black; }"
-        );
+        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 5px; }"
+        "QPushButton:checked { background-color: #FF9800; color: black; }");
 
     btnStabilize = new QPushButton("STABILIZE");
     btnStabilize->setCheckable(true);
     btnStabilize->setStyleSheet(
-        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 6px; }"
-        "QPushButton:checked { background-color: #4FC3F7; color: black; }"
-        );
+        "QPushButton { background-color: #333; color: #AAA; font-weight: bold; padding: 5px; }"
+        "QPushButton:checked { background-color: #4FC3F7; color: black; }");
 
     attitudeControlLayout->addWidget(btnKillRotation);
     attitudeControlLayout->addWidget(btnStabilize);
     thrustLayout->addLayout(attitudeControlLayout);
 
-    landingLayout->addLayout(simControlLayout);
+    QHBoxLayout *simControlLayout = new QHBoxLayout();
+    btnSimStart = new QPushButton("START");
+    btnSimPause = new QPushButton("PAUSE");
+    btnSimStop = new QPushButton("STOP");
+    for (QPushButton *button : {btnSimStart, btnSimPause, btnSimStop})
+    {
+        button->setMinimumWidth(0);
+        button->setMinimumHeight(32);
+        button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        simControlLayout->addWidget(button);
+    }
 
-    return landingBox;
+    controlsLayout->addWidget(thrustBox);
+    controlsLayout->addLayout(simControlLayout);
+    return controlsBox;
 }
 
 // ------------------------------------------------
@@ -932,38 +1017,44 @@ void cockpitPage::updateMainEngineThrustDirectionInMCI(Eigen::Vector3d MCI_MEDir
     SBF_lcdThrustDirection_Z->display(QString::number(MCI_MEDirection.z(), 'f', 1));
 }
 
-void cockpitPage::updateRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
+void cockpitPage::updateRCSThrusters(
+    const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
 {
-    const QVector<Telemetry::PropulsionSystems::RCSThrust> activeStates =
-        filterActiveRCSThrusters(rcsStates);
+    const int activeCount = static_cast<int>(
+        std::count_if(
+            rcsStates.cbegin(),
+            rcsStates.cend(),
+            [](const auto& state)
+            {
+                return std::abs(state.T_current) > 1e-9;
+            }));
 
-    updateRCSActivity(activeStates.size(), rcsStates.size());
+    updateRCSActivity(activeCount, rcsStates.size());
 
-    if (activeStates.size() != lcdRCSCurrentThrust.size())
-    {
-        rebuildRCSThrusterPanel(activeStates);
-    }
+    if (rcsStates.size() != lcdRCSCurrentThrust.size())
+        rebuildRCSThrusterPanel(rcsStates);
 
-    if (activeStates.isEmpty())
-    {
-        //consoleOutput("No active RCS thrusters");
-        return;
-    }
-
-    const int count = qMin(activeStates.size(), lcdRCSCurrentThrust.size());
+    const int count = qMin(rcsStates.size(), lcdRCSCurrentThrust.size());
 
     for (int i = 0; i < count; ++i)
     {
-        const Telemetry::PropulsionSystems::RCSThrust& state = activeStates[i];
+        const auto& state = rcsStates[i];
 
         lblRCSEngineNames[i]->setText(state.engineName);
-        lblRCSAxes[i]->setText(QString("Axis: %1").arg(getAxisLabel(state.SBF_direction)));
+        lblRCSAxes[i]->setText(
+            QString("Axis: %1").arg(getAxisLabel(state.SBF_direction)));
 
-        lcdRCSCurrentThrust[i]->display(QString::number(state.T_current, 'f', 1));
-        lcdRCSTargetThrust[i]->display(QString::number(state.T_target, 'f', 1));
+        lcdRCSCurrentThrust[i]->display(
+            QString::number(state.T_current, 'f', 1));
+        lcdRCSTargetThrust[i]->display(
+            QString::number(state.T_target, 'f', 1));
 
-        const int actuatorPercent =
-            static_cast<int>(qBound(0.0, getNormalizedThrustState(state.T_current, state.maxThrust) * 100.0, 100.0));
+        const int actuatorPercent = static_cast<int>(
+            qBound(
+                0.0,
+                getNormalizedThrustState(
+                    state.T_current, state.maxThrust) * 100.0,
+                100.0));
 
         barRCSActuatorStates[i]->setValue(actuatorPercent);
     }

@@ -20,6 +20,8 @@
 #include <QProgressBar>
 #include <QScrollArea>
 #include <QVBoxLayout>
+#include <QGridLayout>
+#include <QResizeEvent>
 #include <QMap>
 #include <QVector>
 #include <Eigen/Dense>
@@ -237,6 +239,10 @@ public slots:
      */
     void onStateUpdated(Telemetry telemetry_);
 
+protected:
+    /** @brief Re-evaluates the cockpit layout when the available size changes. */
+    void resizeEvent(QResizeEvent *event) override;
+
 private slots:
     /**
      * @brief Handles stop button click including confirmation dialog.
@@ -262,7 +268,23 @@ private slots:
     void consoleOutput(const QString &output);
 
 private:
+    enum class LayoutMode { Desktop, Compact, SmallScreen };
+
+    /** @brief Selects and applies the layout best suited to the current size. */
+    void updateLayoutMode();
+
+    /** @brief Repositions existing panels without recreating their widgets. */
+    void applyLayoutMode(LayoutMode mode);
+
     // Members
+    QGridLayout *mainLayout = nullptr;
+    QGroupBox *navBox = nullptr;
+    QGroupBox *fuelBox = nullptr;
+    QGroupBox *engineBox = nullptr;
+    QGroupBox *statusBox = nullptr;
+    QGroupBox *landingViewBox = nullptr;
+    QGroupBox *flightControlsBox = nullptr;
+    LayoutMode currentLayoutMode = LayoutMode::Desktop;
     double lastTimeDisplay;     ///< Intermediate storage of time to calm the display down
     UIBuilder uibuilder;        ///< UI Building helper class
     inputmapper *m_inputMapper; ///< Keyboard and controller input class
@@ -376,11 +398,11 @@ private:
      */
     QGroupBox *setupStatusBox();
 
-    /**
-     * @brief Builds landing elements.
-     * @return Landing Box as QGroupBox.
-     */
-    QGroupBox *setupLandingBox();
+    /** @brief Builds the landing visualization panel. */
+    QGroupBox *setupLandingViewBox();
+
+    /** @brief Builds throttle, simulation, autopilot, and attitude controls. */
+    QGroupBox *setupFlightControlsBox();
 
     /**
      * @brief Connects internal signals and slots.
@@ -400,7 +422,7 @@ private:
      */
     void keyPressEvent(QKeyEvent* event);
 
-        /**
+    /**
      * @brief Handles key release events.
      *
      * This function is called by Qt when a key is released while this widget has focus.

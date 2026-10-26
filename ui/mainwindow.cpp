@@ -3,6 +3,13 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QScreen>
+#include <QShowEvent>
+#include <QWindow>
+#include <QtMath>
+#include <QGuiApplication>
+#include <QScreen>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -62,7 +69,28 @@ void MainWindow::setupUI()
     vLayout->addWidget(topBar);
     vLayout->addWidget(stackedWidget, 1);
 
+    // Let the stacked widget use the space allocated by the main layout,
+    // rather than insisting on its potentially oversized size hint.
+    stackedWidget->setSizePolicy(QSizePolicy::Ignored,
+                                 QSizePolicy::Ignored);
+    stackedWidget->setMinimumSize(0, 0);
+
     setCentralWidget(centralWidget);
+    // Set an appropriate initial window size after the UI has been created.
+    // The stacked widget remains free to shrink when the window is resized.
+    QTimer::singleShot(0, this, [this]()
+                       {
+                           QScreen *screen = QGuiApplication::primaryScreen();
+                           if (!screen)
+                               return;
+
+                           const QRect available = screen->availableGeometry();
+
+                           const int width = qRound(available.width() * 0.90);
+                           const int height = qRound(available.height() * 0.90);
+
+                           resize(width, height);
+                       });
 }
 
 void MainWindow::setupThread()
@@ -344,25 +372,4 @@ void MainWindow::sendCurrentConfigToWorker()
                               "receiveJsonConfig",
                               Qt::QueuedConnection,
                               Q_ARG(QString, jsonConfig));
-}
-
-void MainWindow::showEvent(QShowEvent *event)
-{
-    QMainWindow::showEvent(event);
-
-    if (!windowHandle())
-    {
-        return;
-    }
-
-    QScreen *screen = windowHandle()->screen();
-
-    if (!screen)
-    {
-        return;
-    }
-
-    QRect screenGeometry = screen->availableGeometry();
-    resize(screenGeometry.width() * 0.7,
-           screenGeometry.height() * 0.7);
 }
