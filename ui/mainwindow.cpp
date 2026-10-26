@@ -91,26 +91,6 @@ void MainWindow::setupUI()
 
                            resize(width, height);
                        });
-    qDebug() << "MainWindow minimum size:" << minimumSize();
-    qDebug() << "MainWindow minimum size hint:" << minimumSizeHint();
-    qDebug() << "Central widget minimum size:" << centralWidget->minimumSize();
-    qDebug() << "Central widget minimum size hint:" << centralWidget->minimumSizeHint();
-    qDebug() << "Stacked widget minimum size:" << stackedWidget->minimumSize();
-    qDebug() << "Stacked widget minimum size hint:" << stackedWidget->minimumSizeHint();
-    qDebug() << "Available screen geometry:"
-             << (windowHandle() && windowHandle()->screen()
-                     ? windowHandle()->screen()->availableGeometry()
-                     : QRect());
-
-    for (int i = 0; i < stackedWidget->count(); ++i)
-    {
-        QWidget *page = stackedWidget->widget(i);
-
-        qDebug() << "Page:" << page->metaObject()->className()
-                 << "sizeHint:" << page->sizeHint()
-                 << "minimumSizeHint:" << page->minimumSizeHint()
-                 << "minimumSize:" << page->minimumSize();
-    }
 }
 
 void MainWindow::setupThread()

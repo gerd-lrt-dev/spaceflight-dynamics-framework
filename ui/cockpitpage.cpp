@@ -399,6 +399,10 @@ QGroupBox *cockpitPage::setupEngineBox()
     rcsScrollArea->setFrameShape(QFrame::NoFrame);
     rcsScrollArea->setWidget(rcsThrusterContainer);
     rcsScrollArea->setMinimumHeight(160);
+    rcsScrollArea->setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::Expanding
+        );
 
     // Layout
     engineLayout->addWidget(currentThrustDetailBox,       0, 0);
@@ -414,6 +418,9 @@ QGroupBox *cockpitPage::setupEngineBox()
     engineLayout->setRowStretch(1, 1);
     engineLayout->setRowStretch(2, 0);
     engineLayout->setRowStretch(3, 2);
+
+    engineLayout->setColumnStretch(0, 1);
+    engineLayout->setColumnStretch(1, 1);
 
     return engineBox;
 }
@@ -563,21 +570,12 @@ void cockpitPage::rebuildRCSThrusterPanel(const QVector<Telemetry::PropulsionSys
     rcsThrusterLayout->addStretch();
 }
 
-QVector<Telemetry::PropulsionSystems::RCSThrust> cockpitPage::filterActiveRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates) const
+QVector<Telemetry::PropulsionSystems::RCSThrust>
+cockpitPage::filterActiveRCSThrusters(
+    const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates) const
 {
-    QVector<Telemetry::PropulsionSystems::RCSThrust> active;
-
-    for (const auto& state : rcsStates)
-    {
-        if (std::abs(state.T_current) > 0.01 ||
-            std::abs(state.T_target) > 0.01 ||
-            (getNormalizedThrustState(state.T_current, state.maxThrust)) > 0.01)
-        {
-            active.push_back(state);
-        }
-    }
-
-    return active;
+    // Display all configured RCS thrusters, including inactive ones.
+    return rcsStates;
 }
 
 // ================= FUEL =================
@@ -1021,6 +1019,7 @@ void cockpitPage::updateMainEngineThrustDirectionInMCI(Eigen::Vector3d MCI_MEDir
 
 void cockpitPage::updateRCSThrusters(const QVector<Telemetry::PropulsionSystems::RCSThrust>& rcsStates)
 {
+
     const QVector<Telemetry::PropulsionSystems::RCSThrust> activeStates =
         filterActiveRCSThrusters(rcsStates);
 
