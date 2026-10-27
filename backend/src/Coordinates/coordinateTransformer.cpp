@@ -26,6 +26,8 @@ CoordinateTransformer::State CoordinateTransformer::MCItoMCMF(
         std::sin(theta * 0.5)
         );
 
+    Eigen::Quaterniond qInv = q.inverse();
+
     Eigen::Vector3d omega(
         0.0,
         0.0,
@@ -34,10 +36,10 @@ CoordinateTransformer::State CoordinateTransformer::MCItoMCMF(
 
     State fixed;
 
-    fixed.position = q * inertial.position;
+    fixed.position = qInv * inertial.position;
 
     fixed.velocity =
-        q * (inertial.velocity - omega.cross(inertial.position));
+        qInv * (inertial.velocity - omega.cross(inertial.position));
 
     return fixed;
 }
@@ -56,8 +58,6 @@ CoordinateTransformer::State CoordinateTransformer::MCMFtoMCI(
         std::sin(theta * 0.5)
         );
 
-    Eigen::Quaterniond qInv = q.inverse();
-
     Eigen::Vector3d omega(
         0.0,
         0.0,
@@ -66,9 +66,9 @@ CoordinateTransformer::State CoordinateTransformer::MCMFtoMCI(
 
     State inertial;
 
-    inertial.position = qInv * fixed.position;
+    inertial.position = q * fixed.position;
 
-    inertial.velocity = qInv * (fixed.velocity + omega.cross(fixed.position));
+    inertial.velocity = q * (fixed.velocity + omega.cross(fixed.position));
 
     return inertial;
 }

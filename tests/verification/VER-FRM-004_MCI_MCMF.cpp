@@ -79,18 +79,19 @@ TEST(VER_FRM_004_MCItoMCMF, QuarterTurnPrincipalAxis)
     // Positive lunar rotation angle:
     // theta = omega * t = +pi/2
     //
-    // With the production frame convention, a +X MCI position maps to +Y MCMF:
+    // MCMF rotates by +theta relative to MCI. Therefore transforming an
+    // inertial vector into the Moon-fixed frame requires Rz(-theta):
     //
     // r_MCI  = {R, 0, 0}
-    // r_MCMF = {0, R, 0}
+    // r_MCMF = {0, -R, 0}
     //
     // For v_MCI = 0:
     //
     // omega x r = {0, omega*R, 0}
     // v_MCI - omega x r = {0, -omega*R, 0}
     //
-    // Rotating by +pi/2 gives:
-    // v_MCMF = {omega*R, 0, 0}
+    // Rotating by -pi/2 gives:
+    // v_MCMF = {-omega*R, 0, 0}
     //
     // omega*R = 4.62443758 m/s
 
@@ -105,13 +106,13 @@ TEST(VER_FRM_004_MCItoMCMF, QuarterTurnPrincipalAxis)
 
     expectVectorNear(
         fixed.position,
-        {0.0, econfig.radiusMoon, 0.0},
+        {0.0, -econfig.radiusMoon, 0.0},
         positionTolerance,
         "Quarter-turn MCI-to-MCMF position");
 
     expectVectorNear(
         fixed.velocity,
-        {4.62443758, 0.0, 0.0},
+        {-4.62443758, 0.0, 0.0},
         velocityTolerance,
         "Quarter-turn MCI-to-MCMF velocity");
 }
@@ -164,13 +165,13 @@ TEST(VER_FRM_004_MCItoMCMF, ArbitraryAngleAndState)
     //
     // Analytical reference using
     //
-    // Rz(theta) =
-    // [ cos(theta) -sin(theta) 0 ]
-    // [ sin(theta)  cos(theta) 0 ]
-    // [     0           0      1 ]
+    // Rz(-theta) =
+    // [  cos(theta)  sin(theta) 0 ]
+    // [ -sin(theta)  cos(theta) 0 ]
+    // [      0           0      1 ]
     //
-    // r_MCMF = Rz(theta) r_MCI
-    // v_MCMF = Rz(theta) [v_MCI - omega x r_MCI]
+    // r_MCMF = Rz(-theta) r_MCI
+    // v_MCMF = Rz(-theta) [v_MCI - omega x r_MCI]
     //
     // gives the frozen scalar references below.
 
@@ -185,16 +186,16 @@ TEST(VER_FRM_004_MCItoMCMF, ArbitraryAngleAndState)
 
     expectVectorNear(
         fixed.position,
-        {1011038.068421715986915,
-         133424.226443647057749,
+        {881948.899141719681211,
+         -512021.619956334237475,
          300000.0},
         positionTolerance,
         "Arbitrary-angle MCI-to-MCMF position");
 
     expectVectorNear(
         fixed.velocity,
-        {111.140629801696363,
-         -17.743461895804906,
+        {77.150354272334468,
+         -81.944449893930449,
          25.0},
         velocityTolerance,
         "Arbitrary-angle MCI-to-MCMF velocity");
@@ -211,17 +212,17 @@ TEST(VER_FRM_004_MCMFtoMCI, QuarterTurnFixedPoint)
     // r_MCMF = {0, R, 0}
     // v_MCMF = {0, 0, 0}
     //
-    // Position inverse:
-    // r_MCI = Rz(-theta) r_MCMF = {R, 0, 0}
+    // Position:
+    // r_MCI = Rz(+theta) r_MCMF = {-R, 0, 0}
     //
     // Velocity:
-    // v_MCI = Rz(-theta) [v_MCMF + omega x r_MCMF]
+    // v_MCI = Rz(+theta) [v_MCMF + omega x r_MCMF]
     //
     // omega x r_MCMF = {-omega*R, 0, 0}
     //
     // therefore
-    // v_MCI = {0, omega*R, 0}
-    //       = {0, 4.62443758, 0} m/s
+    // v_MCI = {0, -omega*R, 0}
+    //       = {0, -4.62443758, 0} m/s
 
     const double quarterTurnTime = PI / (2.0 * MOON_ROTATION_RATE);
 
@@ -234,15 +235,59 @@ TEST(VER_FRM_004_MCMFtoMCI, QuarterTurnFixedPoint)
 
     expectVectorNear(
         inertial.position,
-        {econfig.radiusMoon, 0.0, 0.0},
+        {-econfig.radiusMoon, 0.0, 0.0},
         positionTolerance,
         "Quarter-turn MCMF-to-MCI position");
 
     expectVectorNear(
         inertial.velocity,
-        {0.0, 4.62443758, 0.0},
+        {0.0, -4.62443758, 0.0},
         velocityTolerance,
         "Quarter-turn MCMF-to-MCI velocity");
+}
+
+
+TEST(VER_FRM_004_MCMFtoMCI, MoonFixedPointFollowsPositiveLunarRotation)
+{
+    CoordinateTransformer transformer;
+    EnvironmentConfig econfig;
+
+    // Independent physical sign-convention check:
+    //
+    // A point fixed on the lunar equator at the prime meridian has
+    // r_MCMF = {R, 0, 0} and v_MCMF = 0.
+    //
+    // For positive lunar rotation about +Z, its inertial motion must satisfy
+    //
+    // v_MCI = omega x r_MCI
+    //
+    // and, for theta = +pi/2,
+    //
+    // r_MCI = {0, R, 0}.
+    //
+    // This test intentionally verifies physical time evolution rather than
+    // only algebraic roundtrip consistency.
+
+    const double quarterTurnTime = PI / (2.0 * MOON_ROTATION_RATE);
+
+    const CoordinateTransformer::State fixed{
+        {econfig.radiusMoon, 0.0, 0.0},
+        Eigen::Vector3d::Zero()
+    };
+
+    const auto inertial = transformer.MCMFtoMCI(fixed, quarterTurnTime);
+
+    expectVectorNear(
+        inertial.position,
+        {0.0, econfig.radiusMoon, 0.0},
+        positionTolerance,
+        "Moon-fixed point inertial position");
+
+    expectVectorNear(
+        inertial.velocity,
+        {-MOON_ROTATION_RATE * econfig.radiusMoon, 0.0, 0.0},
+        velocityTolerance,
+        "Moon-fixed point inertial velocity");
 }
 
 TEST(VER_FRM_004_Roundtrip, MCItoMCMFtoMCI)

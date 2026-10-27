@@ -8,6 +8,7 @@ add_executable(
     VER-FRM-005_SBF_MCI.cpp
     VER-FRM-006_LVLH.cpp
     VER-FRM-007_Robustness.cpp
+    VER-FRM-001_LandingPipeline.cpp
 )
 
 target_link_libraries(
