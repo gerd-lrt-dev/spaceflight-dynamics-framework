@@ -1,14 +1,17 @@
 add_executable(
     verification_tests
-    VER_TRA_001_FreeTranslation.cpp
-    VER_ROT_001_AxisTorque.cpp
-    VER-FRM-002_MCMFtoMSC.cpp
-    VER-FRM-003_ENU.cpp
-    VER-FRM-004_MCI_MCMF.cpp
-    VER-FRM-005_SBF_MCI.cpp
-    VER-FRM-006_LVLH.cpp
-    VER-FRM-007_Robustness.cpp
-    VER-FRM-001_LandingPipeline.cpp
+
+    VER-TRA/VER_TRA_001_FreeTranslation.cpp
+
+    VER-ROT/VER_ROT_001_AxisTorque.cpp
+
+    VER-FRM/VER-FRM-001_LandingPipeline.cpp
+    VER-FRM/VER-FRM-002_MCMFtoMSC.cpp
+    VER-FRM/VER-FRM-003_ENU.cpp
+    VER-FRM/VER-FRM-004_MCI_MCMF.cpp
+    VER-FRM/VER-FRM-005_SBF_MCI.cpp
+    VER-FRM/VER-FRM-006_LVLH.cpp
+    VER-FRM/VER-FRM-007_Robustness.cpp
 )
 
 target_link_libraries(
