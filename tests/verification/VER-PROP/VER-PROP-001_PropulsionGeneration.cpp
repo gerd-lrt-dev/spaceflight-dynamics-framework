@@ -50,19 +50,17 @@ TEST(VER_PROP_001_PropulsionGeneration, MatchesAnalyticalSolution)
     testPropulsion.initializeEngines(mainEngines, RCSEngines, tanks);
 
     // Initialize test parameters
-    double dt{0.0};
+    double dt{0.05};
 
     double resultThrustTest1{0.0};
     double resultThrustTest2{0.0};
 
     // Run Simulation Loop
-    for (int i = 0; i <= 1000; i++)
+    for (int i = 1; i <= 1000; ++i)
     {
-        dt += 0.05;
+        testPropulsion.setTargetThrustInNewton(EngineType::MainEngine, 1000.0);
 
         testPropulsion.updatePropulsion(dt);
-
-        testPropulsion.setTargetThrustInNewton(EngineType::MainEngine, 1000.0);
 
         if (i == 10)
         {
@@ -73,11 +71,12 @@ TEST(VER_PROP_001_PropulsionGeneration, MatchesAnalyticalSolution)
         {
             resultThrustTest2 = testPropulsion.getCurrentThrustOfOneEngine(EngineType::MainEngine).norm();
         }
+
     }
 
     // Analytical references
-    const double expectedThrustTest1 = 613.12;  // [N]
-    const double expectedThrustTest2 = 993.26;  // [N]
+    const double expectedThrustTest1 = 632.1205588285577;
+    const double expectedThrustTest2 = 993.2620530009145;
 
     // Tolerances
     constexpr double thrustTolerance = 1e-8;
