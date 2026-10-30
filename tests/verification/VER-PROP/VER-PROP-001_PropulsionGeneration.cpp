@@ -1,4 +1,8 @@
 #include <gtest/gtest.h>
+
+#include <array>
+#include <cmath>
+#include <string>
 #include <vector>
 
 #include "Thrust.h"
@@ -6,82 +10,471 @@
 #include "Thrust/RCSConfig.h"
 #include "Thrust/FueltankStruct.h"
 
-TEST(VER_PROP_001_PropulsionGeneration, MatchesAnalyticalSolution)
+namespace
 {
-    // Configure Main Engine
-    const EngineConfig mainEngineCfg = EngineConfig::Create(
-        true,                       // activated
-        0,                          // id
-        "Test Main Engine",
-        EngineType::MainEngine,
-        0,                          // tankID
-        300.0,                      // Isp [s]
-        0.5,                        // timeConstant tau [s]
-        8.0,                        // responseRate [Hz]
-        1000.0,                     // maxThrust [N]
-        {0.0, 0.0, -1.0},           // SBF thrust direction
-        {0.0, 0.0, 0.0}             // engine position
-        );
+constexpr double kDt = 0.05;
+constexpr double kMainTau = 0.5;
+constexpr double kMainTargetThrust = 1000.0;
 
-    std::vector<EngineConfig> mainEngines;
+constexpr double kRCSTauOn = 0.05;
+constexpr double kRCSMaxThrust = 40.0;
 
-    mainEngines.push_back(mainEngineCfg);
+constexpr double kForceTolerance = 1e-8;
+constexpr double kTorqueTolerance = 1e-8;
+constexpr double kZeroTolerance = 1e-10;
 
-    // Configure RCS Engines
-
-    std::vector<RCSEngineConfig> RCSEngines{};
-
-    // Configure Fuel Tanks
-    const FuelTank tank{
+FuelTank makeTestTank()
+{
+    return FuelTank{
         0,
         "Test Tank",
-        "MainEngine",
+        "Propulsion",
         100.0,
         100.0
     };
-    std::vector<FuelTank> tanks;
+}
 
-    tanks.push_back(tank);
+RCSEngineConfig makeRCS(
+    int id,
+    const std::string& name,
+    EngineType type,
+    const std::string& axis,
+    const Eigen::Vector3d& direction,
+    const Eigen::Vector3d& position)
+{
+    return RCSEngineConfig::Create(
+        true,
+        id,
+        name,
+        type,
+        axis,
+        0,                  // tankID
+        285.0,              // Isp [s]
+        kRCSMaxThrust,      // maxThrust [N]
+        0.0,                // commandDelay [s] -- isolated force/torque verification
+        kRCSTauOn,          // tauOn [s]
+        0.05,               // tauOff [s]
+        0.0,                // minimumPulseWidth [s]
+        direction,
+        position
+    );
+}
 
-    // Propulsion System initializing
+double expectedFirstOrderThrust(
+    double targetThrust,
+    double elapsedTime,
+    double tau)
+{
+    return targetThrust * (1.0 - std::exp(-elapsedTime / tau));
+}
 
-    Thrust testPropulsion;
+void expectVectorNear(
+    const Eigen::Vector3d& actual,
+    const Eigen::Vector3d& expected,
+    double tolerance)
+{
+    EXPECT_NEAR(actual.x(), expected.x(), tolerance);
+    EXPECT_NEAR(actual.y(), expected.y(), tolerance);
+    EXPECT_NEAR(actual.z(), expected.z(), tolerance);
+}
+} // namespace
 
-    testPropulsion.initializeEngines(mainEngines, RCSEngines, tanks);
+TEST(VER_PROP_001_PropulsionGeneration, MainEngineMatchesAnalyticalMagnitudeDirectionAndZeroTorque)
+{
+    const EngineConfig mainEngineCfg = EngineConfig::Create(
+        true,
+        0,
+        "Test Main Engine",
+        EngineType::MainEngine,
+        0,
+        300.0,
+        kMainTau,
+        8.0,
+        kMainTargetThrust,
+        {0.0, 0.0, -1.0},
+        {0.0, 0.0, 0.0}
+    );
 
-    // Initialize test parameters
-    double dt{0.05};
+    std::vector<EngineConfig> mainEngines{mainEngineCfg};
+    std::vector<RCSEngineConfig> rcsEngines{};
+    std::vector<FuelTank> tanks{makeTestTank()};
 
-    double resultThrustTest1{0.0};
-    double resultThrustTest2{0.0};
+    Thrust propulsion;
+    propulsion.initializeEngines(mainEngines, rcsEngines, tanks);
+    propulsion.setTargetThrustInNewton(
+        EngineType::MainEngine,
+        kMainTargetThrust
+    );
 
-    // Run Simulation Loop
-    for (int i = 1; i <= 1000; ++i)
+    double thrustAfterOneTau{0.0};
+    double thrustAfterFiveTau{0.0};
+
+    for (int step = 1; step <= 50; ++step)
     {
-        testPropulsion.setTargetThrustInNewton(EngineType::MainEngine, 1000.0);
+        propulsion.updatePropulsion(kDt);
 
-        testPropulsion.updatePropulsion(dt);
-
-        if (i == 10)
+        if (step == 10)
         {
-            resultThrustTest1 = testPropulsion.getCurrentThrustOfOneEngine(EngineType::MainEngine).norm();
+            thrustAfterOneTau =
+                propulsion.getCurrentThrustOfOneEngine(EngineType::MainEngine).norm();
         }
 
-        if (i == 50)
+        if (step == 50)
         {
-            resultThrustTest2 = testPropulsion.getCurrentThrustOfOneEngine(EngineType::MainEngine).norm();
+            thrustAfterFiveTau =
+                propulsion.getCurrentThrustOfOneEngine(EngineType::MainEngine).norm();
         }
-
     }
 
-    // Analytical references
-    const double expectedThrustTest1 = 632.1205588285577;
-    const double expectedThrustTest2 = 993.2620530009145;
+    const double expectedAfterOneTau =
+        expectedFirstOrderThrust(kMainTargetThrust, 10.0 * kDt, kMainTau);
 
-    // Tolerances
-    constexpr double thrustTolerance = 1e-8;
+    const double expectedAfterFiveTau =
+        expectedFirstOrderThrust(kMainTargetThrust, 50.0 * kDt, kMainTau);
 
-    // Verification
-    EXPECT_NEAR(resultThrustTest1, expectedThrustTest1, thrustTolerance) << "Thrust magnitude of test 1 deviates from analytical references.";
-    EXPECT_NEAR(resultThrustTest2, expectedThrustTest2, thrustTolerance) << "Thrust magnitude of test 2 deviates from analytical references.";
+    EXPECT_NEAR(
+        thrustAfterOneTau,
+        expectedAfterOneTau,
+        kForceTolerance
+    ) << "Main-engine thrust after one time constant deviates from the analytical reference.";
+
+    EXPECT_NEAR(
+        thrustAfterFiveTau,
+        expectedAfterFiveTau,
+        kForceTolerance
+    ) << "Main-engine thrust after five time constants deviates from the analytical reference.";
+
+    const Eigen::Vector3d expectedForce{
+        0.0,
+        0.0,
+        -expectedAfterFiveTau
+    };
+
+    expectVectorNear(
+        propulsion.getCurrentThrustOfOneEngine(EngineType::MainEngine),
+        expectedForce,
+        kForceTolerance
+    );
+
+    expectVectorNear(
+        propulsion.getTotalTorque(),
+        Eigen::Vector3d::Zero(),
+        kZeroTolerance
+    );
+}
+
+TEST(VER_PROP_001_PropulsionGeneration, SingleOffCenterRCSMatchesAnalyticalForceAndTorque)
+{
+    std::vector<EngineConfig> mainEngines{};
+    std::vector<RCSEngineConfig> rcsEngines{
+        makeRCS(
+            1,
+            "RCS Off-Center +X",
+            EngineType::RCS_translation,
+            "+x",
+            {1.0, 0.0, 0.0},
+            {0.0, 1.0, 0.0}
+        )
+    };
+    std::vector<FuelTank> tanks{makeTestTank()};
+
+    Thrust propulsion;
+    propulsion.initializeEngines(mainEngines, rcsEngines, tanks);
+
+    propulsion.setTargetThrustInPercentage(
+        EngineType::RCS_translation,
+        0.0,
+        {1.0, 0.0, 0.0}
+    );
+
+    propulsion.updatePropulsion(kDt);
+
+    const double expectedMagnitude =
+        expectedFirstOrderThrust(kRCSMaxThrust, kDt, kRCSTauOn);
+
+    const Eigen::Vector3d expectedForce{
+        expectedMagnitude,
+        0.0,
+        0.0
+    };
+
+    const Eigen::Vector3d leverArm{
+        0.0,
+        1.0,
+        0.0
+    };
+
+    const Eigen::Vector3d expectedTorque =
+        leverArm.cross(expectedForce);
+
+    expectVectorNear(
+        propulsion.getCurrentThrustOfOneEngine(EngineType::RCS_translation),
+        expectedForce,
+        kForceTolerance
+    );
+
+    expectVectorNear(
+        propulsion.getTotalTorque(),
+        expectedTorque,
+        kTorqueTolerance
+    );
+}
+
+TEST(VER_PROP_001_PropulsionGeneration, SymmetricRCSPairProducesPureTranslation)
+{
+    std::vector<EngineConfig> mainEngines{};
+    std::vector<RCSEngineConfig> rcsEngines{
+        makeRCS(
+            1,
+            "RCS +X Upper",
+            EngineType::RCS_translation,
+            "+x",
+            {1.0, 0.0, 0.0},
+            {0.0, 1.0, 0.0}
+        ),
+        makeRCS(
+            2,
+            "RCS +X Lower",
+            EngineType::RCS_translation,
+            "+x",
+            {1.0, 0.0, 0.0},
+            {0.0, -1.0, 0.0}
+        )
+    };
+    std::vector<FuelTank> tanks{makeTestTank()};
+
+    Thrust propulsion;
+    propulsion.initializeEngines(mainEngines, rcsEngines, tanks);
+
+    propulsion.setTargetThrustInPercentage(
+        EngineType::RCS_translation,
+        0.0,
+        {1.0, 0.0, 0.0}
+    );
+
+    propulsion.updatePropulsion(kDt);
+
+    const double singleThrusterMagnitude =
+        expectedFirstOrderThrust(kRCSMaxThrust, kDt, kRCSTauOn);
+
+    const Eigen::Vector3d expectedForce{
+        2.0 * singleThrusterMagnitude,
+        0.0,
+        0.0
+    };
+
+    expectVectorNear(
+        propulsion.getCurrentThrustOfOneEngine(EngineType::RCS_translation),
+        expectedForce,
+        kForceTolerance
+    );
+
+    expectVectorNear(
+        propulsion.getTotalTorque(),
+        Eigen::Vector3d::Zero(),
+        kZeroTolerance
+    );
+}
+
+TEST(VER_PROP_001_PropulsionGeneration, OpposedRCSPairProducesPureTorque)
+{
+    std::vector<EngineConfig> mainEngines{};
+    std::vector<RCSEngineConfig> rcsEngines{
+        makeRCS(
+            1,
+            "RCS Torque Upper",
+            EngineType::RCS_rotation,
+            "-z",
+            {1.0, 0.0, 0.0},
+            {0.0, 1.0, 0.0}
+        ),
+        makeRCS(
+            2,
+            "RCS Torque Lower",
+            EngineType::RCS_rotation,
+            "-z",
+            {-1.0, 0.0, 0.0},
+            {0.0, -1.0, 0.0}
+        )
+    };
+    std::vector<FuelTank> tanks{makeTestTank()};
+
+    Thrust propulsion;
+    propulsion.initializeEngines(mainEngines, rcsEngines, tanks);
+
+    propulsion.setRCSRotationTargetThrustInPercentage(
+        {0.0, 0.0, -1.0},
+        Eigen::Vector3d::Zero()
+    );
+
+    propulsion.updatePropulsion(kDt);
+
+    const double singleThrusterMagnitude =
+        expectedFirstOrderThrust(kRCSMaxThrust, kDt, kRCSTauOn);
+
+    const Eigen::Vector3d expectedTorque{
+        0.0,
+        0.0,
+        -2.0 * singleThrusterMagnitude
+    };
+
+    expectVectorNear(
+        propulsion.getCurrentThrustOfOneEngine(EngineType::RCS_rotation),
+        Eigen::Vector3d::Zero(),
+        kZeroTolerance
+    );
+
+    expectVectorNear(
+        propulsion.getTotalTorque(),
+        expectedTorque,
+        kTorqueTolerance
+    );
+}
+
+TEST(VER_PROP_001_PropulsionGeneration, CombinedRCSCommandsProduceExpectedForceAndTorque)
+{
+    std::vector<EngineConfig> mainEngines{};
+    std::vector<RCSEngineConfig> rcsEngines{
+        makeRCS(
+            1,
+            "RCS Translation +X Upper",
+            EngineType::RCS_translation,
+            "+x",
+            {1.0, 0.0, 0.0},
+            {0.0, 1.0, 0.0}
+        ),
+        makeRCS(
+            2,
+            "RCS Translation +X Lower",
+            EngineType::RCS_translation,
+            "+x",
+            {1.0, 0.0, 0.0},
+            {0.0, -1.0, 0.0}
+        ),
+        makeRCS(
+            3,
+            "RCS Rotation Upper",
+            EngineType::RCS_rotation,
+            "-z",
+            {1.0, 0.0, 0.0},
+            {0.0, 1.0, 0.0}
+        ),
+        makeRCS(
+            4,
+            "RCS Rotation Lower",
+            EngineType::RCS_rotation,
+            "-z",
+            {-1.0, 0.0, 0.0},
+            {0.0, -1.0, 0.0}
+        )
+    };
+    std::vector<FuelTank> tanks{makeTestTank()};
+
+    Thrust propulsion;
+    propulsion.initializeEngines(mainEngines, rcsEngines, tanks);
+
+    propulsion.setTargetThrustInPercentage(
+        EngineType::RCS_translation,
+        0.0,
+        {1.0, 0.0, 0.0}
+    );
+
+    propulsion.setRCSRotationTargetThrustInPercentage(
+        {0.0, 0.0, -1.0},
+        Eigen::Vector3d::Zero()
+    );
+
+    propulsion.updatePropulsion(kDt);
+
+    const double singleThrusterMagnitude =
+        expectedFirstOrderThrust(kRCSMaxThrust, kDt, kRCSTauOn);
+
+    const Eigen::Vector3d expectedTotalForce{
+        2.0 * singleThrusterMagnitude,
+        0.0,
+        0.0
+    };
+
+    const Eigen::Vector3d expectedTotalTorque{
+        0.0,
+        0.0,
+        -2.0 * singleThrusterMagnitude
+    };
+
+    expectVectorNear(
+        propulsion.getCurrentThrustOfAllEngines(),
+        expectedTotalForce,
+        kForceTolerance
+    );
+
+    expectVectorNear(
+        propulsion.getTotalTorque(),
+        expectedTotalTorque,
+        kTorqueTolerance
+    );
+}
+
+TEST(VER_PROP_001_PropulsionGeneration, TranslationAxisSweepMatchesBodyAxisSignConvention)
+{
+    struct AxisCase
+    {
+        std::string axis;
+        Eigen::Vector3d direction;
+    };
+
+    const std::array<AxisCase, 6> cases{{
+        {"+x", { 1.0,  0.0,  0.0}},
+        {"-x", {-1.0,  0.0,  0.0}},
+        {"+y", { 0.0,  1.0,  0.0}},
+        {"-y", { 0.0, -1.0,  0.0}},
+        {"+z", { 0.0,  0.0,  1.0}},
+        {"-z", { 0.0,  0.0, -1.0}}
+    }};
+
+    const double expectedMagnitude =
+        expectedFirstOrderThrust(kRCSMaxThrust, kDt, kRCSTauOn);
+
+    for (const auto& axisCase : cases)
+    {
+        SCOPED_TRACE("RCS translation axis: " + axisCase.axis);
+
+        std::vector<EngineConfig> mainEngines{};
+        std::vector<RCSEngineConfig> rcsEngines{
+            makeRCS(
+                1,
+                "RCS Axis Sweep " + axisCase.axis,
+                EngineType::RCS_translation,
+                axisCase.axis,
+                axisCase.direction,
+                Eigen::Vector3d::Zero()
+            )
+        };
+        std::vector<FuelTank> tanks{makeTestTank()};
+
+        Thrust propulsion;
+        propulsion.initializeEngines(mainEngines, rcsEngines, tanks);
+
+        propulsion.setTargetThrustInPercentage(
+            EngineType::RCS_translation,
+            0.0,
+            axisCase.direction
+        );
+
+        propulsion.updatePropulsion(kDt);
+
+        const Eigen::Vector3d expectedForce =
+            expectedMagnitude * axisCase.direction;
+
+        expectVectorNear(
+            propulsion.getCurrentThrustOfOneEngine(EngineType::RCS_translation),
+            expectedForce,
+            kForceTolerance
+        );
+
+        expectVectorNear(
+            propulsion.getTotalTorque(),
+            Eigen::Vector3d::Zero(),
+            kZeroTolerance
+        );
+    }
 }
