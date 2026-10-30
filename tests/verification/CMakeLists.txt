@@ -12,6 +12,8 @@ add_executable(
     VER-FRM/VER-FRM-005_SBF_MCI.cpp
     VER-FRM/VER-FRM-006_LVLH.cpp
     VER-FRM/VER-FRM-007_Robustness.cpp
+
+    VER-PROP/VER-PROP-001_PropulsionGeneration.cpp
 )
 
 target_link_libraries(
