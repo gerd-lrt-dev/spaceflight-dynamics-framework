@@ -4,6 +4,15 @@ add_executable(
     VER-TRA/VER_TRA_001_FreeTranslation.cpp
 
     VER-ROT/VER_ROT_001_AxisTorque.cpp
+    VER-ROT/VER_ROT_002A_GyroscopicDerivative.cpp
+
+    VER-MASS/VER_MASS_001A_FuelTankBoundaries.cpp
+
+    VER-NUM/VER_NUM_001A_TranslationConvergence.cpp
+
+    VER-SEN/VER_SEN_001A_GLoadReference.cpp
+
+    VER-CTL/VER_CTL_001A_ControllerBasics.cpp
 
     VER-FRM/VER-FRM-001_LandingPipeline.cpp
     VER-FRM/VER-FRM-002_MCMFtoMSC.cpp
