@@ -7,126 +7,468 @@
 #include "Integrators/eulerIntegrator.h"
 #include "Physics/rigidBodyRotationalModel.h"
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 
-// Test helpers
 namespace VER_ROT_002
 {
 
-class ZeroAccelerationModel : public IPhysicsModel{
+// ============================================================================
+// Test models
+// ============================================================================
+
+class ZeroAccelerationModel : public IPhysicsModel
+{
 public:
-    Eigen::Vector3d computeAcceleration(const Eigen::Vector3d&, const Eigen::Vector3d&, double, const Eigen::Vector3d&) const override
+    Eigen::Vector3d computeAcceleration(
+        const Eigen::Vector3d&,
+        const Eigen::Vector3d&,
+        double,
+        const Eigen::Vector3d&) const override
     {
         return Eigen::Vector3d::Zero();
     }
 };
 
-class DummySensor : public ISensor{
+class DummySensor : public ISensor
+{
 public:
-    double computeGLoad(const Eigen::Vector3d&, const Eigen::Vector3d&, bool) const override
+    double computeGLoad(
+        const Eigen::Vector3d&,
+        const Eigen::Vector3d&,
+        bool) const override
     {
         return 0.0;
     }
 };
 
-} // namespace
 
-// Test module
-TEST(VER_ROT_002_GyroscopicDerivative, MatchesAnalyticalSolution)
+// ============================================================================
+// Independent physical reference functions
+// ============================================================================
+
+/**
+ * @brief Calculates the rotational kinetic energy.
+ *
+ * @param angularVelocity Body-frame angular velocity [rad/s].
+ * @param inertia Inertia tensor [kg m²].
+ * @return Rotational kinetic energy [J].
+ */
+double computeRotationalEnergy(
+    const Eigen::Vector3d& angularVelocity,
+    const Eigen::Matrix3d& inertia)
 {
+    return 0.5 * angularVelocity.dot(inertia * angularVelocity);
+}
+
+
+/**
+ * @brief Calculates the body-frame angular momentum.
+ *
+ * @param angularVelocity Body-frame angular velocity [rad/s].
+ * @param inertia Inertia tensor [kg m²].
+ * @return Angular momentum vector [kg m²/s].
+ */
+Eigen::Vector3d computeAngularMomentum(
+    const Eigen::Vector3d& angularVelocity,
+    const Eigen::Matrix3d& inertia)
+{
+    return inertia * angularVelocity;
+}
+
+
+// ============================================================================
+// Common test fixture
+// ============================================================================
+
+/**
+ * @brief Common test environment for VER-ROT-002.
+ *
+ * Provides the production rotational model, Forward Euler integrator,
+ * and common initial conditions for torque-free gyroscopic rotation.
+ *
+ * GoogleTest creates a new fixture instance for every test case.
+ */
+class RotationalTestFixture : public ::testing::Test
+{
+protected:
+
+    // ------------------------------------------------------------------------
+    // Environment and production models
+    // ------------------------------------------------------------------------
+
     EnvironmentConfig cfg;
 
-    auto physicsModel       = std::make_shared<VER_ROT_002::ZeroAccelerationModel>();
+    std::shared_ptr<ZeroAccelerationModel> physicsModel;
+    std::shared_ptr<RigidBodyRotationalModel> rotationalModel;
+    std::shared_ptr<EulerIntegrator> integrator;
+    std::shared_ptr<DummySensor> sensor;
 
-    auto rotationalModel    = std::make_shared<RigidBodyRotationalModel>(cfg);
+    std::unique_ptr<physics> physicsSystem;
 
-    auto integrator         = std::make_shared<EulerIntegrator>();
 
-    auto sensor             = std::make_shared<VER_ROT_002::DummySensor>();
+    // ------------------------------------------------------------------------
+    // Common reference configuration
+    // ------------------------------------------------------------------------
 
-    // Physics instance
-    physics physicsSystem(physicsModel, rotationalModel, integrator, sensor);
+    const Eigen::Matrix3d inertia =
+        (Eigen::Matrix3d() <<
+             100.0,   0.0,   0.0,
+         0.0, 200.0,   0.0,
+         0.0,   0.0, 300.0
+         ).finished();
 
-    // Verification conventions:
+    const Eigen::Vector3d torque =
+        Eigen::Vector3d::Zero();
 
-    const Eigen::Matrix3d inertia1 = (Eigen::Matrix3d() <<
-                                    100.0,  0.0,    0.0,
-                                    0.0,    200.0,  0.0,
-                                    0.0,    0.0,    300.0
-                                    ).finished();
-
-    const Eigen::Vector3d torque = Eigen::Vector3d::Zero();
-
-    // Start Conditions
-
-    Eigen::Vector3d angularVelocity_start{0.1, 0.2, 0.3};
-
-    Eigen::Quaterniond attitude_start{
-        1.0,  // w
-        0.0,  // x
-        0.0,  // y
-        0.0   // z
+    const Eigen::Vector3d initialAngularVelocity{
+        0.1,
+        0.2,
+        0.3
     };
 
-    // Caclulated Test Results
+    const Eigen::Quaterniond initialAttitude =
+        Eigen::Quaterniond::Identity();
 
-    Eigen::Vector3d angularAcceleration_T1{0.0, 0.0, 0.0};
-    Eigen::Vector3d angularAcceleration_T2{0.0, 0.0, 0.0};
+    static constexpr double defaultTimeStep = 0.01;
 
-    Eigen::Vector3d angularVelocity_T2{0.0, 0.0, 0.0};
 
-    Eigen::Quaterniond attitude_T2{0.0, 0.0, 0.0, 0.0};
+    // ------------------------------------------------------------------------
+    // Test initialization
+    // ------------------------------------------------------------------------
+
+    void SetUp() override
+    {
+        physicsModel =
+            std::make_shared<ZeroAccelerationModel>();
+
+        rotationalModel =
+            std::make_shared<RigidBodyRotationalModel>(cfg);
+
+        integrator =
+            std::make_shared<EulerIntegrator>();
+
+        sensor =
+            std::make_shared<DummySensor>();
+
+        physicsSystem =
+            std::make_unique<physics>(
+                physicsModel,
+                rotationalModel,
+                integrator,
+                sensor);
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Production state propagation
+    // ------------------------------------------------------------------------
+
+    /**
+     * @brief Propagates angular velocity by one integration step.
+     *
+     * Uses the production rotational dynamics model and integrator.
+     *
+     * @param angularVelocity Current angular velocity [rad/s].
+     * @param dt Integration time step [s].
+     * @return Propagated angular velocity [rad/s].
+     */
+    Eigen::Vector3d propagateAngularVelocity(
+        const Eigen::Vector3d& angularVelocity,
+        const double dt)
+    {
+        const Eigen::Vector3d angularAcceleration =
+            physicsSystem->computeAngAcc(
+                angularVelocity,
+                inertia,
+                torque);
+
+        return physicsSystem->computeAngVel(
+            angularVelocity,
+            angularAcceleration,
+            dt);
+    }
+};
+
+
+// ============================================================================
+// Test Case 1 - Initial Gyroscopic Angular Acceleration
+// ============================================================================
+
+TEST_F(
+    RotationalTestFixture,
+    InitialGyroscopicDerivativeMatchesAnalyticalSolution)
+{
+    // Reference data
+
+    const Eigen::Vector3d expectedAngularAcceleration{
+        -0.06,
+        0.03,
+        -0.006666666666666667
+    };
+
+    constexpr double tolerance = 1e-12;
+
 
     // Test procedure
 
-    // Testcase 1 Initial gyroscopic derivatvie
-    angularAcceleration_T1 = physicsSystem.computeAngAcc(angularVelocity_start, inertia1, torque);
+    const Eigen::Vector3d angularAcceleration =
+        physicsSystem->computeAngAcc(
+            initialAngularVelocity,
+            inertia,
+            torque);
 
-    // Testcase 2 Time evolution of angular velocity
-    const double dt     = 0.01;
-    const int steps     = 100;
-    angularVelocity_T2  = angularVelocity_start;
-    attitude_T2         = attitude_start;
 
-    // Simulation Loop
-    for (int i = 0; i < steps; ++i)
-    {
-        angularAcceleration_T2  = physicsSystem.computeAngAcc(angularVelocity_T2, inertia1, torque);
-        angularVelocity_T2      = physicsSystem.computeAngVel(angularVelocity_T2, angularAcceleration_T2, dt);
-        attitude_T2             = physicsSystem.computeAttitude(attitude_T2, angularVelocity_T2, dt);
-    }
+    // Verification
 
-    // Test expectations
-    const Eigen::Vector3d expectedAngularAcceleration_T1{-0.06, 0.03, -0.006666666666666667};
-    const Eigen::Vector3d expectedAngularVelocity_T2{
+    ASSERT_TRUE(angularAcceleration.allFinite());
+
+    EXPECT_NEAR(
+        angularAcceleration.x(),
+        expectedAngularAcceleration.x(),
+        tolerance)
+        << "Angular acceleration in X deviates from analytical reference.";
+
+    EXPECT_NEAR(
+        angularAcceleration.y(),
+        expectedAngularAcceleration.y(),
+        tolerance)
+        << "Angular acceleration in Y deviates from analytical reference.";
+
+    EXPECT_NEAR(
+        angularAcceleration.z(),
+        expectedAngularAcceleration.z(),
+        tolerance)
+        << "Angular acceleration in Z deviates from analytical reference.";
+}
+
+
+// ============================================================================
+// Test Case 2 - Torque-Free Angular Velocity Evolution
+// ============================================================================
+
+TEST_F(
+    RotationalTestFixture,
+    AngularVelocityMatchesIndependentReference)
+{
+    // Reference data
+
+    constexpr double dt = defaultTimeStep;
+    constexpr int steps = 100;
+
+    constexpr double tolerance = 2e-4;
+
+    const Eigen::Vector3d expectedAngularVelocity{
         0.0370354933652774,
         0.2205184169886715,
         0.2951675387351000
     };
 
-    // Tolerances:
-    // Angular acceleration and angular velocity use tight absolute tolerances because
-    // the selected principal-axis case eliminates gyroscopic cross-coupling and has
-    // an analytically exact reference apart from floating-point roundoff.
-    //
-    // Quaternion components use a wider tolerance because SDF propagates quaternion
-    // kinematics numerically using explicit Euler integration with normalization.
 
-    constexpr double angularAccelerationTolerance = 1e-12;
-    constexpr double angularVelocityTolerance     = 2e-4;
+    // Initial state
 
-    constexpr double quaternionComponentTolerance = 2.5e-2;
-    constexpr double quaternionNormTolerance      = 1e-12;
+    Eigen::Vector3d angularVelocity =
+        initialAngularVelocity;
 
-    // Verifications
 
-    // Test case 1
-    EXPECT_NEAR(angularAcceleration_T1.x(), expectedAngularAcceleration_T1.x(), angularAccelerationTolerance) << "Angular acceleration in X deviates from analytical reference.";
-    EXPECT_NEAR(angularAcceleration_T1.y(), expectedAngularAcceleration_T1.y(), angularAccelerationTolerance) << "Angular acceleration in Y deviates from analytical reference.";
-    EXPECT_NEAR(angularAcceleration_T1.z(), expectedAngularAcceleration_T1.z(), angularAccelerationTolerance) << "Angular acceleration in Z deviates from analytical reference.";
+    // Test procedure
 
-    // Test Case 2
-    EXPECT_NEAR(angularVelocity_T2.x(), expectedAngularVelocity_T2.x(), angularVelocityTolerance) << "Angular velocity in X deviates from analytical reference.";
-    EXPECT_NEAR(angularVelocity_T2.y(), expectedAngularVelocity_T2.y(), angularVelocityTolerance) << "Angular velocity in Y deviates from analytical reference.";
-    EXPECT_NEAR(angularVelocity_T2.z(), expectedAngularVelocity_T2.z(), angularVelocityTolerance) << "Angular velocity in Z deviates from analytical reference.";
+    for (int i = 0; i < steps; ++i)
+    {
+        angularVelocity =
+            propagateAngularVelocity(angularVelocity, dt);
+
+        ASSERT_TRUE(angularVelocity.allFinite())
+            << "Non-finite angular velocity at step " << i + 1;
+    }
+
+
+    // Verification
+
+    const double angularVelocityError =
+        (angularVelocity - expectedAngularVelocity).norm();
+
+    EXPECT_LT(angularVelocityError, tolerance)
+        << "Angular velocity deviates from independent reference."
+        << "\nCalculated: "
+        << angularVelocity.transpose()
+        << "\nReference:  "
+        << expectedAngularVelocity.transpose()
+        << "\nError:      "
+        << angularVelocityError
+        << "\nTolerance:  "
+        << tolerance;
 }
+
+
+// ============================================================================
+// Test Case 3 - Rotational Kinetic Energy Conservation
+// ============================================================================
+
+TEST_F(
+    RotationalTestFixture,
+    RotationalEnergyRemainsBounded)
+{
+    // Reference data
+
+    constexpr double dt = defaultTimeStep;
+    constexpr int steps = 1000;
+
+    constexpr double expectedInitialEnergy = 18.0;
+    constexpr double initialEnergyTolerance = 1e-12;
+
+    constexpr double relativeEnergyTolerance = 3e-3;
+
+
+    // Initial state
+
+    Eigen::Vector3d angularVelocity =
+        initialAngularVelocity;
+
+    const double initialEnergy =
+        computeRotationalEnergy(
+            initialAngularVelocity,
+            inertia);
+
+    double maxRelativeEnergyError = 0.0;
+
+
+    // Initial state verification
+
+    ASSERT_TRUE(std::isfinite(initialEnergy));
+
+    ASSERT_NEAR(
+        initialEnergy,
+        expectedInitialEnergy,
+        initialEnergyTolerance);
+
+    ASSERT_GT(initialEnergy, 0.0);
+
+
+    // Test procedure
+
+    for (int i = 0; i < steps; ++i)
+    {
+        angularVelocity =
+            propagateAngularVelocity(angularVelocity, dt);
+
+        ASSERT_TRUE(angularVelocity.allFinite())
+            << "Non-finite angular velocity at step " << i + 1;
+
+        const double rotationalEnergy =
+            computeRotationalEnergy(
+                angularVelocity,
+                inertia);
+
+        ASSERT_TRUE(std::isfinite(rotationalEnergy))
+            << "Non-finite rotational energy at step " << i + 1;
+
+        const double relativeEnergyError =
+            std::abs(rotationalEnergy - initialEnergy)
+            / initialEnergy;
+
+        maxRelativeEnergyError =
+            std::max(
+                maxRelativeEnergyError,
+                relativeEnergyError);
+    }
+
+
+    // Verification
+
+    EXPECT_LT(
+        maxRelativeEnergyError,
+        relativeEnergyTolerance)
+        << "Maximum relative rotational energy error exceeds tolerance."
+        << "\nMaximum error: "
+        << maxRelativeEnergyError
+        << "\nTolerance:     "
+        << relativeEnergyTolerance;
+}
+
+
+// ============================================================================
+// Test Case 4 - Angular Momentum Magnitude Conservation
+// ============================================================================
+
+TEST_F(
+    RotationalTestFixture,
+    AngularMomentumMagnitudeRemainsBounded)
+{
+    GTEST_SKIP() << "Test Case 4 implementation pending.";
+
+    // Reference data
+
+    constexpr double dt = defaultTimeStep;
+    constexpr int steps = 1000;
+
+    const Eigen::Vector3d expectedInitialAngularMomentum{
+        10.0,
+        40.0,
+        90.0
+    };
+
+    const double expectedInitialAngularMomentumMagnitude =
+        std::sqrt(9800.0);
+
+    // TODO: Define acceptance tolerance according to test specification.
+
+
+    // Initial state
+
+    Eigen::Vector3d angularVelocity =
+        initialAngularVelocity;
+
+    const Eigen::Vector3d initialAngularMomentum =
+        computeAngularMomentum(
+            initialAngularVelocity,
+            inertia);
+
+    const double initialAngularMomentumMagnitude =
+        initialAngularMomentum.norm();
+
+    double maxRelativeAngularMomentumError = 0.0;
+
+
+    // TODO: Initial state verification
+
+
+    // Test procedure
+
+    for (int i = 0; i < steps; ++i)
+    {
+        angularVelocity =
+            propagateAngularVelocity(angularVelocity, dt);
+
+        // TODO: Calculate current angular momentum vector.
+
+        // TODO: Calculate angular momentum magnitude.
+
+        // TODO: Verify finite values.
+
+        // TODO: Calculate relative angular momentum error.
+
+        // TODO: Track maximum relative error.
+    }
+
+
+    // TODO: Verify maximum relative angular momentum error.
+}
+
+
+// ============================================================================
+// Test Case 5 - Quaternion Normalization
+// ============================================================================
+
+// TODO: Implement quaternion normalization verification.
+
+
+// ============================================================================
+// Test Case 6 - Time Step Convergence
+// ============================================================================
+
+// TODO: Implement time step convergence verification.
+
+
+} // namespace VER_ROT_002
