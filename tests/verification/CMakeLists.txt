@@ -4,7 +4,7 @@ add_executable(
     VER-TRA/VER_TRA_001_FreeTranslation.cpp
 
     VER-ROT/VER_ROT_001_AxisTorque.cpp
-    VER-ROT/VER_ROT_002A_GyroscopicDerivative.cpp
+    VER-ROT/VER_ROT_002_GyroscopicDerivative.cpp
 
     VER-MASS/VER_MASS_001A_FuelTankBoundaries.cpp
 
